@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:keepy/screens/main_screen.dart';
+import 'package:keepy/screens/home_container_screen.dart';
 
 class KeepyApp extends StatelessWidget {
   const KeepyApp({super.key});
@@ -13,7 +14,7 @@ class KeepyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: HomeContainerScreen(),
     );
   }
 }
