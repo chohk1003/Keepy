@@ -7,20 +7,15 @@ import '../theme.dart';
 import '../widgets/fx.dart';
 import '../widgets/square_check.dart';
 import '../widgets/task_actions.dart';
+import 'ocr/ocr_result.dart';
+import 'ocr/recognize.dart';
 
 /// 촬영 → 인식 → 검토 흐름 (UI설계서 08·09)
-/// 실제 카메라·ML Kit OCR은 MP4에서 [recognizeLines]만 교체하면 된다.
-/// 원본 이미지는 저장하지 않는다 (NFR-05).
-Future<List<String>> recognizeLines() async {
-  await Future<void>.delayed(const Duration(milliseconds: 900));
-  return const [
-    '운영체제 과제 제출',
-    '장보기 우유 계란',
-    '팀플 회의록 정리',
-    '도서관 책 반납',
-    '컴그 4장 복습',
-  ];
-}
+///
+/// 실제 구현은 플랫폼별로 갈린다 (`ocr/recognize.dart`의 조건부 export).
+/// - 모바일: `image_picker` 촬영 + ML Kit 한국어 인식, 끝나면 원본 삭제 (NFR-05)
+/// - 웹·데스크톱: ML Kit이 없으므로 샘플 5줄 폴백 ([OcrResult.sample])
+Future<OcrResult> recognizeLines() => recognizeLinesImpl();
 
 void openCapture(BuildContext context) {
   FocusScope.of(context).unfocus();
@@ -73,11 +68,47 @@ class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin
     HapticFeedback.heavyImpact();
     setState(() => _busy = true);
     _flash.forward(from: 0);
-    final lines = await recognizeLines();
+    final r = await recognizeLines();
     if (!mounted) return;
+
+    // 취소 — 안내 없이 촬영 화면에 머문다
+    if (r.cancelled) {
+      setState(() => _busy = false);
+      return;
+    }
+    // 권한 거부·타임아웃·인식 0줄 안내 (NFR-07, NFR-02)
+    if (r.message != null || !r.hasLines) {
+      setState(() => _busy = false);
+      await _notice(r.message ?? '인식된 글자 없음\n글자가 프레임에 차도록 다시 촬영');
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     Navigator.of(context).pushReplacement(
-      CupertinoPageRoute<void>(builder: (_) => ReviewPage(lines: lines)),
+      CupertinoPageRoute<void>(
+        builder: (_) => ReviewPage(
+          lines: r.lines,
+          elapsed: r.elapsed,
+          sample: r.sample,
+        ),
+      ),
+    );
+  }
+
+  /// 인식 실패 안내. 촬영 화면 구조는 그대로 두고 팝업만 띄운다.
+  Future<void> _notice(String text) async {
+    HapticFeedback.heavyImpact();
+    await showCupertinoDialog<void>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        content: Text(text, style: T.subhead),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -258,9 +289,20 @@ class _FramePainter extends CustomPainter {
 
 /// 인식 결과 검토 (FR-14): 줄 단위 후보 수정·선택 → 일괄 추가
 class ReviewPage extends StatefulWidget {
-  const ReviewPage({super.key, required this.lines});
+  const ReviewPage({
+    super.key,
+    required this.lines,
+    this.elapsed = Duration.zero,
+    this.sample = false,
+  });
 
   final List<String> lines;
+
+  /// 실측 인식 시간 (NFR-02) — 제출 시 README에 적을 값
+  final Duration elapsed;
+
+  /// 웹·데스크톱 샘플 폴백인지. true일 때만 '샘플' 배지를 붙인다.
+  final bool sample;
 
   @override
   State<ReviewPage> createState() => _ReviewPageState();
@@ -279,6 +321,10 @@ class _ReviewPageState extends State<ReviewPage> {
     }
     super.dispose();
   }
+
+  /// 소요 시간 표시용 — '0.84초'
+  String get _elapsedText =>
+      '${(widget.elapsed.inMilliseconds / 1000).toStringAsFixed(2)}초';
 
   int get _count {
     var n = 0;
@@ -329,16 +375,22 @@ class _ReviewPageState extends State<ReviewPage> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: K.orange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
+                      // 실제 인식 결과에는 배지를 붙이지 않는다 (웹·데스크톱 폴백만)
+                      if (widget.sample) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: K.orange.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text('샘플', style: T.caption.copyWith(color: K.orange)),
                         ),
-                        child: Text('샘플', style: T.caption.copyWith(color: K.orange)),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
+                      ],
                       Text('${widget.lines.length}줄', style: T.footnote),
+                      // 실측 소요 시간 (NFR-02)
+                      if (widget.elapsed > Duration.zero)
+                        Text(' · $_elapsedText', style: T.footnote),
                     ],
                   ),
                 ),

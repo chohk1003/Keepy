@@ -30,8 +30,11 @@ class Task {
     this.doneAt,
     Set<TaskTag>? tags,
     DateTime? createdAt,
+    DateTime? updatedAt,
+    this.deleted = false,
   })  : tags = tags ?? <TaskTag>{},
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? createdAt ?? DateTime.now();
 
   final String id;
   String title;
@@ -43,6 +46,17 @@ class Task {
   Set<TaskTag> tags;
   final DateTime createdAt;
 
+  /// 마지막 변경 시점 — 동기화 충돌 해결(Last-Write-Wins)의 비교 기준.
+  /// 제목·완료·기한·태그가 바뀔 때마다 [touch]로 갱신한다.
+  DateTime updatedAt;
+
+  /// tombstone — 삭제 표식. 오프라인에서 지운 항목을 다른 기기에 전파하려면
+  /// 바로 지우지 않고 표식만 남겨야 한다 (docs/firebase.md).
+  bool deleted;
+
+  /// 변경 시점을 찍는다 (LWW 비교용)
+  void touch([DateTime? at]) => updatedAt = at ?? DateTime.now();
+
   Map<String, Object?> toJson() => {
         'id': id,
         'title': title,
@@ -51,10 +65,17 @@ class Task {
         'tags': [for (final t in tags) t.name],
         'createdAt': createdAt.toIso8601String(),
         'doneAt': doneAt?.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+        'deleted': deleted,
       };
 
+  /// 구버전(v1) JSON 호환 — `updatedAt`이 없으면 `createdAt`으로,
+  /// `deleted`가 없으면 false로 채운다.
   factory Task.fromJson(Map<String, Object?> j) {
     final tagNames = (j['tags'] as List?)?.cast<String>() ?? const <String>[];
+    final created = j['createdAt'] == null
+        ? null
+        : DateTime.parse(j['createdAt'] as String);
     return Task(
       id: j['id'] as String,
       title: j['title'] as String,
@@ -64,10 +85,12 @@ class Task {
         for (final t in TaskTag.values)
           if (tagNames.contains(t.name)) t,
       },
-      createdAt: j['createdAt'] == null
-          ? null
-          : DateTime.parse(j['createdAt'] as String),
+      createdAt: created,
       doneAt: j['doneAt'] == null ? null : DateTime.parse(j['doneAt'] as String),
+      updatedAt: j['updatedAt'] == null
+          ? created
+          : DateTime.parse(j['updatedAt'] as String),
+      deleted: j['deleted'] as bool? ?? false,
     );
   }
 }

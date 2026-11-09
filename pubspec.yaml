@@ -13,6 +13,9 @@ dependencies:
     sdk: flutter
   shared_preferences: ^2.3.0
   cupertino_icons: ^1.0.8
+  # MP4 카메라·OCR — 모바일 전용. 웹·데스크톱에서는 lib/pages/ocr/ 의 폴백이 돌아간다.
+  image_picker: ^1.2.4
+  google_mlkit_text_recognition: ^1.0.1
 
 dev_dependencies:
   flutter_test:

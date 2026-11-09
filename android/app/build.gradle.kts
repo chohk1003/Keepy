@@ -38,6 +38,15 @@ android {
     }
 }
 
+dependencies {
+    // ML Kit 한국어 텍스트 인식 모델 (MP4)
+    // google_mlkit_text_recognition 플러그인은 라틴 문자만 implementation으로 걸고
+    // 한국어 모델은 compileOnly로만 선언한다. 여기서 직접 넣지 않으면
+    // TextRecognitionScript.korean 호출 순간 NoClassDefFoundError로 앱이 죽는다.
+    // 버전은 플러그인의 android/build.gradle 과 맞춤 (1.0.1 → 16.0.1).
+    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

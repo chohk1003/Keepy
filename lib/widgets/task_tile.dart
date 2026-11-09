@@ -444,25 +444,33 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
           index: _tagIdx,
           current: widget.task.tags,
         ),
+      // 두 버튼 사이 간격(6px)은 고정 폭 SizedBox가 아니라 각 버튼의 Padding으로 준다.
+      // 패널이 닫히는 애니메이션 중 폭이 6px 미만으로 줄면 고정 폭 칸이 들어갈 자리가
+      // 없어 RenderFlex 오버플로가 났다. Expanded만 남기면 폭이 얼마든 넘치지 않는다.
       _ => Row(
           key: const ValueKey('buttons'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: _ActionButton(
-                t: Curves.easeOutBack.transform(((t - 0.05) / 0.8).clamp(0.0, 1.0)),
-                icon: CupertinoIcons.calendar_badge_plus,
-                label: '날짜',
-                colors: const [Color(0xFF0A84FF), Color(0xFF5E5CE6)],
+              child: Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: _ActionButton(
+                  t: Curves.easeOutBack.transform(((t - 0.05) / 0.8).clamp(0.0, 1.0)),
+                  icon: CupertinoIcons.calendar_badge_plus,
+                  label: '날짜',
+                  colors: const [Color(0xFF0A84FF), Color(0xFF5E5CE6)],
+                ),
               ),
             ),
-            const SizedBox(width: 6),
             Expanded(
-              child: _ActionButton(
-                t: Curves.easeOutBack.transform(((t - 0.2) / 0.8).clamp(0.0, 1.0)),
-                icon: CupertinoIcons.tag_fill,
-                label: '태그',
-                colors: const [Color(0xFFFF9F0A), Color(0xFFFF375F)],
+              child: Padding(
+                padding: const EdgeInsets.only(left: 3),
+                child: _ActionButton(
+                  t: Curves.easeOutBack.transform(((t - 0.2) / 0.8).clamp(0.0, 1.0)),
+                  icon: CupertinoIcons.tag_fill,
+                  label: '태그',
+                  colors: const [Color(0xFFFF9F0A), Color(0xFFFF375F)],
+                ),
               ),
             ),
           ],

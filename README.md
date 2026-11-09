@@ -54,6 +54,12 @@ lib/
 assets/fonts/                Pretendard (SIL OFL 1.1)
 ```
 
+## 문서
+
+- **[docs/STATUS.md](docs/STATUS.md)** — 남은 작업 현황 (할 일이 위, 끝난 일이 아래)
+- [docs/](docs/README.md) — 기능별 구조 문서 (화면 · 태스크 · 제스처 · 저장 · 로그인 · Firebase · OCR)
+- [TEAM_NOTES.md](TEAM_NOTES.md) — 팀 환경·브랜치·규칙
+
 ## 남은 단계
 
 - MP3: Firebase Auth·Firestore 동기화 (`data/` 계층 위에 추가)

@@ -517,6 +517,22 @@ class _Segmented<V extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // CupertinoSlidingSegmentedControl은 칸이 2개 미만이면 assertion으로 죽는다.
+    // '달력 행'을 1로 두면 '이번 주 위치'가 1칸뿐이므로 그 때는 고정 표시로 대체.
+    if (items.length < 2) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: K.fill,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          items[value] ?? (items.isEmpty ? '-' : items.values.first),
+          style: T.subhead.copyWith(color: K.label2),
+        ),
+      );
+    }
     return CupertinoSlidingSegmentedControl<V>(
       groupValue: value,
       onValueChanged: (v) {
@@ -549,7 +565,8 @@ class _Toggle extends StatelessWidget {
       scale: 0.88,
       child: AnimatedContainer(
         duration: Motion.med,
-        curve: Motion.spring,
+        // 색·그라데이션을 보간하므로 1을 넘어 튀는 Motion.spring은 쓰지 않는다
+        curve: Motion.out,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         decoration: BoxDecoration(
           gradient: on ? K.brand2 : null,

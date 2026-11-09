@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- MP4 카메라 OCR (FR-13). 카메라가 없는 기기에서도 설치는 되게 required=false -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="keepy"
         android:name="${applicationName}"

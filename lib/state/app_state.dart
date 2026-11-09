@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../data/local_store.dart';
+import '../data/task_store.dart';
 import '../models/task.dart';
 import '../util/dates.dart';
 
@@ -36,19 +36,25 @@ class AppState extends ChangeNotifier {
 
   Timer? _clock;
 
-  final LocalStore? store;
+  /// `LocalStore` 또는 MP3의 `SyncStore` (같은 인터페이스)
+  final TaskStore? store;
 
   // ---------------------------------------------------------------- 태스크
   final List<Task> _tasks = [];
   final List<DoneEvent> doneLog = [];
   int _seq = 0;
 
-  List<Task> get tasks => List.unmodifiable(_tasks);
-  List<Task> get todo => sortByDate(_tasks.where((t) => !t.done));
-  List<Task> get done => sortByDate(_tasks.where((t) => t.done));
+  /// 화면에 보이는 태스크 — tombstone(`deleted`)은 모두 걸러진다.
+  /// **목록 조회는 전부 이걸 거쳐야 한다** (빠뜨리면 지운 항목이 캘린더나
+  /// 집계에 남는다). 저장·동기화는 tombstone까지 포함한 [_tasks]를 쓴다.
+  Iterable<Task> get _live => _tasks.where((t) => !t.deleted);
+
+  List<Task> get tasks => List.unmodifiable(_live);
+  List<Task> get todo => sortByDate(_live.where((t) => !t.done));
+  List<Task> get done => sortByDate(_live.where((t) => t.done));
 
   List<Task> ofStatus(TaskStatus st) =>
-      sortByDate(_tasks.where((t) => statusOf(t) == st));
+      sortByDate(_live.where((t) => statusOf(t) == st));
 
   /// 날짜순: 기한 빠른 순 → 기한 없는 항목은 뒤 → 같은 날은 만든 순
   static List<Task> sortByDate(Iterable<Task> list) {
@@ -99,7 +105,7 @@ class AppState extends ChangeNotifier {
   /// 태그 사용 빈도순 (같으면 기본 순서)
   List<TaskTag> tagsByUsage() {
     final count = {for (final g in TaskTag.values) g: 0};
-    for (final t in _tasks) {
+    for (final t in _live) {
       for (final g in t.tags) {
         count[g] = count[g]! + 1;
       }
@@ -115,6 +121,7 @@ class AppState extends ChangeNotifier {
   String _nextId() =>
       '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${_seq++}';
 
+  /// 새 항목은 `Task` 생성자가 `updatedAt`을 `createdAt`과 같게 맞춘다.
   Task add(String title, {DateTime? due, Set<TaskTag>? tags}) {
     final t = Task(
       id: _nextId(),
@@ -146,6 +153,7 @@ class AppState extends ChangeNotifier {
     if (t.done == value) return;
     t.done = value;
     t.doneAt = value ? DateTime.now() : null;
+    t.touch();
     if (value) {
       doneLog.insert(0, DoneEvent(t.id, t.title, DateTime.now()));
       if (doneLog.length > 100) doneLog.removeLast();
@@ -155,6 +163,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 되돌리기(`restore`)가 인덱스를 쓰므로 **지금은 목록에서 실제로 뺀다**.
+  /// Firestore를 붙일 때 `t.deleted = true; t.touch();`로 바꾼다
+  /// (조회는 이미 [_live]에서 tombstone을 걸러 두었다).
   int remove(Task t) {
     final i = _tasks.indexOf(t);
     if (i >= 0) {
@@ -171,9 +182,10 @@ class AppState extends ChangeNotifier {
   }
 
   /// 완료 항목 일괄 삭제 → 되돌리기용 스냅샷 반환
+  /// (`remove`와 같은 이유로 아직 실제 삭제. tombstone 전환 시 함께 바꾼다)
   List<Task> clearDone() {
     final before = List.of(_tasks);
-    _tasks.removeWhere((t) => t.done);
+    _tasks.removeWhere((t) => t.done && !t.deleted);
     notifyListeners();
     return before;
   }
@@ -199,17 +211,18 @@ class AppState extends ChangeNotifier {
     } else if (due != null) {
       t.due = dayOf(due);
     }
+    t.touch();
     notifyListeners();
   }
 
   List<Task> onDay(DateTime d) =>
-      _tasks.where((t) => sameDay(t.due, d)).toList();
+      _live.where((t) => sameDay(t.due, d)).toList();
 
   /// 그날의 (완료 개수, 전체 개수)
   ({int done, int total}) dayCounts(DateTime d) {
     var done = 0;
     var total = 0;
-    for (final t in _tasks) {
+    for (final t in _live) {
       if (!sameDay(t.due, d)) continue;
       total++;
       if (t.done) done++;
@@ -220,7 +233,7 @@ class AppState extends ChangeNotifier {
   /// [d] 기준 앞(dir > 0)·뒤(dir < 0)로 가장 가까운 '할 일이 있는 날'
   DateTime? neighborTaskDay(DateTime d, int dir) {
     DateTime? best;
-    for (final t in _tasks) {
+    for (final t in _live) {
       final due = t.due;
       if (due == null) continue;
       final diff = dayDiff(d, due);
@@ -349,7 +362,7 @@ class AppState extends ChangeNotifier {
         'overdueDays': overdueDays,
       };
 
-  void _load(LocalStore s) {
+  void _load(TaskStore s) {
     for (final j in s.readTasks()) {
       try {
         _tasks.add(Task.fromJson(j));

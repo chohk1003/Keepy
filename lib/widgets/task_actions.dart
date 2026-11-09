@@ -30,6 +30,9 @@ Widget buildTaskTile(BuildContext context, Task t) {
     status: s.statusOf(t),
     tagOrder: s.tagsByUsage(),
     onToggle: () {
+      // 체크 후 0.52초 안에 삭제하면 블럭이 사라지면서 지연 커밋이 뒤늦게 들어온다.
+      // 이미 목록에 없는 항목이면 완료 처리·완료 기록을 남기지 않는다.
+      if (!s.tasks.contains(t)) return;
       final value = !t.done;
       s.setDone(t, value);
       if (value) {
