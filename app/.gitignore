@@ -1,0 +1,48 @@
+# --- 비밀 키 (CST-04, NFR-06) ---
+.env
+.env.*
+!.env.example
+
+# --- Flutter / Dart ---
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- 플랫폼 생성물 ---
+android/.gradle/
+android/local.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/key.properties
+*.jks
+*.keystore
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.*
+**/xcuserdata/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- 개인정보가 담긴 자료 (CST-04) ---
+# 팀원 이름·학번이 들어간 명세서 PDF, 실제 메모 사진은 올리지 않는다
+docs/private/
+*.heic

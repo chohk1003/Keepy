@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Keepy 미리보기</title>
+<style>
+@font-face{font-family:'NanumSquareRound';src:url('fonts/nsrR.woff') format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'NanumSquareRound';src:url('fonts/nsrB.woff') format('woff');font-weight:700;font-display:swap}
+@font-face{font-family:'NanumSquareRound';src:url('fonts/nsrEB.woff') format('woff');font-weight:800;font-display:swap}
+:root{
+  --bg:#F1F5FA; --card:#fff; --label:#1A2433; --label2:#8792A5; --label3:#C3CCD8; --sep:#E2E8F0; --fill:#EBF1F8; --skytint:#E6F4FF;
+  --sky:#4CC3FF; --blue:#2F7BFF; --red:#FF4D5E; --orange:#FF9F2E; --green:#2FC27A;
+  --g-primary:linear-gradient(135deg,#4CC3FF,#2F7BFF);
+  --g-delete:linear-gradient(135deg,#FF7A85,#FF4D5E);
+  --g-delayed:linear-gradient(135deg,#FFBE55,#FF8A3D);
+  --g-success:linear-gradient(135deg,#3FD48C,#22B3C9);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --hair:rgba(26,36,51,.07); --donecard:#F8FAFD; --bar:rgba(248,251,254,.86); --msg:rgba(255,255,255,.92); --gamesky:linear-gradient(#BFE6FF,#EAF6FF);
+  --font:'NanumSquareRound',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+}
+/* 다크 모드 (v0.4) */
+.phone.dark{--bg:#0D131B; --card:#18212D; --label:#EEF3FA; --label2:#8E9AAE; --label3:#4B576A; --sep:#253041; --fill:#222C3A; --skytint:#14304D;
+  --hair:rgba(255,255,255,.09); --donecard:#141C26; --bar:rgba(20,27,37,.86); --msg:rgba(24,33,45,.94); --gamesky:linear-gradient(#0B1A33,#16294A); color-scheme:dark}
+.phone{color-scheme:light;color:var(--label)}
+:where(.phone) button{color:inherit}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* iOS 에서 user-select:none 안의 입력 칸 글자가 안 보이는 문제 수정 (v0.4) */
+.phone input,.phone textarea{-webkit-user-select:text;user-select:text;color:var(--label);-webkit-text-fill-color:var(--label);caret-color:var(--blue)}
+html,body{margin:0;height:100%;font-family:var(--font);color:var(--label)}
+body{display:flex;align-items:center;justify-content:center;gap:40px;min-height:100vh;
+  background:radial-gradient(1200px 600px at 20% 10%,#DDF1FF 0,transparent 60%),radial-gradient(900px 500px at 90% 90%,#E3ECFF 0,transparent 60%),#EEF3F9}
+button,input,textarea{font-family:inherit}
+.phone{position:relative;width:393px;height:852px;border-radius:54px;background:var(--bg);overflow:hidden;
+  box-shadow:0 0 0 11px #111,0 0 0 13px #2b2b2e,0 40px 80px rgba(20,40,80,.3);user-select:none;-webkit-user-select:none}
+@media (max-width:520px){body{display:block;background:var(--bg)} .phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none} .guide{display:none}}
+.status{color:var(--label);position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 42px;font-weight:700;font-size:15px;z-index:5;pointer-events:none}
+.status .icons{display:flex;gap:6px;align-items:center}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000;z-index:60}
+.app{position:absolute;inset:50px 0 0 0;display:flex;flex-direction:column}
+.viewport{position:relative;flex:1;overflow:hidden}
+.pages{position:absolute;inset:0;display:flex;width:300%;will-change:transform}
+.page{position:relative;width:33.3333%;height:100%;overflow:hidden}
+.scroller{position:absolute;inset:0;overflow:hidden;touch-action:none}
+.content{will-change:transform;padding:8px 16px 80px}
+.large{font-size:26px;font-weight:800;letter-spacing:-.6px;line-height:1.2}
+.title{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.caption{font-size:12px;color:var(--label2)}
+.foot{font-size:11px;color:var(--label2)}
+.gt{background:var(--g-primary);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hdr{height:40px;display:flex;align-items:center;gap:8px}
+.logo{font-size:23px;font-weight:800;letter-spacing:-1px;display:flex;align-items:flex-end;line-height:1;margin-right:auto}
+.logo i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g-primary);margin:0 0 3px 2px}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(76,195,255,.18),rgba(47,123,255,.14));font-weight:800;font-size:13px}
+.gamebtn{width:32px;height:32px;border-radius:10px;background:var(--skytint);display:grid;place-items:center;cursor:pointer;border:0;transition:transform .16s var(--ease)}
+.gamebtn:active{transform:scale(.88)}
+.badge{display:inline-grid;place-items:center;min-width:28px;height:22px;padding:0 8px;border-radius:10px;background:rgba(47,123,255,.1);font-weight:800;font-size:13px}
+.editbtn{margin-left:auto;border:0;border-radius:14px;padding:6px 12px;font-size:12.5px;font-weight:800;color:var(--blue);background:var(--skytint);cursor:pointer}
+.editbtn.on{background:var(--g-primary);color:#fff}
+.tabs{display:flex;gap:20px;border-bottom:.8px solid var(--sep);margin-top:12px}
+.tabs button{border:0;background:none;padding:4px 0 0;font-size:14px;font-weight:400;color:var(--label2);cursor:pointer}
+.tabs button.on{font-weight:800}
+.tabs button u{display:block;height:2.5px;width:0;margin-top:8px;border-radius:2px;background:var(--g-primary);transition:width .16s var(--ease)}
+.tabs button.on u{width:28px}
+.kcard,.card{border:.8px solid var(--hair)}
+.sum{display:flex;align-items:center;margin-top:12px;background:var(--card);border-radius:16px;border:.8px solid var(--hair);box-shadow:0 1px 2px rgba(20,50,90,.04)}
+.sum button{background:none;border:0;font:inherit;color:inherit;cursor:pointer;flex:1;padding:11px 0 10px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .12s}
+.sum button:active{transform:scale(.95)}.sum small{font-size:11px;color:var(--label2);display:flex;align-items:center;gap:4px}.sum small i{width:6px;height:6px;border-radius:3px;display:block}
+.sum b{font-size:20px;font-weight:800}.sum b.z{color:var(--label3)!important}.sum .dv{width:.6px;height:34px;background:var(--sep)}
+.sec .tg{display:inline-flex;align-items:center;gap:6px;cursor:pointer}.sec .dchev{display:inline-flex;transition:transform .2s}.sec .dchev.c{transform:rotate(-90deg)}
+.sec .clr{background:none;border:0;font-family:inherit;cursor:pointer;margin-left:auto;color:#FF5A5F;font-weight:700;font-size:12px;padding:2px 6px}
+.sec{display:flex;gap:6px;align-items:center;padding:18px 4px 8px;font-size:12px;font-weight:700;color:var(--label2)}
+.sec .n{opacity:.7;font-weight:400}.sec .r{margin-left:auto;font-weight:400;font-size:11px}
+.tile{position:relative;margin-bottom:10px;transform-origin:top center}
+.tile.faded{pointer-events:none}
+.card{position:relative;z-index:2;display:flex;align-items:center;min-height:58px;padding:4px 14px 4px 4px;background:var(--card);border-radius:16px;
+  box-shadow:0 2px 10px rgba(20,50,90,.05);transition:margin .24s var(--ease),transform .24s var(--ease),box-shadow .16s var(--ease),background .16s;cursor:pointer}
+.tile.done .card{background:var(--donecard);box-shadow:none}
+.tile.lift .card{box-shadow:0 6px 20px rgba(20,50,90,.1)}
+.tile.drag .card{transition:box-shadow .16s}
+.tile.snap .card{transition:margin .11s var(--ease),transform .11s var(--ease)}
+.editing .card{padding-right:4px;border:1px solid rgba(47,123,255,.18);cursor:default}
+.tile.lifted{z-index:20}.tile.lifted .card{box-shadow:0 12px 28px rgba(20,50,90,.18);transform:scale(1.03)}
+.handle{width:44px;height:44px;display:grid;place-items:center;color:var(--label2);cursor:grab;touch-action:none;font-size:18px}
+.cb{flex:none;width:42px;height:42px;display:grid;place-items:center;cursor:pointer}
+.cb span{width:22px;height:22px;border-radius:6.5px;border:1.6px solid var(--label3);background:var(--card);display:grid;place-items:center;transition:all .16s var(--ease)}
+.cb.warn span{border-color:var(--orange)}
+.cb svg{width:16px;height:16px;opacity:0;transform:scale(.4);transition:transform .24s cubic-bezier(.34,1.56,.64,1),opacity .16s}
+.checked .cb span,.cb.on span{background:var(--g-primary);border-color:transparent}
+.checked .cb svg,.cb.on svg{opacity:1;transform:scale(1)}
+.body{flex:1;min-width:0;padding:8px 0}
+.tt{font-size:15px;letter-spacing:-.2px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .16s}
+.checked .tt{color:var(--label2);text-decoration:line-through}
+.meta{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:5px;font-size:11px;color:var(--label2)}
+.pill{display:inline-block;padding:2.5px 7px;border-radius:6px;font-size:10.5px;font-weight:700;color:var(--blue);background:rgba(47,123,255,.1)}
+.pill.grey{color:var(--label2);background:var(--fill)} .pill.warm{color:#fff;background:var(--g-delayed)} .pill.orange{color:var(--orange);background:rgba(255,159,46,.13)}
+.area{position:absolute;top:0;bottom:0;overflow:hidden;border-radius:16px;z-index:1}
+.area.r{right:0}.area.l{left:0}
+.area .in{position:absolute;top:0;bottom:0;right:0}
+.dbadge{width:92px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--fill);color:var(--label3);transition:background .16s}
+.dbadge.on{background:var(--g-primary);color:#fff}
+.dbadge b{font-size:21px;font-weight:800;letter-spacing:-.5px;transition:transform .11s}
+.dbadge span{font-size:10.5px;font-weight:700;margin-top:2px}.dbadge.on span{color:#fff}.dbadge:not(.on) span{color:var(--label2)}
+.dbadge small{font-size:9px;margin-top:3px;opacity:.8}
+.del{position:absolute;inset:0;background:var(--g-delete)}
+.empty{text-align:center;padding:56px 24px}
+.empty .ic{width:56px;height:56px;border-radius:18px;margin:0 auto 18px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(76,195,255,.16),rgba(47,123,255,.12))}
+.empty h3{margin:0 0 6px;font-size:15px;font-weight:700}.empty p{margin:0;font-size:12px;color:var(--label2);line-height:1.5}
+.inputwrap{flex:none;overflow:hidden;transition:height .24s var(--ease)}
+.chips{display:flex;align-items:center;gap:6px;padding:8px 16px 0;overflow-x:auto}
+.chip{border:1px solid var(--sep);background:var(--card);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;color:var(--label);transition:all .16s;white-space:nowrap}
+.chip.on{background:var(--g-primary);color:#fff;border-color:transparent}
+.chips .cnt{margin-left:auto;font-size:11px;color:var(--label3);white-space:nowrap}
+.ibar{display:flex;gap:10px;padding:6px 16px 8px}
+.field{flex:1;min-width:0;height:48px;display:flex;align-items:center;background:var(--card);border-radius:16px;padding:0 5px 0 16px;border:1.2px solid transparent;box-shadow:0 2px 10px rgba(20,50,90,.05);cursor:text;transition:border-color .16s}
+.field.focus{border-color:rgba(47,123,255,.35)}
+.field input{flex:1;border:0;outline:0;font-size:15px;background:none;min-width:0;color:var(--label)}
+.field input::placeholder{color:var(--label3)}
+.field:not(.focus) input{pointer-events:none}
+.send{width:38px;height:38px;border-radius:12px;border:0;display:grid;place-items:center;background:var(--fill);color:var(--label3);cursor:pointer;transition:all .16s}
+.send.on{background:var(--g-primary);color:#fff;box-shadow:0 5px 14px rgba(47,123,255,.25)}
+.cam{width:48px;height:48px;border-radius:16px;border:0;background:var(--card);color:var(--label);display:grid;place-items:center;box-shadow:0 2px 10px rgba(20,50,90,.05);cursor:pointer}
+.shake{animation:shake .32s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.tabbar{flex:none;display:flex;padding:6px 0 28px;background:var(--bar);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--sep)}
+.tabbar button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--label2);cursor:pointer;height:50px;justify-content:center}
+.tabbar button svg{width:23px;height:23px;transition:transform .16s var(--ease)}
+.tabbar button.on{font-weight:800}.tabbar button.on svg{transform:scale(1.08)}
+.home{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--label);z-index:90;pointer-events:none}
+.toast{position:absolute;left:50%;bottom:10px;transform:translate(-50%,12px);opacity:0;pointer-events:none;transition:all .16s var(--ease);z-index:30;
+  display:flex;align-items:center;min-height:42px;padding:0 6px 0 16px;border-radius:14px;background:rgba(26,36,51,.9);backdrop-filter:blur(18px);color:#fff;font-size:13px;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{border:0;background:none;color:#8FD3FF;font-weight:800;font-size:13px;padding:12px;cursor:pointer}
+.cal{position:absolute;left:0;right:0;top:0;padding:4px 10px 6px 14px;display:flex;flex-direction:column;border-bottom:.6px solid var(--sep);transition:height .28s var(--ease);overflow:hidden}
+.calh{height:34px;display:flex;align-items:center;flex:none}
+.calh .mt{display:flex;align-items:center;gap:4px;cursor:pointer;margin-right:auto}
+.calh .mt svg{transition:transform .24s var(--ease);color:var(--blue)}
+.calh .mt.open svg{transform:rotate(180deg)}
+.chev{width:34px;height:34px;border:0;background:none;color:var(--blue);display:grid;place-items:center;cursor:pointer}
+.wd{display:grid;grid-template-columns:repeat(7,1fr);height:18px;font-size:10px;font-weight:700;color:var(--label2);text-align:center;flex:none}
+.wd span:last-child{color:#FF6B6B}
+.grid{flex:1;display:flex;flex-direction:column;margin-top:2px;min-height:0}
+.row{display:grid;grid-template-columns:repeat(7,1fr);flex:none}
+.day{margin:2.5px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:background .16s;line-height:1}
+.day.dim{color:var(--label3)}.day.sel{background:var(--g-primary)!important;color:#fff;font-weight:800}
+.day.dark{color:#fff}.day.today{font-weight:800}
+.day u{display:block;width:14px;height:2.5px;border-radius:2px;margin-top:2px;background:var(--g-primary)}
+.day.sel u,.day.dark u{background:#fff}
+.datelist{position:absolute;left:0;right:0;bottom:0;transition:top .28s var(--ease)}
+.dh{display:flex;align-items:flex-end}
+.dh .big{font-size:24px;font-weight:800;letter-spacing:-.6px}
+.dh .wkd{font-size:13px;color:var(--label2);margin-left:6px}
+.today-btn{margin-left:auto;border:0;border-radius:14px;padding:6px 12px;color:#fff;background:var(--g-primary);font-size:12px;font-weight:800;cursor:pointer;display:flex;gap:4px;align-items:center}
+.kcard{background:var(--card);border-radius:16px;box-shadow:0 2px 10px rgba(20,50,90,.05)}
+.comp{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-top:14px}
+.comp .lb b{display:block;font-size:12px;font-weight:700}.comp .lb span{font-size:11px;color:var(--label2)}
+.comp .pct{font-size:16px;font-weight:800;letter-spacing:-.4px}
+.bar{flex:1;height:8px;border-radius:4px;background:var(--fill);overflow:hidden}.bar i{display:block;height:100%;border-radius:4px;background:var(--g-primary);transition:width .28s var(--ease)}
+.wg{flex:1;display:flex;align-items:flex-end;height:40px;gap:5px}
+.wg div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
+.wg i{display:block;width:100%;border-radius:3px;background:var(--fill)}.wg i.has{background:rgba(47,123,255,.25)}.wg i.sel{background:var(--g-primary)}
+.wg span{font-size:8px;color:var(--label3)}.wg span.sel{color:var(--blue);font-weight:800}
+.hint{position:absolute;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:4px;align-items:center;padding:6px 12px;border-radius:14px;background:var(--card);color:var(--label2);font-size:11.5px;font-weight:700;opacity:0;pointer-events:none;white-space:nowrap}
+.hint.ready{background:var(--g-primary);color:#fff}
+.gtitle{display:flex;padding:22px 4px 8px;font-size:12px;font-weight:700;color:var(--label2)}.gtitle span{margin-left:auto;font-weight:400;font-size:11px}
+.group{background:var(--card);border-radius:16px;box-shadow:0 2px 10px rgba(20,50,90,.05);overflow:hidden}
+.srow{display:flex;align-items:center;gap:12px;padding:13px 16px;font-size:14.5px;cursor:default;position:relative}
+.srow+.srow:before{content:"";position:absolute;top:0;left:16px;right:0;height:.6px;background:var(--sep)}
+.srow.tap{cursor:pointer}.srow.tap:active{background:#f6f9fc}
+.srow.off{opacity:.4;pointer-events:none}
+.srow .v{margin-left:auto;font-size:13.5px;color:var(--label2);max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .chev2{color:var(--label3);font-size:14px}
+.srow .sub{display:block;font-size:11px;color:var(--label2);margin-top:2px}
+.srow.red{color:var(--red)}
+.seg{margin-left:auto;display:flex;padding:2px;border-radius:9px;background:var(--fill)}
+.seg button{border:0;background:none;min-width:30px;padding:5px 9px;border-radius:7px;font-size:12px;color:var(--label2);cursor:pointer;transition:all .16s}
+.seg button.on{background:var(--g-primary);color:#fff;font-weight:800}
+.sw{margin-left:auto;flex:none;width:51px;height:31px;border-radius:16px;background:#E3E9F1;position:relative;cursor:pointer;transition:background .2s}
+.sw:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15);transition:transform .2s var(--ease)}
+.sw.on{background:var(--blue)}.sw.on:after{transform:translateX(20px)}
+.svc{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+.note{padding:8px 6px 0;font-size:11px;color:var(--label2);line-height:1.5}
+.stepper{margin-left:auto;display:flex;align-items:center;background:var(--fill);border-radius:9px}
+.stepper button{width:30px;height:30px;border:0;background:none;color:var(--blue);font-size:16px;cursor:pointer}.stepper button:disabled{color:var(--label3)}
+.stepper b{width:34px;text-align:center;font-size:13px}
+.logrow{display:flex;align-items:center;gap:12px;padding:11px 16px;position:relative;font-size:14px}
+.logrow+.logrow:before{content:"";position:absolute;top:0;left:16px;right:0;height:.6px;background:var(--sep)}
+.logrow .ck{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:var(--g-success);color:#fff;flex:none}
+.logrow .ck.late{background:var(--g-delayed)}
+.logrow .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scrim{position:absolute;inset:0;background:rgba(10,25,45,.32);opacity:0;pointer-events:none;transition:opacity .24s;z-index:40}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--bg);border-radius:22px 22px 0 0;padding:8px 16px 34px;transform:translateY(105%);transition:transform .3s var(--ease);max-height:84%;display:flex;flex-direction:column;overflow:auto}
+.sheet.show{transform:none}
+#sheet2{z-index:58}#scrim2{z-index:57}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--label3);margin:0 auto 14px;flex:none}
+.btn{height:50px;border:0;border-radius:14px;background:var(--g-primary);color:#fff;font-size:15px;font-weight:800;width:100%;cursor:pointer;box-shadow:0 5px 14px rgba(47,123,255,.28);transition:opacity .16s,transform .16s;flex:none}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;box-shadow:none}
+.tin{width:100%;border:0;outline:0;font-size:15px;padding:14px;border-radius:16px;background:var(--card)}
+.tagrow{display:flex;flex-wrap:wrap;gap:8px}
+.qchips{display:flex;gap:4px;padding:0 12px}
+.qchip{flex:1;height:32px;border-radius:10px;border:0;background:var(--fill);color:var(--label);font-size:12px;font-weight:700;cursor:pointer;transition:all .16s}
+.qchip.on{background:var(--g-primary);color:#fff}
+.mhead{display:flex;align-items:center;padding:10px 12px 0 16px}.mhead b{flex:1;font-size:15px}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:4px 12px 12px}
+.mday{height:34px;border:0;border-radius:9px;background:none;color:var(--label);font-size:13px;cursor:pointer}
+.mday.dim{color:var(--label3)}.mday.on{background:var(--g-primary);color:#fff;font-weight:800}
+.gear{margin-left:auto;border:0;background:none;color:var(--blue);cursor:pointer;width:30px;height:30px;display:grid;place-items:center;border-radius:8px}
+.gear:active{background:var(--skytint)}
+.tagline{display:flex;align-items:center;padding:0 4px 0 2px;position:relative;background:var(--card)}
+.tagline .th{width:36px;height:44px;display:grid;place-items:center;color:var(--label2);cursor:grab;touch-action:none;font-size:17px}
+.tagline.lifted{z-index:5;box-shadow:0 8px 22px rgba(10,30,60,.18);border-radius:12px}
+.tagline+.tagline:before{content:"";position:absolute;top:0;left:16px;right:0;height:.6px;background:var(--sep)}
+.tagline .nm{flex:1;padding:13px 0;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.tagline .nm small{font-weight:400;font-size:11px;color:var(--label2)}
+.tagline .rm{width:40px;height:40px;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+.tagline .rm i{width:20px;height:20px;border-radius:50%;background:var(--red);display:grid;place-items:center}
+.tagline .rm i:after{content:"";width:9px;height:2px;border-radius:1px;background:#fff}
+.dialog{position:absolute;inset:0;z-index:70;display:grid;place-items:center;background:rgba(10,25,45,.3);opacity:0;pointer-events:none;transition:opacity .2s}
+.dialog.show{opacity:1;pointer-events:auto}
+.dialog .box{width:270px;border-radius:14px;background:rgba(250,252,255,.97);text-align:center;overflow:hidden;transform:scale(1.08);transition:transform .2s var(--ease)}
+.dialog.show .box{transform:none}
+.dialog h4{margin:18px 16px 4px;font-size:16px}.dialog p{margin:0 16px 10px;font-size:12.5px;color:var(--label2);line-height:1.45}
+.dialog input{width:calc(100% - 32px);margin:4px 16px 4px;border:1px solid var(--sep);border-radius:8px;padding:8px 10px;font-size:14px;outline:0}
+.dialog .err{color:var(--red);font-size:11.5px;min-height:16px;margin-bottom:6px}
+.dialog .acts{display:flex;border-top:.5px solid var(--sep)}
+.dialog .acts button{flex:1;border:0;background:none;padding:13px;font-size:16px;color:var(--blue);cursor:pointer}
+.dialog .acts button+button{border-left:.5px solid var(--sep);font-weight:800}
+.dialog .acts button.red{color:var(--red)}
+.cands{overflow:auto;margin:10px 0}
+.cand{display:flex;align-items:center;border-radius:14px;margin-bottom:8px;background:var(--card);border:1px solid var(--sep);padding-right:10px}
+.cand.on{background:var(--skytint);border-color:rgba(47,123,255,.3)}
+.cand input{flex:1;border:0;outline:0;background:none;font-size:14px;min-width:0}
+.capture{position:absolute;inset:0;z-index:50;background:#1A1F2A;color:#fff;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:scale(.96);transition:all .26s var(--ease)}
+.capture.show{opacity:1;pointer-events:auto;transform:none}
+.capture .x{align-self:flex-end;margin:58px 12px 0 0;border:0;background:none;color:#fff;font-size:24px;cursor:pointer}
+.frame{flex:1;margin:20px 28px;border:1.5px solid rgba(255,255,255,.55);border-radius:22px;position:relative;display:grid;place-items:center;text-align:center}
+.frame b{display:block;font-size:16px;margin-bottom:6px}.frame span{font-size:12px;color:rgba(255,255,255,.65);line-height:1.5}
+.corner{position:absolute;width:34px;height:34px;border-color:#8FD3FF;border-style:solid;border-width:0}
+.ctrls{display:flex;justify-content:space-between;align-items:center;padding:8px 32px 46px}
+.side{width:64px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10.5px;cursor:pointer;border:0;background:none;color:#fff}
+.side i{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-style:normal}
+.shutter{width:74px;height:74px;border-radius:50%;border:3px solid #fff;padding:5px;background:none;cursor:pointer}.shutter i{display:block;width:100%;height:100%;border-radius:50%;background:#fff}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:sp .8s linear infinite;margin:0 auto 12px}@keyframes sp{to{transform:rotate(360deg)}}
+.action{position:absolute;left:8px;right:8px;bottom:28px;z-index:61;transform:translateY(120%);transition:transform .28s var(--ease)}
+.action.show{transform:none}
+.action .g{background:rgba(250,252,255,.97);border-radius:14px;overflow:hidden;margin-bottom:8px;backdrop-filter:blur(20px)}
+.action .g div{padding:12px;text-align:center;font-size:12px;color:var(--label2);border-bottom:.5px solid var(--sep);line-height:1.45}
+.action .g button{display:block;width:100%;border:0;background:none;padding:16px;font-size:18px;color:var(--blue);cursor:pointer;border-bottom:.5px solid var(--sep)}
+.action .g button:last-child{border-bottom:0}.action .g button.red{color:var(--red)}.action .g button.b{font-weight:800}
+/* 미니게임 */
+.game{position:absolute;inset:0;z-index:55;display:flex;flex-direction:column;background:var(--gamesky);opacity:0;pointer-events:none;transform:scale(.96);transition:all .28s var(--ease)}
+.game.show{opacity:1;pointer-events:auto;transform:none}
+.game .top{display:flex;align-items:flex-start;padding:60px 8px 0 20px}
+.game .top .t{flex:1}
+.game .top .st{font-size:12px;color:var(--blue);font-weight:800;margin-top:6px;display:flex;align-items:center}
+.gbar{height:6px;border-radius:4px;background:color-mix(in srgb, var(--card) 70%, transparent);margin-top:8px;overflow:hidden}.gbar i{display:block;height:100%;width:0;background:var(--g-primary);border-radius:4px;transition:width .4s var(--ease)}
+.choices{display:flex;gap:8px}
+.choice{flex:1;border:1px solid var(--sep);background:var(--card);border-radius:14px;padding:10px 4px;cursor:pointer;color:var(--label);font-size:11.5px;line-height:1.2;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .16s}
+.choice.on{border:1.6px solid var(--blue);background:var(--skytint);color:var(--blue);font-weight:800}
+.game .x{border:0;background:none;font-size:22px;cursor:pointer;width:44px;height:44px;color:var(--label)}
+.game canvas{flex:1;min-height:0;width:100%;display:block}
+.game .msg{margin:8px 16px 0;padding:12px 16px;border-radius:16px;background:var(--msg)}
+.game .msg b{display:block;font-size:15px;font-weight:800}.game .msg span{font-size:12px;color:var(--label2);line-height:1.45}
+.game .bots{display:flex;gap:10px;padding:10px 16px 40px}
+.game .bots .btn{flex:1;width:auto;min-width:0}
+.game .re{width:50px;height:50px;border-radius:14px;border:0;background:var(--card);color:var(--blue);font-size:20px;cursor:pointer;flex:none}
+.guide{width:300px;font-size:13px;line-height:1.6;color:#3a4458}
+.guide h1{font-size:21px;margin:0 0 4px;letter-spacing:-.4px}.guide h1 i{font-style:normal;background:var(--g-primary);-webkit-background-clip:text;color:transparent}
+.guide p{margin:0 0 14px;color:#6b778c}
+.guide li{margin-bottom:7px}.guide ul{padding-left:18px;margin:0 0 16px}
+.guide b{color:#1A2433}
+.guide .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:#fff;border:1px solid #dbe4ef;color:#6b778c}
+.guide .new{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;background:var(--g-primary);color:#fff;font-weight:800;margin-right:4px}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="island"></div>
+  <div class="status"><span id="clock">9:41</span><span class="icons">
+    <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor"/><rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor"/><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg>
+    <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.5c2.3 0 4.4.9 5.9 2.4l1.1-1.1A9.8 9.8 0 0 0 8 1 9.8 9.8 0 0 0 1 3.8l1.1 1.1A8.3 8.3 0 0 1 8 2.5Zm0 3c1.5 0 2.8.6 3.8 1.5l1.1-1.1A6.8 6.8 0 0 0 8 4a6.8 6.8 0 0 0-4.9 1.9L4.2 7A5.3 5.3 0 0 1 8 5.5Zm0 3c.7 0 1.3.3 1.7.7L8 11 6.3 9.2c.4-.4 1-.7 1.7-.7Z" fill="currentColor"/></svg>
+    <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="currentColor" opacity=".4" fill="none"/><rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="currentColor" opacity=".4"/></svg>
+  </span></div>
+  <div class="app" id="app">
+    <div class="viewport" id="viewport">
+      <div class="pages" id="pages">
+        <div class="page" data-page="0"><div class="scroller" id="sc0"><div class="content" id="settings"></div></div></div>
+        <div class="page" data-page="1"><div class="scroller" id="sc1"><div class="content" id="main"></div></div></div>
+        <div class="page" data-page="2">
+          <div class="cal" id="cal"></div>
+          <div class="datelist" id="datelist">
+            <div class="hint" id="hintTop" style="top:6px"></div>
+            <div class="scroller" id="sc2"><div class="content" id="date" style="padding-top:16px"></div></div>
+            <div class="hint" id="hintBottom" style="bottom:24px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="toast" id="toast"><span id="toastText"></span><button id="toastBtn">취소</button></div>
+    </div>
+    <div class="inputwrap" id="inputwrap">
+      <div class="chips" id="chips" style="display:none"></div>
+      <div class="ibar">
+        <div class="field" id="field"><input id="input" maxlength="100" autocomplete="off" placeholder="새로운 태스크를 입력하세요"><button class="send" id="send" aria-label="추가"></button></div>
+        <button class="cam" id="cam" aria-label="카메라"></button>
+      </div>
+    </div>
+    <div class="tabbar" id="tabbar"></div>
+  </div>
+  <div class="home"></div>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="scrim" id="scrim2"></div>
+  <div class="sheet" id="sheet2"></div>
+  <div class="capture" id="capture"></div>
+  <div class="game" id="game"></div>
+  <div class="action" id="action"></div>
+  <div class="dialog" id="dialog"></div>
+  <input type="file" id="photoIn" accept="image/*" style="display:none">
+</div>
+
+<div class="guide">
+  <h1><i>keepy</i> 미리보기 <span style="font-size:13px;color:#8792A5">v0.5</span></h1>
+  <p>Flutter 앱과 같은 화면·조작을 브라우저에서 해 볼 수 있는 버전입니다. 마우스로 끌어도 됩니다.</p>
+  <ul>
+    <li><span class="new">NEW</span><b>다크 모드</b> — 설정 &gt; 화면 &gt; 시스템/라이트/다크</li>
+    <li><span class="new">NEW</span><b>할 일 수정 &gt; 기한</b> — 오늘·내일·모레·다음 주 칩과 한 달 달력에서 한 번에 고르기</li>
+    <li><span class="new">NEW</span><b>태그 관리 ⚙</b> — ≡ 를 끌어 태그 순서 바꾸기</li>
+    <li><span class="new">NEW</span><b>미니게임 꾸미기</b> — 남자/여자/내 사진 캐릭터, 강아지·고양이·토끼 펫</li>
+    <li><b>할 일 ← 당기기</b> — 날짜만, 거리에 따라 +1 → +2 → +7일. 누른 채 아래로 내리면 취소</li>
+    <li><b>→ 당기기</b> — 삭제 버튼에 걸림, 절반 넘게 세게 끌면 즉시 삭제</li>
+    <li><b>편집</b> — ≡ 손잡이로 할 일 순서 바꾸기</li>
+    <li><b>날짜 화면 '년 월' 누르기</b> — 한 달 전체 펼치기</li>
+    <li><b>화면 넘기기</b> — 빈 곳·입력 바 위·리스트 맨 아래 흐려지는 영역에서 좌우로, 또는 하단 탭</li>
+  </ul>
+  <p><span class="tag">미리보기 전용</span> 처음 열면 샘플 할 일이 들어 있고, 카메라 글자 인식은 예시 메모로 대신합니다. 캐릭터 사진은 테두리 색으로 배경을 지웁니다(앱은 온디바이스 AI로 사람만 오려 냄). 데이터는 이 브라우저에만 저장됩니다.</p>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ------------------------------------------------------------------ 아이콘
+const I = {
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.2a1.5 1.5 0 0 0 1.5 1.3h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M10 11v6M14 11v6"/></svg>',
+  arrowUp:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg>',
+  camera:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 8.5a2 2 0 0 1 2-2h2.3l1.5-2h6.4l1.5 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></svg>',
+  chevL:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  chevR:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+  chevD:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg>',
+  uturn:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>',
+  gear:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>',
+  stairs:'<svg width="18" height="18" viewBox="0 0 18 18"><defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4CC3FF"/><stop offset="1" stop-color="#2F7BFF"/></linearGradient></defs><path d="M0 18V13h6V8.3h6V3.6h6V18Z" fill="url(#sg)"/><path d="M15.5 3.6V0" stroke="#1A2433" stroke-width="1.3"/><path d="M15.5 0 11.2 1.4l4.3 1.3Z" fill="#FF6B8A"/></svg>',
+  bigCheck:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#gp)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="gp" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4CC3FF"/><stop offset="1" stop-color="#2F7BFF"/></linearGradient></defs><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+};
+const DEFAULT_TAGS = ['과제','수업','팀 프로젝트','개인'];
+const WD = ['월','화','수','목','금','토','일'];
+const DAY = 86400000;
+const DATE_STOPS = [1, 2, 7]; // 당긴 거리에 따른 날짜 단계 (앱: TaskTile.dateStops)
+
+// ------------------------------------------------------------------ 날짜
+const dOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const pad = n => String(n).padStart(2, '0');
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y,m,dd] = k.split('-').map(Number); return new Date(y, m-1, dd); };
+const daysBetween = (a, b) => Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate()) - Date.UTC(a.getFullYear(),a.getMonth(),a.getDate())) / DAY);
+const sameDay = (a, b) => daysBetween(a, b) === 0;
+const wk = d => WD[(d.getDay()+6)%7];
+const md = d => `${d.getMonth()+1}월 ${d.getDate()}일`;
+const full = d => `${md(d)} ${wk(d)}요일`;
+const startOfWeek = d => addDays(dOnly(d), -((d.getDay()+6)%7));
+const rel = (day, today) => { const n = daysBetween(today, day);
+  if (n===0) return '오늘'; if (n===1) return '내일'; if (n===2) return '모레'; if (n===-1) return '어제';
+  return day.getFullYear()!==today.getFullYear() ? `${day.getFullYear()}. ${day.getMonth()+1}. ${day.getDate()}.` : md(day); };
+const timeLabel = m => { const h = Math.floor(m/60), mm = m%60; const h12 = h%12===0?12:h%12; return `${h<12?'오전':'오후'} ${pad(h12)}:${pad(mm)}`; };
+const now = () => new Date();
+const today = () => dOnly(now());
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => s.trim().replace(/\s+/g, ' ');
+const valid = s => { const t = norm(s); return t.length >= 1 && t.length <= 100; };
+const tagNorm = s => s.replace(/#/g, '').trim().replace(/\s+/g, ' ');
+const buzz = (ms = 6) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+// ------------------------------------------------------------------ 상태
+const STORE = 'keepy.preview.v3';
+const darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+const isDark = () => S.settings.appearance === 'dark' || (S.settings.appearance === 'system' && !!(darkMQ && darkMQ.matches));
+const S = { tasks: [], settings: { userName:'키피 사용자', appearance:'system', charStyle:'boy', pet:'none', notify:true, remind:1, remindMin:540, eclass:false, everytime:false, rows:2, weekRow:1, style:'bar', delayDays:3, tags:[...DEFAULT_TAGS], game:false, char:null } };
+const UI = { page:1, filter:'all', selected:null, weekOffset:0, open:null, focused:false, inputTags:[], editing:false, expanded:false, month:null };
+function load() {
+  try { const raw = localStorage.getItem(STORE); if (raw) { const v = JSON.parse(raw); S.tasks = v.tasks || []; Object.assign(S.settings, v.settings || {});
+    S.tasks.forEach(t => { if (typeof t.order !== 'number') t.order = t.createdAt; }); return true; } } catch (e) {}
+  return false;
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} }
+let seq = 0; const newId = () => Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2,6);
+const nextOrder = () => S.tasks.length ? Math.max(...S.tasks.map(t => t.order)) + 1 : 0;
+function addSamples() {
+  const t = today(), n = Date.now(), base = nextOrder();
+  const sm = [['모바일 앱 UI 시안 정리',0,['과제'],false],['자료구조 3주차 과제 제출',2,['과제','수업'],false],['팀 프로젝트 회의 준비',3,['팀 프로젝트'],false],
+    ['알고리즘 강의 복습',0,['수업'],false],['요구사항 명세서 검토',0,['팀 프로젝트'],true],['이번 주 시간표 확인',-1,['개인'],true],['운영체제 퀴즈 준비',-2,['수업'],false],['읽고 싶은 책 찾아보기',null,['개인'],false]];
+  sm.forEach(([title, off, tags, done], i) => S.tasks.push({ id:newId(), title, createdAt:n - 1800000*(sm.length-i), due: off===null?null:keyOf(addDays(t, off)), tags, done, completedAt: done ? n - 600000*(i+1) : null, completedLate:false, order: base + i }));
+}
+
+function isDelayed(t) { if (t.done) return false; if (t.due) return daysBetween(fromKey(t.due), now()) > 0; return Date.now() - t.createdAt >= S.settings.delayDays * DAY; }
+function status(t) { if (t.done) return t.completedLate ? 'lateDone' : 'done'; return isDelayed(t) ? 'delayed' : 'todo'; }
+function sorted(list) {
+  const open = list.filter(t => !t.done).sort((a, b) => { const da = status(a)==='delayed'?0:1, db = status(b)==='delayed'?0:1; if (da!==db) return da-db; return (a.order - b.order) || (a.createdAt - b.createdAt); });
+  const done = list.filter(t => t.done).sort((a, b) => (b.completedAt||b.createdAt) - (a.completedAt||a.createdAt));
+  return open.concat(done);
+}
+const byId = id => S.tasks.find(t => t.id === id);
+const statOn = day => { const k = keyOf(day); const l = S.tasks.filter(t => t.due === k); return { total:l.length, done:l.filter(t=>t.done).length }; };
+function monthStat(m) { const inM = d => d.getFullYear()===m.getFullYear() && d.getMonth()===m.getMonth();
+  const l = S.tasks.filter(t => t.due ? inM(fromKey(t.due)) : inM(new Date(t.createdAt))); return { total:l.length, done:l.filter(t=>t.done).length }; }
+function adjacent(from, dir) {
+  const keys = [...new Set(S.tasks.filter(t => t.due).map(t => t.due))].sort();
+  if (dir < 0) { for (let i = keys.length-1; i >= 0; i--) if (daysBetween(fromKey(keys[i]), from) > 0) return fromKey(keys[i]); }
+  else { for (const k of keys) if (daysBetween(from, fromKey(k)) > 0) return fromKey(k); }
+  return null;
+}
+const selected = () => UI.selected ? fromKey(UI.selected) : today();
+
+function commit() { save(); render(); }
+function addTask(title, due, tags) { if (!valid(title)) return null; const t = { id:newId(), title:norm(title), createdAt:Date.now(), due: due?keyOf(due):null, tags:[...tags], done:false, completedAt:null, completedLate:false, order: nextOrder() }; S.tasks.push(t); commit(); return t; }
+function put(t) { const i = S.tasks.findIndex(x => x.id === t.id); if (i < 0) S.tasks.push(t); else S.tasks[i] = t; commit(); }
+function toggle(id) {
+  const t = byId(id); if (!t) return; const before = {...t};
+  if (t.done) { t.done = false; t.completedAt = null; t.completedLate = false; } else { t.completedLate = isDelayed(t); t.done = true; t.completedAt = Date.now(); }
+  commit(); toast(t.done ? (t.completedLate ? '늦은 완료로 옮겼어요' : '완료했어요') : '다시 할 일로 옮겼어요', () => put(before));
+}
+function removeTask(id) { const i = S.tasks.findIndex(t => t.id === id); if (i < 0) return; const [t] = S.tasks.splice(i, 1); if (UI.open===id) UI.open=null; commit(); toast('삭제했어요', () => { S.tasks.splice(Math.min(i, S.tasks.length), 0, t); commit(); }); }
+function setDue(id, d) { const t = byId(id); if (!t) return; const before = {...t}; t.due = keyOf(d); commit(); toast(`${rel(d, today())}로 옮겼어요`, () => put(before)); }
+function reorder(ids, from, to) { // 앱: TaskStore.reorder (to 는 끼워 넣을 최종 위치)
+  const slots = ids.map(i => byId(i).order).sort((a,b)=>a-b); for (let k = 1; k < slots.length; k++) if (slots[k] <= slots[k-1]) slots[k] = slots[k-1] + 0.001;
+  const moved = [...ids]; const [x] = moved.splice(from, 1); moved.splice(to, 0, x); moved.forEach((id, k) => byId(id).order = slots[k]); commit(); }
+function renameTag(from, to) { S.settings.tags = S.settings.tags.map(t => t===from ? to : t); S.tasks.forEach(t => { if (t.tags.includes(from)) t.tags = [...new Set(t.tags.map(g => g===from ? to : g))]; }); commit(); }
+function deleteTag(tag) { S.settings.tags = S.settings.tags.filter(t => t!==tag); S.tasks.forEach(t => { t.tags = t.tags.filter(g => g!==tag); }); commit(); }
+
+// ------------------------------------------------------------------ 알림 (0.6초)
+let toastTimer = null, toastAction = null, pointerInToast = false;
+const toastEl = document.getElementById('toast');
+function toast(text, action) { clearTimeout(toastTimer); document.getElementById('toastText').textContent = text; document.getElementById('toastBtn').style.display = action ? '' : 'none'; toastAction = action || null;
+  toastEl.classList.remove('show'); void toastEl.offsetWidth; toastEl.classList.add('show'); toastTimer = setTimeout(hideToast, 600); }
+function hideToast() { clearTimeout(toastTimer); toastEl.classList.remove('show'); toastAction = null; }
+toastEl.addEventListener('pointerdown', () => { pointerInToast = true; });
+document.getElementById('toastBtn').addEventListener('click', () => { const a = toastAction; hideToast(); a && a(); });
+
+// ------------------------------------------------------------------ 렌더링
+const pill = (text, cls='') => `<span class="pill ${cls}">${esc(text)}</span>`;
+function tileHTML(t, editing) {
+  const st = status(t), td = today(), due = t.due ? fromKey(t.due) : null, meta = [];
+  if (st === 'delayed') { meta.push(pill('지연','warm')); if (due) meta.push(`<span>${rel(due, td)}</span>`); }
+  else if (st === 'lateDone') { meta.push(pill('늦은 완료','orange')); if (due) meta.push(`<span>${rel(due, td)}</span>`); }
+  else if (st === 'todo') { if (!due) meta.push(pill('날짜 미지정','grey')); else if (sameDay(due, td)) meta.push(pill('오늘')); else meta.push(pill(rel(due, td),'grey')); }
+  else if (due) meta.push(`<span>${rel(due, td)}</span>`);
+  t.tags.forEach(g => meta.push(`<span>#${esc(g)}</span>`));
+  return `<div class="tile ${t.done?'done checked':''} ${editing?'editing':''}" data-id="${t.id}">
+    <div class="area l" style="width:0"><div class="del"></div><div class="in" style="width:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:10.5px;font-weight:800;gap:3px"><span style="width:19px;height:19px;display:block">${I.trash}</span><b class="dl">삭제</b></div></div>
+    <div class="area r" style="width:0"><div class="in"><div class="dbadge"><b>+1</b><span></span><small>↓ 내리면 취소</small></div></div></div>
+    <div class="card"><div class="cb ${st==='delayed'?'warn':''}" ${editing?'':'data-act="check"'}><span>${I.check}</span></div>
+      <div class="body"><div class="tt">${esc(t.title)}</div>${meta.length?`<div class="meta">${meta.join('')}</div>`:''}</div>${editing?'<div class="handle">≡</div>':''}</div></div>`;
+}
+const emptyHTML = (h, p) => `<div class="empty"><div class="ic">${I.bigCheck}</div><h3>${h}</h3><p>${p}</p></div>`;
+const sec = (title, n, color, right='') => `<div class="sec" ${color?`style="color:${color}"`:''}>${title}<span class="n">${n}</span>${right?`<span class="r">${right}</span>`:''}</div>`;
+
+const sameDayAny = (a, b) => !!(a && b) && keyOf(new Date(a)) === keyOf(new Date(b));
+function clearDone() { const removed = []; S.tasks.forEach((t, i) => { if (t.done) removed.push([t, i]); }); if (!removed.length) return;
+  S.tasks = S.tasks.filter(t => !t.done); commit(); toast(`완료한 일 ${removed.length}개를 지웠어요`, () => { removed.forEach(([t, i]) => S.tasks.splice(Math.min(i, S.tasks.length), 0, t)); commit(); }); }
+function renderMain() {
+  const all = sorted(S.tasks), delayed = all.filter(t => status(t)==='delayed'), todo = all.filter(t => status(t)==='todo'), done = all.filter(t => t.done);
+  const total = S.tasks.length, open = total - done.length; if (!total) UI.editing = false;
+  let h = `<div class="hdr"><div class="logo">keepy<i></i></div>${S.settings.game?`<button class="gamebtn" data-act="game" title="미니게임">${I.stairs}</button>`:''}</div>
+    <div class="caption" style="margin-top:12px">${full(today())}</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:2px"><div class="large">모든 할 일</div><span class="badge"><span class="gt">${total}</span></span>${total?`<button class="editbtn ${UI.editing?'on':''}" data-act="edit">${UI.editing?'완료':'편집'}</button>`:''}</div>
+    ${total?`<div class="sum">${[['today','오늘 할 일',S.tasks.filter(t=>!t.done&&t.due&&sameDayAny(t.due,today())).length,'#2F7BFF'],['delayed','지연',delayed.length,'#FF9F2E'],['donetoday','오늘 완료',S.tasks.filter(t=>t.done&&t.completedAt&&sameDayAny(t.completedAt,today())).length,'#34C77B']].map(([k,l,n,c],i)=>`${i?'<span class="dv"></span>':''}<button data-act="sum" data-k="${k}"><small><i style="background:${c}"></i>${l}</small><b class="${n?'':'z'}" style="color:${c}">${n}</b></button>`).join('')}</div>`:''}
+    <div class="tabs">${[['all','전체',total],['open','미완료',open],['done','완료',done.length]].map(([f,l,n]) => `<button class="${UI.filter===f?'on':''}" data-act="filter" data-f="${f}">${UI.filter===f?`<span class="gt">${l} ${n}</span>`:`${l} ${n}`}<u></u></button>`).join('')}</div>
+    ${UI.editing?'<div class="foot" style="margin-top:10px">오른쪽 손잡이(≡)를 끌어 순서를 바꿔요</div>':''}`;
+  if (!total) h += emptyHTML('등록된 태스크가 없습니다', '기억하고 싶은 할 일이 있나요?<br>아래에서 첫 태스크를 추가해 보세요');
+  else {
+    const so = UI.filter !== 'done', sd = UI.filter !== 'open'; let body = '';
+    const list = (key, arr) => `<div class="seclist" data-sec="${key}">${arr.map(t => tileHTML(t, UI.editing)).join('')}</div>`;
+    if (so && delayed.length) body += sec('지연', delayed.length, '#FF9F2E') + list('delayed', delayed);
+    if (so && todo.length) body += sec('해야 할 일', todo.length) + list('todo', todo);
+    if (sd && done.length) { const col = UI.doneCollapsed && UI.filter !== 'done';
+      body += `<div class="sec"><span class="tg" ${UI.filter!=='done'?'data-act="donetoggle"':''}>완료한 일<span class="n">${done.length}</span>${UI.filter!=='done'?`<span class="dchev ${col?'c':''}"><svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5 6 7.5 9 4.5"/></svg></span>`:''}</span><button class="clr" data-act="cleardone">비우기</button></div>` + (col ? '' : list('done', done)); }
+    h += body || (UI.filter==='done' ? emptyHTML('아직 완료한 일이 없어요','체크박스를 누르면 여기로 옮겨져요') : emptyHTML('남은 할 일이 없어요','모두 끝냈어요!<br>새로운 할 일은 아래에서 추가해 보세요'));
+  }
+  document.getElementById('main').innerHTML = h;
+}
+
+const HEAT_L = ['#E3ECF7','#CDF1DD','#94DDB5','#45C283','#1F9A5E'], HEAT_D = ['#233041','#173B2C','#1E5E40','#2A8A58','#3FBF7A'];
+function renderDate() {
+  const td = today(), sel = selected();
+  const page = document.querySelector('[data-page="2"]'); const H = page.clientHeight || 640;
+  let first, rows, month;
+  if (UI.expanded) { month = UI.month ? fromKey(UI.month) : new Date(sel.getFullYear(), sel.getMonth(), 1);
+    first = startOfWeek(month); const last = new Date(month.getFullYear(), month.getMonth()+1, 0); rows = Math.floor(daysBetween(first, last)/7) + 1; }
+  else { rows = S.settings.rows; const wr = Math.min(S.settings.weekRow, rows); first = addDays(startOfWeek(td), 7 * (UI.weekOffset - (wr - 1))); month = sel; }
+  const collapsed = H * 0.25, fullH = Math.min(H * 0.62, 34 + 18 + 2 + 10 + rows * 44);
+  const calH = UI.expanded ? Math.max(collapsed, fullH) : collapsed; // CST-01: 접힘 = 1/4 고정
+  const cal = document.getElementById('cal'); cal.style.height = calH + 'px';
+  document.getElementById('datelist').style.top = calH + 'px';
+  const gridH = calH - 4 - 6 - 34 - 18 - 2; const rowH = Math.min(gridH / rows, 44);
+  let g = '';
+  for (let r = 0; r < rows; r++) { g += `<div class="row" style="height:${rowH}px">`;
+    for (let c = 0; c < 7; c++) { const d = addDays(first, r*7+c), s = statOn(d), lv = s.total ? Math.min(s.done, 4) : -1, isSel = sameDay(d, sel), isT = sameDay(d, td);
+      const cls = ['day', isSel?'sel':'', lv>=3?'dark':'', d.getMonth()!==month.getMonth()?'dim':'', isT?'today':''].join(' ');
+      const fs = Math.max(9, Math.min(14, rowH - 10));
+      g += `<div class="${cls}" data-act="day" data-k="${keyOf(d)}" style="${lv>=0&&!isSel?`background:${(isDark()?HEAT_D:HEAT_L)[lv]};`:''}font-size:${fs}px">${isT&&!isSel&&lv<3?`<span class="gt">${d.getDate()}</span>`:d.getDate()}${isT?'<u></u>':''}</div>`; }
+    g += '</div>'; }
+  cal.innerHTML = `<div class="calh"><div class="mt ${UI.expanded?'open':''}" data-act="month"><span class="title">${month.getFullYear()}년 ${month.getMonth()+1}월</span>${I.chevD}</div><button class="chev" data-act="week" data-d="-1">${I.chevL}</button><button class="chev" data-act="week" data-d="1">${I.chevR}</button></div>
+    <div class="wd">${WD.map(w => `<span>${w}</span>`).join('')}</div><div class="grid">${g}</div>`;
+
+  const tasks = sorted(S.tasks.filter(t => t.due === keyOf(sel))), st = statOn(sel), pct = st.total ? Math.round(st.done/st.total*100) : 0;
+  const lb = `<div class="lb"><b>완료율</b><span>${st.done} / ${st.total} 완료</span></div>`, pc = `<span class="pct gt">${pct}%</span>`;
+  let comp;
+  if (S.settings.style === 'ring') { const C = 2*Math.PI*19, off = C*(1-pct/100);
+    comp = `<svg width="44" height="44" viewBox="0 0 44 44"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4CC3FF"/><stop offset="1" stop-color="#2F7BFF"/></linearGradient></defs><circle cx="22" cy="22" r="19" fill="none" stroke="#EBF1F8" stroke-width="6"/><circle cx="22" cy="22" r="19" fill="none" stroke="url(#rg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 22 22)" style="transition:stroke-dashoffset .28s"/></svg>${lb}<span style="flex:1"></span>${pc}`; }
+  else if (S.settings.style === 'graph') { const ws = startOfWeek(sel), si = (sel.getDay()+6)%7;
+    comp = `${lb}<div class="wg">${WD.map((w,i) => { const s = statOn(addDays(ws,i)); const r = s.total ? s.done/s.total : 0; return `<div><i class="${i===si?'sel':s.total?'has':''}" style="height:${4+22*r}px"></i><span class="${i===si?'sel':''}">${w}</span></div>`; }).join('')}</div>${pc}`; }
+  else comp = `${lb}<div class="bar"><i style="width:${pct}%"></i></div>${pc}`;
+  const isT = sameDay(sel, td);
+  document.getElementById('date').innerHTML = `<div class="dh"><div><div class="caption">선택한 날짜</div><div style="display:flex;align-items:baseline;margin-top:2px"><span class="big">${md(sel)}</span><span class="wkd">${wk(sel)}요일</span></div></div>
+      ${isT ? '<span class="pill" style="margin-left:auto;margin-bottom:6px">오늘</span>' : `<button class="today-btn" data-act="today">${I.uturn}오늘</button>`}</div>
+    <div class="kcard comp">${comp}</div>
+    ${sec('태스크', tasks.length, '', `${st.done}개 완료`)}
+    ${tasks.length ? tasks.map(t => tileHTML(t, false)).join('') : emptyHTML('이 날짜에 할 일이 없어요','아래 입력창에 쓰면 이 날짜로 등록돼요<br>목록을 위·아래로 끌면 일정이 있는 날로 이동해요')}`;
+}
+
+function renderSettings() {
+  const s = S.settings, done = S.tasks.filter(t => t.done && t.completedAt).sort((a,b) => b.completedAt - a.completedAt);
+  const seg = (k, opts, lab = v => v) => `<div class="seg">${opts.map(o => `<button class="${s[k]===o?'on':''}" data-act="set" data-k="${k}" data-v="${o}">${lab(o)}</button>`).join('')}</div>`;
+  const row = (inner, cls='', act='') => `<div class="srow ${cls}" ${act}>${inner}</div>`;
+  const styleLab = { bar:'바', ring:'원형', graph:'그래프' };
+  const wr = Math.min(s.weekRow, s.rows), nowD = now();
+  const logTime = ms => { const d = new Date(ms), n = daysBetween(d, nowD), t = `${pad(d.getHours())}:${pad(d.getMinutes())}`; return n===0?`오늘 ${t}`:n===1?`어제 ${t}`:`${md(d)} ${t}`; };
+  document.getElementById('settings').innerHTML = `
+    <div class="hdr"><div class="logo" style="font-size:20px">keepy<i></i></div></div>
+    <div class="large" style="margin-top:10px">설정</div>
+    <div class="gtitle">계정</div>
+    <div class="group">${row(`<div class="avatar" style="width:40px;height:40px;flex:none;background:var(--skytint);color:var(--blue)"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4.1 3.6-7 8-7s8 2.9 8 7Z"/></svg></div><div>${esc(s.userName)}<span class="sub">로그인 전 · 이 기기에 저장 중</span></div><span class="chev2" style="margin-left:auto">›</span>`, 'tap', 'data-act="account"')}</div>
+    <div class="gtitle">화면</div>
+    <div class="group">${row(`<span style="color:var(--blue);display:flex">${isDark()?'<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>':'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>'}</span>화면 모드${seg('appearance',['system','light','dark'], v => ({system:'시스템',light:'라이트',dark:'다크'})[v])}`)}</div>
+    <div class="note">시스템을 고르면 휴대폰의 다크 모드 설정을 따라가요.</div>
+    <div class="gtitle">알림</div>
+    <div class="group">
+      ${row(`알림 설정<div class="sw ${s.notify?'on':''}" data-act="toggle" data-k="notify"></div>`)}
+      ${row(`미리 알림<span class="v">${s.remind===0?'당일':s.remind+'일 전'}</span><span class="chev2">›</span>`, 'tap ' + (s.notify?'':'off'), 'data-act="remind"')}
+      ${row(`알림 시간<span class="v">${timeLabel(s.remindMin)}</span><span class="chev2">›</span>`, 'tap ' + (s.notify?'':'off'), 'data-act="time"')}
+    </div>
+    <div class="gtitle">서비스 연동</div>
+    <div class="group">
+      ${row(`<div class="svc" style="background:rgba(47,123,255,.12);color:#2F7BFF">e</div>eclass<span class="v ${s.eclass?'gt':''}" style="${s.eclass?'font-weight:800':''}">${s.eclass?'연결됨':'연결하기'}</span><span class="chev2">›</span>`, 'tap', 'data-act="toggle" data-k="eclass"')}
+      ${row(`<div class="svc" style="background:rgba(255,77,94,.12);color:#FF4D5E">E</div>에브리타임 시간표<span class="v ${s.everytime?'gt':''}" style="${s.everytime?'font-weight:800':''}">${s.everytime?'연결됨':'연결하기'}</span><span class="chev2">›</span>`, 'tap', 'data-act="toggle" data-k="everytime"')}
+    </div>
+    <div class="note">실제 일정 가져오기는 다음 단계에서 연결됩니다. 지금은 연결 상태만 저장돼요.</div>
+    <div class="gtitle">날짜 화면</div>
+    <div class="group">
+      ${row(`달력 행 수${seg('rows',[1,2,3,4])}`)}
+      ${row(`이번 주 행 순서<div class="seg">${Array.from({length:s.rows},(_,i)=>i+1).map(o => `<button class="${wr===o?'on':''}" data-act="set" data-k="weekRow" data-v="${o}">${o}</button>`).join('')}</div>`, s.rows>1?'':'off')}
+      ${row(`금일 완료율 형태${seg('style',['bar','ring','graph'], v => styleLab[v])}`)}
+    </div>
+    <div class="note">이번 주를 ${wr}번째 행에 표시합니다. 금일 완료율은 ${styleLab[s.style]} 형태로 표시합니다. 날짜 화면에서 '년 월' 제목을 누르면 한 달 전체가 펼쳐져요.</div>
+    <div class="gtitle">할 일 분류</div>
+    <div class="group">${row(`기한 없는 할 일 지연 기준<div class="stepper"><button data-act="delay" data-d="-1" ${s.delayDays<=1?'disabled':''}>−</button><b>${s.delayDays}일</b><button data-act="delay" data-d="1" ${s.delayDays>=14?'disabled':''}>+</button></div>`)}</div>
+    <div class="note">기한이 지나거나, 기한 없이 만든 뒤 위 기간이 지나면 '지연'으로 분류돼요. 지연된 일을 끝내면 '늦은 완료'로 남아요.</div>
+    <div class="gtitle">태그<span>${s.tags.length}개</span></div>
+    <div class="group">${row(`<span style="color:#2F7BFF;display:flex">${I.gear}</span>태그 관리<span class="v">${esc(s.tags.slice(0,3).map(t=>'#'+t).join(' '))}${s.tags.length>3?' …':''}</span><span class="chev2">›</span>`, 'tap', 'data-act="tagmgr"')}</div>
+    <div class="gtitle">미니게임</div>
+    <div class="group">
+      ${row(`<span style="display:flex;flex:none">${I.stairs}</span><div style="flex:1">계단 오르기<span class="sub">이번 달 완료한 만큼 내 캐릭터가 계단을 올라요</span></div><div class="sw ${s.game?'on':''}" data-act="toggle" data-k="game"></div>`)}
+      ${s.game ? row(`지금 해 보기<span class="v">${({boy:'남자',girl:'여자',photo:'내 사진'})[charStyle()]} · 펫 ${({none:'없음',dog:'강아지',cat:'고양이',rabbit:'토끼'})[s.pet]}</span><span class="chev2">›</span>`, 'tap', 'data-act="game"') : ''}
+    </div>
+    <div class="note">켜면 메인 화면 오른쪽 위에 바로가기 아이콘이 생겨요. 끄면 아이콘도 사라져요.</div>
+    <div class="gtitle">완료 기록<span>총 ${S.tasks.filter(t=>t.done).length}개</span></div>
+    ${done.length ? `<div class="group">${done.slice(0,8).map(t => `<div class="logrow"><span class="ck ${t.completedLate?'late':''}"><span style="width:15px;height:15px;display:block">${I.check}</span></span><span class="t">${esc(t.title)}</span>${t.completedLate?pill('늦은 완료','orange'):''}<span class="foot">${logTime(t.completedAt)}</span></div>`).join('')}</div>` : `<div class="group" style="padding:22px;text-align:center"><span class="caption">아직 완료한 할 일이 없어요</span></div>`}
+    <div class="gtitle">데이터</div>
+    <div class="group">${row('샘플 할 일 넣기<span class="v">시연용</span><span class="chev2">›</span>','tap','data-act="samples"')}${row('모든 할 일 지우기','tap red','data-act="clear"')}</div>
+    <div class="note">할 일은 이 기기(브라우저)에 저장되어 다시 열어도 그대로 남아요.</div>
+    <div class="foot" style="text-align:center;margin:20px 0 10px">Keepy 0.5.0 · 웹 미리보기</div>`;
+}
+
+function renderChrome() {
+  const tb = document.getElementById('tabbar');
+  const defs = '<defs><linearGradient id="gt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4CC3FF"/><stop offset="1" stop-color="#2F7BFF"/></linearGradient></defs>';
+  tb.innerHTML = [['설정',I.sliders],['메인',I.grid],['날짜',I.cal]].map(([l, ic], i) => `<button class="${UI.page===i?'on':''}" data-act="tab" data-i="${i}">${UI.page===i?ic.replace(/stroke="currentColor"/g,'stroke="url(#gt)"').replace('</svg>', defs + '</svg>'):ic}<span class="${UI.page===i?'gt':''}">${l}</span></button>`).join('');
+  const chips = document.getElementById('chips'); chips.style.display = UI.focused ? 'flex' : 'none';
+  UI.inputTags = UI.inputTags.filter(t => S.settings.tags.includes(t));
+  const len = norm(input.value).length;
+  chips.innerHTML = S.settings.tags.map(t => `<button class="chip ${UI.inputTags.includes(t)?'on':''}" data-act="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('') + `<span class="cnt" style="${len>90?'color:#FF9F2E':''}">${len}/100</span>`;
+  document.getElementById('inputwrap').style.height = UI.page === 0 ? '0px' : (UI.focused ? 106 : 62) + 'px';
+  input.placeholder = UI.page === 2 ? `${md(selected())}에 할 일 추가` : '새로운 태스크를 입력하세요';
+  document.getElementById('send').classList.toggle('on', valid(input.value));
+}
+
+const scrollers = [];
+function applyTheme() { document.getElementById('phone').classList.toggle('dark', isDark()); }
+function render() { applyTheme(); renderMain(); renderDate(); renderSettings(); renderChrome(); scrollers.forEach(s => s.refresh()); if (gameOpen) drawGameStatic(); }
+
+// ------------------------------------------------------------------ iOS식 스크롤
+class Scroller {
+  constructor(el, opts = {}) { this.el = el; this.c = el.firstElementChild; this.y = 0; this.raf = 0; this.opts = opts; this.drag = false;
+    el.addEventListener('wheel', e => { e.preventDefault(); this.stop(); this.y = this.clamp(this.y + e.deltaY); this.apply(); }, { passive:false }); }
+  get max() { return Math.max(0, this.c.scrollHeight - this.el.clientHeight); }
+  clamp(y) { return Math.max(0, Math.min(this.max, y)); }
+  stop() { cancelAnimationFrame(this.raf); this.raf = 0; }
+  refresh() { if (!this.drag && !this.raf) this.y = this.clamp(this.y); this.apply(); }
+  apply() { this.c.style.transform = `translate3d(0,${-this.y}px,0)`; this.opts.onScroll && this.opts.onScroll(this); fadeEdge(this); }
+  over() { return this.y < 0 ? this.y : this.y > this.max ? this.y - this.max : 0; }
+  start() { this.stop(); this.drag = true; this.samples = []; }
+  move(dy) { const o = this.over(); this.y -= (o !== 0 ? dy * 0.4 : dy); this.samples.push([performance.now(), this.y]); if (this.samples.length > 6) this.samples.shift(); this.apply(); }
+  end() { this.drag = false; const o = this.over(); if (this.opts.onRelease && this.opts.onRelease(o)) { this.springBack(); return; }
+    let v = 0; if (this.samples.length > 1) { const a = this.samples[0], b = this.samples[this.samples.length-1]; if (performance.now() - b[0] < 80 && b[0] > a[0]) v = (b[1]-a[1])/(b[0]-a[0]); }
+    if (o !== 0) { this.springBack(); return; } this.momentum(v); }
+  momentum(v) { let last = performance.now(); const step = t => { const dt = Math.min(32, t - last); last = t; v *= Math.pow(0.9975, dt); this.y += v*dt;
+      if (this.y < 0 || this.y > this.max) { this.y = this.y < 0 ? Math.max(this.y, -40) : Math.min(this.y, this.max + 40); v *= 0.5; if (Math.abs(v) < 0.3) { this.springBack(); return; } }
+      this.apply(); if (Math.abs(v) > 0.02) this.raf = requestAnimationFrame(step); else { this.raf = 0; if (this.over()) this.springBack(); } };
+    this.raf = requestAnimationFrame(step); }
+  springBack() { const from = this.y, to = this.clamp(this.y), t0 = performance.now(); const step = t => { const p = Math.min(1, (t - t0)/320), e = 1 - Math.pow(1-p, 3); this.y = from + (to-from)*e; this.apply(); if (p < 1) this.raf = requestAnimationFrame(step); else this.raf = 0; }; this.raf = requestAnimationFrame(step); }
+}
+function fadeEdge(sc) {
+  const zone = 72, vh = sc.el.clientHeight;
+  sc.c.querySelectorAll('.tile').forEach(t => { if (t.classList.contains('lifted')) return; const top = t.offsetTop - sc.y, h = t.offsetHeight, center = top + h/2;
+    const k = Math.max(0, Math.min(1, (center - (vh - zone)) / zone));
+    t.style.opacity = k ? Math.max(0, 1 - k*1.1) : ''; t.style.scale = k ? String(1 - 0.14*k) : ''; t.style.filter = k ? `blur(${4*k}px)` : '';
+    t.classList.toggle('faded', k > 0.35);
+    if (UI.open === t.dataset.id && !sc.drag) { const vis = Math.max(0, Math.min(top+h, vh) - Math.max(top, 0)) / h; if (vis < 0.5) closeTile(t); }
+  });
+}
+
+// ------------------------------------------------------------------ 할 일 블럭 스와이프
+const BW = 100, DW = 86, GAP = 8, SNAP = 0.42, FIRST = 46, SPACING = 58;
+const stopFor = d => d < FIRST ? -1 : Math.min(DATE_STOPS.length - 1, Math.floor((d - FIRST) / SPACING));
+function visualFor(raw, W) {
+  if (raw < 0) { const d = -raw, s = stopFor(d); if (s < 0) return -d*0.5; const last = FIRST + SPACING*DATE_STOPS.length; return -(BW + s*10 + (d > last ? (d-last)*0.08 : 0)); }
+  const d = raw; if (d < DW*SNAP) return d*0.55; if (d < W*0.55) return DW + (d - DW)*0.08; return d*0.92;
+}
+const zoneFor = (raw, W) => raw <= 0 ? 0 : raw < DW*SNAP ? 1 : raw < W*0.55 ? 2 : 3;
+function setOffset(tile, off) {
+  const card = tile.querySelector('.card'), r = off < 0 ? -off : 0, l = off > 0 ? off : 0, W = tile.offsetWidth || 360, lc = Math.min(l, W*0.45);
+  card.style.marginRight = Math.min(r, W*0.45) + 'px'; card.style.marginLeft = lc + 'px'; card.style.transform = l > lc ? `translateX(${l - lc}px)` : '';
+  tile.querySelector('.area.r').style.width = Math.max(0, r - GAP) + 'px'; tile.querySelector('.area.l').style.width = Math.max(0, l - GAP) + 'px';
+  tile.querySelector('.area.r .in').style.opacity = Math.min(1, r/BW);
+  const lin = tile.querySelector('.area.l .in'); const lp = Math.min(1, l/DW); lin.style.opacity = lp; lin.style.transform = `scale(${0.7+0.3*lp})`;
+  tile.classList.toggle('lift', off !== 0); tile._off = off;
+}
+function updateBadge(tile, stop) {
+  const b = tile.querySelector('.dbadge'), days = DATE_STOPS[Math.max(0, stop)], d = addDays(today(), days);
+  b.classList.toggle('on', stop >= 0); b.querySelector('b').textContent = '+' + days; b.querySelector('span').textContent = `${md(d)} (${wk(d)})`;
+  b.querySelector('b').style.transform = 'scale(1.15)'; setTimeout(() => b.querySelector('b').style.transform = '', 110);
+}
+function openDelete(tile) { document.querySelectorAll('.tile').forEach(o => { if (o !== tile && o._off) closeTile(o); }); UI.open = tile.dataset.id; tile.classList.remove('drag'); setOffset(tile, DW); }
+function closeTile(tile) { tile.classList.remove('drag','snap'); setOffset(tile, 0); if (UI.open === tile.dataset.id) UI.open = null; }
+function closeAll() { document.querySelectorAll('.tile').forEach(t => { if (t._off) closeTile(t); }); UI.open = null; }
+function deleteNow(tile) { buzz(12); tile.classList.remove('drag'); const W = tile.offsetWidth; tile.querySelector('.card').style.transition = 'margin .16s ease-in, transform .16s ease-in'; setOffset(tile, W + 40); setTimeout(() => removeTask(tile.dataset.id), 170); }
+
+// ------------------------------------------------------------------ 제스처 관리
+const phone = document.getElementById('phone'), pagesEl = document.getElementById('pages'), viewport = document.getElementById('viewport');
+const input = document.getElementById('input'), field = document.getElementById('field');
+let G = null, suppressClick = false;
+const pageX = () => -UI.page * viewport.clientWidth;
+function setPagesX(x, anim) { pagesEl.style.transition = anim ? 'transform .28s cubic-bezier(.22,1,.36,1)' : 'none'; pagesEl.style.transform = `translate3d(${x}px,0,0)`; }
+function goPage(i, haptic = true) { i = Math.max(0, Math.min(2, i)); const changed = i !== UI.page; UI.page = i; setPagesX(pageX(), true); if (changed) { if (haptic) buzz(); closeAll(); blurInput(); hideToast(); render(); } }
+const overlayOpen = () => ['sheet','sheet2','action','dialog'].some(id => document.getElementById(id).classList.contains('show')) || capture.classList.contains('show') || gameOpen;
+
+phone.addEventListener('pointerdown', e => {
+  if (pointerInToast) pointerInToast = false; else if (toastEl.classList.contains('show')) hideToast();
+  if (overlayOpen()) return;
+  const page = e.target.closest('.page'), scTarget = e.target.closest('.scroller');
+  const sc = page && scTarget ? scrollers[+page.dataset.page] : null;
+  const handle = e.target.closest('.handle');
+  if (handle) { startReorder(e, handle.closest('.tile'), sc); return; }
+  const tile = e.target.closest('.tile:not(.faded):not(.editing)');
+  G = { id:e.pointerId, x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY, axis:null, sc, tile: (tile && scTarget) ? tile : null, inBar: !!e.target.closest('#inputwrap') && !UI.focused, samples:[] };
+});
+window.addEventListener('pointermove', e => {
+  if (!G || e.pointerId !== G.id) return;
+  const dx = e.clientX - G.x, dy = e.clientY - G.y; G.x = e.clientX; G.y = e.clientY;
+  const tx = e.clientX - G.x0, ty = e.clientY - G.y0;
+  if (G.mode === 'reorder') { moveReorder(e); return; }
+  if (!G.axis) { if (Math.abs(tx) < 8 && Math.abs(ty) < 8) return;
+    G.axis = Math.abs(tx) > Math.abs(ty) ? 'x' : 'y';
+    if (G.axis === 'y') { if (G.sc) { G.mode = 'scroll'; G.sc.start(); } else G.mode = 'none'; }
+    else if (G.tile && UI.page !== 0) { G.mode = 'tile'; const t = G.tile; G.raw = UI.open === t.dataset.id ? DW : 0; G.stop = -1; G.zone = zoneFor(G.raw, t.offsetWidth); t.classList.add('drag');
+      document.querySelectorAll('.tile').forEach(x => { if (x !== t && x._off) closeTile(x); }); }
+    else if (G.inBar) G.mode = 'bar';
+    else { G.mode = 'page'; closeAll(); }
+  }
+  if (G.mode === 'scroll') G.sc.move(dy);
+  else if (G.mode === 'page') { const W = viewport.clientWidth; let x = pageX() + tx; const minX = -2*W; if (x > 0) x *= 0.35; if (x < minX) x = minX + (x-minX)*0.35; setPagesX(x, false); G.samples.push([performance.now(), tx]); if (G.samples.length > 5) G.samples.shift(); }
+  else if (G.mode === 'tile') {
+    const t = G.tile;
+    if (ty > 28) { // 누른 채 아래로 당기면 무효
+      G.mode = 'cancelled'; buzz(8); t.classList.remove('drag'); if (UI.open === t.dataset.id) openDelete(t); else closeTile(t); return; }
+    const W = t.offsetWidth; G.raw += dx; if (UI.open === t.dataset.id && G.raw < 0) G.raw = 0;
+    const s = G.raw < 0 ? stopFor(-G.raw) : -1, z = zoneFor(G.raw, W);
+    if (s !== G.stop || z !== G.zone) {
+      if (s >= 0 && s !== G.stop) buzz(5); if (z === 2 && G.zone !== 2) buzz(5); if (z === 3 && G.zone !== 3) buzz(15);
+      G.stop = s; G.zone = z; updateBadge(t, s);
+      t.classList.add('snap'); t.classList.remove('drag'); setTimeout(() => { t.classList.remove('snap'); if (G && G.tile === t) t.classList.add('drag'); }, 110);
+      const dl = t.querySelector('.dl'); if (dl) dl.textContent = z === 3 ? '놓으면 삭제' : '삭제';
+    }
+    setOffset(t, visualFor(G.raw, W));
+  }
+});
+function endGesture(e) {
+  if (!G || (e && e.pointerId !== G.id)) return; const g = G; G = null;
+  if (g.mode === 'reorder') { endReorder(g); }
+  else if (g.mode === 'scroll') g.sc.end();
+  else if (g.mode === 'page') { const W = viewport.clientWidth, tx = g.x - g.x0; let v = 0; if (g.samples.length > 1) { const a = g.samples[0], b = g.samples[g.samples.length-1]; v = (b[1]-a[1]) / Math.max(1, b[0]-a[0]); }
+    let i = UI.page; if (tx < -W/3 || v < -0.5) i++; else if (tx > W/3 || v > 0.5) i--; goPage(i); }
+  else if (g.mode === 'bar') { const tx = g.x - g.x0; if (tx < -40) goPage(UI.page + 1); else if (tx > 40) goPage(UI.page - 1); }
+  else if (g.mode === 'tile') { const t = g.tile, W = t.offsetWidth; t.classList.remove('drag');
+    if (g.raw < 0) { const id = t.dataset.id; closeTile(t); if (g.stop >= 0) { buzz(10); setDue(id, addDays(today(), DATE_STOPS[g.stop])); } }
+    else if (g.raw > 0) { if (g.raw >= W*0.55) deleteNow(t); else if (g.raw >= DW*SNAP) openDelete(t); else closeTile(t); }
+    else closeTile(t); }
+  if (g.axis || g.mode === 'reorder') { suppressClick = true; setTimeout(() => suppressClick = false, 0); }
+}
+window.addEventListener('pointerup', endGesture); window.addEventListener('pointercancel', endGesture);
+
+// 편집 모드: 손잡이로 끌어 순서 바꾸기 (앱: SliverReorderableList)
+function startReorder(e, tile, sc) {
+  const list = tile.parentElement; const tiles = [...list.querySelectorAll('.tile')];
+  const rects = tiles.map(t => ({ t, top: t.offsetTop, h: t.offsetHeight + 10 }));
+  tile.classList.add('lifted'); buzz(8);
+  G = { id:e.pointerId, x0:e.clientX, y0:e.clientY, x:e.clientX, y:e.clientY, mode:'reorder', axis:'y', tile, tiles, rects, from: tiles.indexOf(tile), to: tiles.indexOf(tile), sc };
+}
+function moveReorder(e) {
+  const g = G, dy = e.clientY - g.y0, me = g.rects[g.from], center = me.top + me.h/2 + dy;
+  g.tile.style.translate = `0 ${dy}px`;
+  let to = 0; g.rects.forEach((r, i) => { if (i !== g.from && center > r.top + r.h/2) to++; });
+  if (to !== g.to) { buzz(4); g.to = to; }
+  g.rects.forEach((r, i) => { if (i === g.from) return; let shift = 0; if (g.from < g.to && i > g.from && i <= g.to) shift = -me.h; if (g.from > g.to && i >= g.to && i < g.from) shift = me.h;
+    r.t.style.transition = 'translate .2s cubic-bezier(.22,1,.36,1)'; r.t.style.translate = `0 ${shift}px`; });
+}
+function endReorder(g) { g.tiles.forEach(t => { t.style.translate = ''; t.style.transition = ''; }); g.tile.classList.remove('lifted');
+  if (g.to !== g.from) { reorder(g.tiles.map(t => t.dataset.id), g.from, g.to); } }
+
+// ------------------------------------------------------------------ 탭(클릭) 동작
+phone.addEventListener('click', e => {
+  if (suppressClick) { e.stopPropagation(); e.preventDefault(); return; }
+  const el = e.target.closest('[data-act]'); const tile = e.target.closest('.tile');
+  if (!el && tile && !tile.classList.contains('editing') && tile.querySelector('.card').contains(e.target)) { if (UI.open === tile.dataset.id) closeTile(tile); else openEditor(tile.dataset.id); return; }
+  if (!el && tile && e.target.closest('.area.l') && UI.open === tile.dataset.id) { deleteNow(tile); return; } // 열린 삭제 버튼 누르기
+  if (!el) { if (UI.open && !e.target.closest('.area')) closeAll(); return; }
+  const act = el.dataset.act;
+  switch (act) {
+    case 'check': { if (UI.open === tile.dataset.id) { closeTile(tile); return; } const t = byId(tile.dataset.id); if (!t) return;
+      if (t.done) { toggle(t.id); return; } buzz(8); tile.classList.add('checked'); setTimeout(() => toggle(t.id), 240); return; }
+    case 'filter': buzz(4); UI.filter = el.dataset.f; render(); return;
+    case 'sum': buzz(4); { const k = el.dataset.k; if (k === 'today') { selectDate(today()); goPage(2); } else { UI.filter = k === 'delayed' ? 'open' : 'done'; if (k !== 'delayed') UI.doneCollapsed = false; render(); } } return;
+    case 'donetoggle': buzz(4); UI.doneCollapsed = !UI.doneCollapsed; render(); return;
+    case 'cleardone': { const n = S.tasks.filter(t => t.done).length; dialogBox({ title: `완료한 일 ${n}개를 지울까요?`, message: "지운 직후 알림에서 '취소'로 되돌릴 수 있어요.", okLabel: '비우기', red: true, onOk: () => clearDone() }); } return;
+    case 'edit': buzz(6); UI.editing = !UI.editing; closeAll(); render(); return;
+    case 'game': openGame(); return;
+    case 'tab': goPage(+el.dataset.i); return;
+    case 'day': buzz(4); selectDate(fromKey(el.dataset.k)); return;
+    case 'month': { buzz(6); UI.expanded = !UI.expanded; const sd = selected(); UI.month = keyOf(new Date(sd.getFullYear(), sd.getMonth(), 1)); render(); return; }
+    case 'week': { const d = +el.dataset.d; if (UI.expanded) { const m = fromKey(UI.month); UI.month = keyOf(new Date(m.getFullYear(), m.getMonth() + d, 1)); } else UI.weekOffset += d; render(); return; }
+    case 'today': buzz(4); selectDate(today()); return;
+    case 'chip': { const g = el.dataset.t, i = UI.inputTags.indexOf(g); if (i >= 0) UI.inputTags.splice(i,1); else UI.inputTags.push(g); buzz(4); renderChrome(); input.focus(); return; }
+    case 'set': { const k = el.dataset.k; let v = el.dataset.v; if (k !== 'style' && k !== 'appearance') v = +v; S.settings[k] = v; if (k === 'rows') S.settings.weekRow = Math.min(S.settings.weekRow, v); buzz(4); commit(); return; }
+    case 'toggle': S.settings[el.dataset.k] = !S.settings[el.dataset.k]; buzz(4); commit(); return;
+    case 'delay': S.settings.delayDays = Math.max(1, Math.min(14, S.settings.delayDays + +el.dataset.d)); commit(); return;
+    case 'tagmgr': openTagManager(); return;
+    case 'samples': addSamples(); commit(); toast('샘플 할 일을 넣었어요'); return;
+    case 'clear': actionSheet('모든 할 일을 지울까요? 되돌릴 수 없어요.', [['지우기','red', () => { S.tasks = []; UI.open = null; commit(); }]]); return;
+    case 'account': actionSheet('로그인·여러 기기 동기화는 BaaS 연동 단계에서 지원됩니다. 지금은 이 기기에만 저장돼요.', [['로그아웃','red', () => toast('로그인 기능은 아직 준비 중이에요')]]); return;
+    case 'remind': actionSheet('미리 알림', [0,1,2,3].map(d => [d===0?'당일':d+'일 전', S.settings.remind===d?'b':'', () => { S.settings.remind = d; commit(); }])); return;
+    case 'time': { const cur = `${pad(Math.floor(S.settings.remindMin/60))}:${pad(S.settings.remindMin%60)}`;
+      openSheet(`<div class="title">알림 시간</div><input type="time" id="tmIn" class="tin" value="${cur}" step="300" style="margin:14px 0 18px"><button class="btn" id="tmOk">완료</button>`);
+      document.getElementById('tmOk').onclick = () => { const v = document.getElementById('tmIn').value; if (/^\d{2}:\d{2}$/.test(v)) { const [h, m] = v.split(':').map(Number); S.settings.remindMin = h*60+m; } closeSheet(); commit(); }; return; }
+  }
+});
+function selectDate(d) { const prev = selected(); UI.selected = keyOf(d); if (UI.expanded) UI.month = keyOf(new Date(d.getFullYear(), d.getMonth(), 1)); else ensureVisible(d); closeAll(); render(); scrollers[2].y = 0; scrollers[2].apply(); }
+function ensureVisible(d) { const rows = S.settings.rows, wr = Math.min(S.settings.weekRow, rows); const first = addDays(startOfWeek(today()), 7*(UI.weekOffset - (wr-1))); const diff = Math.round(daysBetween(first, startOfWeek(d))/7); if (diff < 0) UI.weekOffset += diff; else if (diff >= rows) UI.weekOffset += diff - rows + 1; }
+
+// ------------------------------------------------------------------ 입력 바
+function focusInput() { if (UI.page === 0) return; UI.focused = true; field.classList.add('focus'); renderChrome(); input.focus(); }
+function blurInput() { UI.focused = false; field.classList.remove('focus'); if (!norm(input.value)) UI.inputTags = []; input.blur(); renderChrome(); }
+field.addEventListener('click', e => { if (e.target.closest('#send')) return; if (!UI.focused) focusInput(); });
+input.addEventListener('input', () => renderChrome());
+input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+document.addEventListener('pointerdown', e => { if (UI.focused && !e.target.closest('#inputwrap')) blurInput(); }, true);
+document.getElementById('send').innerHTML = I.arrowUp;
+document.getElementById('send').addEventListener('click', e => { e.stopPropagation(); submit(); });
+function submit() {
+  if (!valid(input.value)) { field.classList.remove('shake'); void field.offsetWidth; field.classList.add('shake'); buzz(20); toast(norm(input.value).length ? '100자 이하로 입력해 주세요' : '할 일을 한 글자 이상 입력해 주세요'); return; }
+  addTask(input.value, UI.page === 2 ? selected() : null, UI.inputTags); input.value = ''; UI.inputTags = []; renderChrome(); if (UI.focused) input.focus();
+}
+document.getElementById('cam').innerHTML = I.camera;
+document.getElementById('cam').addEventListener('click', openCapture);
+
+// ------------------------------------------------------------------ 시트·대화상자
+const action = document.getElementById('action');
+const layer = n => ({ scrim: document.getElementById(n === 2 ? 'scrim2' : 'scrim'), sheet: document.getElementById(n === 2 ? 'sheet2' : 'sheet') });
+function openSheet(html, n = 1) { const L = layer(n); L.sheet.innerHTML = '<div class="grab"></div>' + html; L.scrim.classList.add('show'); L.sheet.classList.add('show'); }
+function closeSheet(n = 1) { const L = layer(n); L.scrim.classList.remove('show'); L.sheet.classList.remove('show'); if (n === 1) action.classList.remove('show'); if (L.sheet.onclose) { const f = L.sheet.onclose; L.sheet.onclose = null; f(); } }
+document.getElementById('scrim').addEventListener('click', () => { closeSheet(1); });
+document.getElementById('scrim2').addEventListener('click', () => closeSheet(2));
+function actionSheet(msg, items) {
+  action.innerHTML = `<div class="g"><div>${esc(msg)}</div>${items.map((it, i) => `<button class="${it[1]}" data-i="${i}">${esc(it[0])}</button>`).join('')}</div><div class="g"><button class="b" data-i="-1">취소</button></div>`;
+  document.getElementById('scrim').classList.add('show'); action.classList.add('show');
+  action.onclick = e => { const b = e.target.closest('button'); if (!b) return; const i = +b.dataset.i; action.classList.remove('show'); if (!document.getElementById('sheet').classList.contains('show')) document.getElementById('scrim').classList.remove('show'); if (i >= 0) items[i][2](); };
+}
+const dialog = document.getElementById('dialog');
+function dialogBox({ title, message = '', inputValue = null, okLabel = '저장', red = false, validate = null, onOk }) {
+  dialog.innerHTML = `<div class="box"><h4>${esc(title)}</h4>${message?`<p>${esc(message)}</p>`:''}${inputValue!==null?`<input id="dlgIn" maxlength="12" placeholder="예: 동아리" value="${esc(inputValue)}"><div class="err" id="dlgErr"></div>`:''}<div class="acts"><button id="dlgNo">취소</button><button id="dlgOk" class="${red?'red':''}">${esc(okLabel)}</button></div></div>`;
+  dialog.classList.add('show'); const inp = document.getElementById('dlgIn'); if (inp) { inp.focus(); inp.select(); }
+  const close = () => dialog.classList.remove('show');
+  document.getElementById('dlgNo').onclick = close;
+  document.getElementById('dlgOk').onclick = () => { const v = inp ? tagNorm(inp.value) : null; const err = validate ? validate(v) : null; if (err) { document.getElementById('dlgErr').textContent = err; return; } close(); onOk(v); };
+  if (inp) inp.onkeydown = e => { if (e.key === 'Enter') document.getElementById('dlgOk').click(); };
+}
+const tagError = (v, except) => !v ? '태그 이름을 입력해 주세요' : v.length > 12 ? '12자 이하로 입력해 주세요' : S.settings.tags.some(t => t === v && t !== except) ? '이미 있는 태그예요' : null;
+
+// 태그 관리 (앱: tag_manager_sheet.dart)
+function openTagManager(onChange) {
+  const draw = () => {
+    const tags = S.settings.tags, cnt = g => S.tasks.filter(t => t.tags.includes(g)).length;
+    openSheet(`<div style="display:flex;align-items:center;gap:8px;color:#2F7BFF">${I.gear}<span class="title" style="color:var(--label)">태그 관리</span></div>
+      <div class="caption" style="margin:4px 0 14px">≡ 를 끌어 순서를 바꾸고, 이름을 누르면 바꿀 수 있어요. 바꾸거나 지우면 할 일에도 반영돼요.</div>
+      <div class="group" style="overflow:visible">${tags.map((g, i) => `<div class="tagline"><span class="th" data-h="${i}">≡</span><div class="nm" data-i="${i}">#${esc(g)}<small>${cnt(g)}개 ✎</small></div><button class="rm" data-rm="${i}" aria-label="삭제"><i></i></button></div>`).join('') || '<div style="padding:20px" class="caption">태그가 없어요</div>'}</div>
+      <div style="height:14px"></div><button class="btn" id="tagAdd" ${tags.length>=12?'disabled':''}>${tags.length>=12?'태그는 12개까지 만들 수 있어요':'+ 새 태그 추가'}</button>`, 2);
+    const sh = document.getElementById('sheet2');
+    // ≡ 손잡이로 끌어 태그 순서 바꾸기 (v0.4, 앱: ReorderableListView)
+    sh.querySelectorAll('.th').forEach(h => h.onpointerdown = e => {
+      e.preventDefault(); const line = h.closest('.tagline'), lines = [...sh.querySelectorAll('.tagline')], from = lines.indexOf(line), y0 = e.clientY, H = line.offsetHeight; let to = from;
+      line.classList.add('lifted'); buzz(6);
+      const mv = ev => { const dy = ev.clientY - y0; line.style.translate = `0 ${dy}px`; const nt = Math.max(0, Math.min(lines.length - 1, from + Math.round(dy / H))); if (nt !== to) { to = nt; buzz(4); }
+        lines.forEach((l, i) => { if (i === from) return; let d = 0; if (from < to && i > from && i <= to) d = -H; if (from > to && i >= to && i < from) d = H; l.style.transition = 'translate .2s'; l.style.translate = `0 ${d}px`; }); };
+      const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
+        if (to !== from) { const arr = S.settings.tags; const [x] = arr.splice(from, 1); arr.splice(to, 0, x); commit(); onChange && onChange('order'); } draw(); };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); });
+    sh.querySelectorAll('.nm').forEach(n => n.onclick = () => { const old = tags[+n.dataset.i];
+      dialogBox({ title:'태그 이름 바꾸기', inputValue: old, validate: v => tagError(v, old), onOk: v => { if (v !== old) { renameTag(old, v); onChange && onChange('rename', old, v); } draw(); } }); });
+    sh.querySelectorAll('.rm').forEach(b => b.onclick = () => { const g = tags[+b.dataset.rm], n = cnt(g);
+      dialogBox({ title:`#${g} 태그를 지울까요?`, message: n ? `할 일 ${n}개에서 이 태그가 떨어져요. 할 일은 그대로 남아요.` : '이 태그를 단 할 일은 없어요.', okLabel:'삭제', red:true, onOk: () => { deleteTag(g); onChange && onChange('delete', g); draw(); } }); });
+    document.getElementById('tagAdd').onclick = () => dialogBox({ title:'새 태그', inputValue:'', validate: v => tagError(v), onOk: v => { S.settings.tags.push(v); commit(); draw(); } });
+  };
+  draw();
+}
+
+function openEditor(id) {
+  const t = byId(id); if (!t) return; closeAll(); blurInput();
+  let tags = [...t.tags];
+  openSheet(`<div style="display:flex;align-items:center;margin-bottom:12px"><div class="title">할 일 수정</div><button id="edDel" style="margin-left:auto;border:0;background:none;cursor:pointer;width:34px;height:34px"><span style="display:block;width:20px;height:20px;margin:auto;background:#FF4D5E;-webkit-mask:url('data:image/svg+xml;utf8,${encodeURIComponent(I.trash)}') center/contain no-repeat;mask:url('data:image/svg+xml;utf8,${encodeURIComponent(I.trash)}') center/contain no-repeat"></span></button></div>
+    <input class="tin" id="edTitle" maxlength="100" value="${esc(t.title)}">
+    <div class="foot" style="display:flex;padding:6px 6px 0"><span id="edErr" style="color:#FF4D5E;flex:1"></span><span id="edCnt"></span></div>
+    <div style="display:flex;align-items:center;margin:10px 0 6px"><span class="caption">태그</span><button class="gear" id="edGear" title="태그 관리">${I.gear}</button></div><div class="tagrow" id="edTags"></div>
+    <div class="kcard" style="margin-top:16px;overflow:hidden"><div id="edDueRow" style="display:flex;align-items:center;gap:10px;padding:13px 16px;font-size:14px;cursor:pointer"><span style="width:20px;height:20px;color:#2F7BFF;display:block">${I.cal}</span>기한<span id="edDueLabel" style="margin-left:auto;color:var(--label2);font-size:13px"></span></div><div id="edPicker" style="display:none"></div></div>
+    <div style="height:18px"></div><button class="btn" id="edSave">저장</button>`);
+  const ti = document.getElementById('edTitle'), err = document.getElementById('edErr'), cnt = document.getElementById('edCnt'), saveB = document.getElementById('edSave');
+  const upd = () => { const n = norm(ti.value).length; cnt.textContent = `${n}/100`; err.textContent = n ? '' : '할 일을 한 글자 이상 입력해 주세요'; saveB.disabled = !valid(ti.value); };
+  const drawTags = () => { document.getElementById('edTags').innerHTML = S.settings.tags.map(g => `<button class="chip ${tags.includes(g)?'on':''}" data-t="${esc(g)}">#${esc(g)}</button>`).join(''); };
+  drawTags(); upd(); ti.addEventListener('input', upd);
+  document.getElementById('edTags').onclick = e => { const b = e.target.closest('button'); if (!b) return; const g = b.dataset.t; tags = tags.includes(g) ? tags.filter(x => x!==g) : [...tags, g]; buzz(4); drawTags(); };
+  document.getElementById('edGear').onclick = () => { openTagManager((kind, a, b) => { if (kind === 'rename') tags = tags.map(x => x===a ? b : x); else if (kind === 'delete') tags = tags.filter(x => x!==a); drawTags(); });
+    document.getElementById('sheet2').onclose = drawTags; };
+  // 간편 날짜 선택 (v0.4): 빠른 칩 + 한 달 달력에서 한 번에 (앱: mini_calendar.dart)
+  let due = t.due, pm = due ? fromKey(due) : today(); pm = new Date(pm.getFullYear(), pm.getMonth(), 1);
+  const drawDue = () => { const td = today(); document.getElementById('edDueLabel').textContent = due ? `${full(fromKey(due))} · ${rel(fromKey(due), td)}` : '날짜 미지정'; };
+  const drawPicker = () => { const td = today(), nm = addDays(startOfWeek(td), 7);
+    const q = [['오늘', td], ['내일', addDays(td,1)], ['모레', addDays(td,2)], ['다음 주', nm], ['없음', null]];
+    const first = startOfWeek(pm), last = new Date(pm.getFullYear(), pm.getMonth()+1, 0), rows = Math.floor(daysBetween(first, last)/7) + 1;
+    let g = ''; for (let i = 0; i < rows*7; i++) { const d = addDays(first, i), k = keyOf(d), sel = due === k, isT = sameDay(d, td);
+      g += `<button class="mday ${sel?'on':''} ${d.getMonth()!==pm.getMonth()?'dim':''}" data-k="${k}">${isT&&!sel?`<span class="gt" style="font-weight:800">${d.getDate()}</span>`:d.getDate()}</button>`; }
+    document.getElementById('edPicker').innerHTML = `<div class="qchips">${q.map(([l, d]) => `<button class="qchip ${(d ? due === keyOf(d) : !due)?'on':''}" data-k="${d?keyOf(d):''}">${l}</button>`).join('')}</div>
+      <div class="mhead"><b>${pm.getFullYear()}년 ${pm.getMonth()+1}월</b><button class="chev" data-m="-1">${I.chevL}</button><button class="chev" data-m="1">${I.chevR}</button></div>
+      <div class="wd" style="padding:0 12px">${WD.map(w => `<span>${w}</span>`).join('')}</div><div class="mgrid">${g}</div>`; };
+  document.getElementById('edDueRow').onclick = () => { const pk = document.getElementById('edPicker'); const open = pk.style.display === 'none'; pk.style.display = open ? 'block' : 'none'; if (open) drawPicker(); };
+  document.getElementById('edPicker').onclick = e => { const m = e.target.closest('[data-m]'); if (m) { pm = new Date(pm.getFullYear(), pm.getMonth() + +m.dataset.m, 1); drawPicker(); return; }
+    const b = e.target.closest('[data-k]'); if (!b) return; due = b.dataset.k || null; if (due) { const d = fromKey(due); pm = new Date(d.getFullYear(), d.getMonth(), 1); } buzz(4); drawDue(); drawPicker(); };
+  drawDue();
+  document.getElementById('edDel').onclick = () => { closeSheet(); removeTask(id); };
+  saveB.onclick = () => { if (!valid(ti.value)) return; t.title = norm(ti.value); t.tags = S.settings.tags.filter(x => tags.includes(x)); t.due = due; closeSheet(); commit(); };
+}
+
+// ------------------------------------------------------------------ 카메라 (OCR 흐름)
+const capture = document.getElementById('capture');
+const DEMO = ['- 자료구조 4주차 과제 제출', '• 팀 프로젝트 발표 자료 정리', '', '1. 도서관 책 반납', '2) 운영체제 퀴즈 공부'];
+function split(text) { const seen = new Set(); return text.split(/\r?\n/).map(l => norm(l.replace(/^\s*(?:[-–—•·*▪◦○●□■☐☑✓✔]|\d{1,2}[.)]|[①-⑳])\s*/, ''))).filter(l => l && !seen.has(l) && seen.add(l)).map(l => l.slice(0, 100)); }
+function openCapture() {
+  blurInput(); closeAll();
+  capture.innerHTML = `<button class="x" id="capX">✕</button><div class="frame" id="frame">${['top:10px;left:10px;border-top-width:3px;border-left-width:3px','top:10px;right:10px;border-top-width:3px;border-right-width:3px','bottom:10px;left:10px;border-bottom-width:3px;border-left-width:3px','bottom:10px;right:10px;border-bottom-width:3px;border-right-width:3px'].map(s => `<span class="corner" style="${s}"></span>`).join('')}<div><b>프레임 안에 맞춰 주세요</b><span>한 줄이 할 일 하나가 돼요<br>사진은 인식 후 바로 지워져요</span></div></div>
+    <div class="ctrls"><button class="side" id="capAlbum"><i>🖼</i>앨범</button><button class="shutter" id="capShot"><i></i></button><button class="side" id="capPaste"><i>📋</i>붙여넣기</button></div>`;
+  capture.classList.add('show');
+  document.getElementById('capX').onclick = () => capture.classList.remove('show');
+  const fake = () => { buzz(12); document.getElementById('frame').innerHTML = '<div><div class="spin"></div>기기 안에서 글자를 읽는 중…<br><span>미리보기는 예시 메모를 사용해요</span></div>'; setTimeout(() => { capture.classList.remove('show'); review(split(DEMO.join('\n'))); }, 900); };
+  document.getElementById('capShot').onclick = fake; document.getElementById('capAlbum').onclick = fake;
+  document.getElementById('capPaste').onclick = () => { capture.classList.remove('show');
+    openSheet(`<div class="title">메모 내용 붙여넣기</div><div class="caption" style="margin:4px 0 10px">한 줄에 하나씩 적으면 할 일 후보로 나눠 드려요</div><textarea id="pasteIn" class="tin" rows="6" style="resize:none">${esc(DEMO.join('\n'))}</textarea><div style="height:14px"></div><button class="btn" id="pasteOk">나누기</button>`);
+    document.getElementById('pasteOk').onclick = () => { const l = split(document.getElementById('pasteIn').value); if (!l.length) return; closeSheet(); setTimeout(() => review(l), 320); }; };
+}
+function review(cands) {
+  const on = cands.map(() => true);
+  openSheet(`<div class="foot">온디바이스 인식</div><div class="title" style="margin-top:2px">인식된 태스크</div><div class="caption" style="margin-top:4px">등록할 항목을 선택하세요 · 글자를 눌러 고칠 수 있어요</div>
+    <div class="cands" id="cands">${cands.map((c, i) => `<div class="cand on"><div class="cb on" data-i="${i}"><span>${I.check}</span></div><input value="${esc(c)}" maxlength="100"></div>`).join('')}</div>
+    <button class="btn" id="addSel"></button><div class="foot" style="text-align:center;margin-top:8px">원본 사진은 기기에도 서버에도 저장되지 않아요</div>`);
+  const box = document.getElementById('cands'), btn = document.getElementById('addSel');
+  const titles = () => [...box.querySelectorAll('.cand')].filter((c, i) => on[i] && valid(c.querySelector('input').value)).map(c => c.querySelector('input').value);
+  const upd = () => { const n = titles().length; btn.textContent = n ? `선택한 ${n}개 추가` : '추가할 항목을 선택하세요'; btn.disabled = !n; };
+  box.onclick = e => { const cb = e.target.closest('.cb'); if (!cb) return; const i = +cb.dataset.i; on[i] = !on[i]; cb.classList.toggle('on', on[i]); cb.parentElement.classList.toggle('on', on[i]); buzz(4); upd(); };
+  box.oninput = upd; upd();
+  btn.onclick = () => { const list = titles(); closeSheet(); const due = UI.page === 2 ? selected() : null; const base = nextOrder();
+    const added = list.map((t, i) => ({ id:newId(), title:norm(t), createdAt:Date.now(), due: due?keyOf(due):null, tags:[], done:false, completedAt:null, completedLate:false, order: base + i }));
+    S.tasks.push(...added); commit(); toast(`${added.length}개를 추가했어요`, () => { S.tasks = S.tasks.filter(t => !added.includes(t)); commit(); }); };
+}
+
+// ------------------------------------------------------------------ 미니게임: 계단 오르기 (앱: stair_game_page.dart)
+const gameEl = document.getElementById('game');
+let gameOpen = false, gameRaf = 0, climb = null;
+const SPRITE_MAP = ["................", ".....OOOOOO.....", "...OOBBBBBBOO...", "..OBBBBBBBBBBO..", ".OBBBLBBBBBBBBO.", ".OOOOOOOOOOOOOO.", ".OSSSSSSSSSSSSO.", ".OSSEESSSSEESSO.", ".OSSEWSSSSEWSSO.", ".OSPPSSMMSSPPSO.", "..OSSSSSSSSSSO..", "...OOSSSSSSOO...", "...OTTTTTTTTO...", "..OSTTTWWTTTSO..", "...OTTTTTTTTO...", "....ODDO.ODDO..."];
+const SPRITE_PAL = { O:0xFF2E3A55, B:0xFF55B8FF, L:0xFFBFE6FF, S:0xFFFFE0CC, E:0xFF2B2B3A, W:0xFFFFFFFF, P:0xFFFF9FB2, M:0xFFE5607A, T:0xFF7CC8FF, D:0xFF5A6B8C };
+const fromMap = (map, pal) => ({ size: map.length, px: map.join('').split('').map(c => pal[c] || 0) });
+const GIRL_MAP = ["..........ORRO..", ".....OOOOOORRO..", "...OOHHHHHHOO...", "..OHHHHHHHHHHO..", ".OHHHLHHHHHHHHO.", ".OHHSSHHHHSSHHO.", ".OHSSSSSSSSSSHO.", ".OHSEESSSSEESHO.", ".OHSEWSSSSEWSHO.", ".OHPPSSMMSSPPHO.", ".OHHSSSSSSSSHHO.", ".OHOOSSSSSSOOHO.", "..OOTTTTTTTTOO..", "..OSTTTTTTTTSO..", ".OTTTTTTTTTTTTO.", "...OODDOODDOO..."];
+const GIRL_PAL = { O:0xFF2E3A55, H:0xFF8A5A44, L:0xFFB98468, R:0xFFFF7FA8, S:0xFFFFE0CC, E:0xFF2B2B3A, W:0xFFFFFFFF, P:0xFFFF9FB2, M:0xFFE5607A, T:0xFFFFB3CF, D:0xFF5A6B8C };
+const PETS = {
+  dog: fromMap(["............", "...OOOOOO...", ".OOTTTTTTOO.", "OEOTTTTTTOEO", "OEOTKTTKTOEO", "OEOTTNNTTOEO", ".OOPTTTTPOO.", "..OTTMMTTO..", "..OOTTTTOO..", ".OTTTTTTTTO.", ".OTTOTTOTTO.", "..OOO..OOO.."], { O:0xFF2E3A55, T:0xFFF2C38B, E:0xFFB97A4A, K:0xFF2B2B3A, N:0xFF2B2B3A, P:0xFFFFA3B5, M:0xFFFF7F96 }),
+  cat: fromMap([".O........O.", ".OO......OO.", ".OGO....OGO.", ".OGGOOOOGGO.", "OGGGGGGGGGGO", "OGGKGGGGKGGO", "OGPGGNNGGPGO", ".OGGGMMGGGO.", "..OOGGGGOO..", ".OGGGGGGGGOO", ".OGGOGGOGGOG", "..OOO..OOO.."], { O:0xFF2E3A55, G:0xFFFFC27A, K:0xFF2B2B3A, N:0xFFFF8FA3, P:0xFFFFB0A0, M:0xFFE5607A }),
+  rabbit: fromMap(["..OO....OO..", ".OWPO..OPWO.", ".OWPO..OPWO.", ".OWWOOOOWWO.", "OWWWWWWWWWWO", "OWWKWWWWKWWO", "OWPWWNNWWPWO", ".OWWWMMWWWO.", "..OOWWWWOO..", ".OWWWWWWWWO.", ".OWWOWWOWWO.", "..OOO..OOO.."], { O:0xFF2E3A55, W:0xFFFFFFFF, P:0xFFFFB3C6, K:0xFF2B2B3A, N:0xFFFF8FA3, M:0xFFFFB3C6 }),
+};
+const PET_LABEL = { none:'없음', dog:'강아지', cat:'고양이', rabbit:'토끼' };
+const boySprite = () => fromMap(SPRITE_MAP, SPRITE_PAL), girlSprite = () => fromMap(GIRL_MAP, GIRL_PAL);
+const charStyle = () => S.settings.charStyle === 'photo' && !S.settings.char ? 'boy' : S.settings.charStyle;
+const sprite = () => ({ boy: boySprite, girl: girlSprite, photo: () => ({ size:24, px:S.settings.char }) })[charStyle()]();
+const petSprite = () => PETS[S.settings.pet] || null;
+function spriteImg(sp, size) { const cv = document.createElement('canvas'); cv.width = cv.height = sp.size; const c = cv.getContext('2d');
+  sp.px.forEach((v, i) => { if (!v) return; c.fillStyle = argbCss(v); c.fillRect(i % sp.size, Math.floor(i / sp.size), 1, 1); });
+  return `<img src="${cv.toDataURL()}" width="${size}" height="${size}" style="image-rendering:pixelated;display:block;margin:0 auto">`; }
+// 꾸미기 (v0.4, 앱: _CustomizeSheet)
+function openCustomize() {
+  const draw = () => { const st = charStyle(), s = S.settings;
+    const ch = (key, label, img) => `<button class="choice ${st===key?'on':''}" data-c="${key}">${img}<span>${label}</span></button>`;
+    openSheet(`<div class="title">꾸미기</div><div class="caption" style="margin:14px 0 8px">캐릭터</div>
+      <div class="choices">${ch('boy','남자',spriteImg(boySprite(),52))}${ch('girl','여자',spriteImg(girlSprite(),52))}${ch('photo', s.char ? '내 사진' : '사진으로<br>만들기', s.char ? spriteImg({size:24,px:s.char},52) : '<div style="height:52px;display:grid;place-items:center;font-size:24px">📷</div>')}</div>
+      ${s.char ? '<div style="text-align:right"><button id="rePhoto" style="border:0;background:none;color:var(--blue);font-size:12.5px;padding:6px 4px;cursor:pointer">사진 다시 고르기</button></div>' : ''}
+      <div class="caption" style="margin:10px 0 8px">함께 오를 펫</div>
+      <div class="choices">${['none','dog','cat','rabbit'].map(k => `<button class="choice sm ${s.pet===k?'on':''}" data-p="${k}">${k==='none'?'<div style="height:40px;display:grid;place-items:center;font-size:20px;color:var(--label2)">⊘</div>':spriteImg(PETS[k],40)}<span>${PET_LABEL[k]}</span></button>`).join('')}</div>
+      <div style="height:16px"></div><button class="btn" id="cusOk">완료</button>`, 2);
+    const sh = document.getElementById('sheet2');
+    sh.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { buzz(4); const k = b.dataset.c; if (k === 'photo' && !S.settings.char) { document.getElementById('photoIn').click(); return; } S.settings.charStyle = k; commit(); draw(); });
+    sh.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { buzz(4); S.settings.pet = b.dataset.p; commit(); draw(); });
+    const rp = document.getElementById('rePhoto'); if (rp) rp.onclick = () => document.getElementById('photoIn').click();
+    document.getElementById('cusOk').onclick = () => closeSheet(2); };
+  draw();
+}
+const argbCss = c => `rgb(${(c>>16)&255},${(c>>8)&255},${c&255})`;
+
+function openGame() {
+  closeAll(); blurInput(); hideToast(); gameOpen = true; buzz(6);
+  const m = today();
+  gameEl.innerHTML = `<div class="top"><div class="t"><div class="foot">미니게임</div><div class="title" style="margin-top:2px">${m.getMonth()+1}월 계단 오르기</div><div class="st" id="gStat"></div><div class="gbar"><i id="gBar"></i></div></div><button class="x" id="gX" aria-label="닫기">✕</button></div>
+    <canvas id="gCanvas"></canvas><div class="msg" id="gMsg"></div>
+    <div class="bots"><button class="btn" id="gChar"></button><button class="re" id="gRe" aria-label="다시">↺</button></div>`;
+  gameEl.classList.add('show');
+  document.getElementById('gX').onclick = closeGame;
+  document.getElementById('gRe').onclick = startClimb;
+  document.getElementById('gChar').textContent = '꾸미기 · 캐릭터와 펫';
+  document.getElementById('gChar').onclick = openCustomize;
+  requestAnimationFrame(startClimb);
+}
+function closeGame() { gameOpen = false; cancelAnimationFrame(gameRaf); gameEl.classList.remove('show'); }
+function startClimb() { const st = monthStat(today()); climb = { t0: performance.now(), dur: st.done ? Math.max(600, Math.min(4200, st.done*320)) : 0, done: st.done, total: st.total, lastStep: 0, arrived: st.done === 0 };
+  cancelAnimationFrame(gameRaf); const loop = t => { drawGame(t); gameRaf = requestAnimationFrame(loop); }; gameRaf = requestAnimationFrame(loop); }
+function drawGameStatic() { if (!climb) return; const st = monthStat(today()); climb.done = st.done; climb.total = st.total; }
+function encouragement(s) { const left = s.total - s.done, r = s.total ? s.done/s.total : 0;
+  if (!s.total) return '이번 달 할 일을 추가하면 계단이 생겨요'; if (!s.done) return '첫 계단이 기다리고 있어요. 가장 쉬운 일부터 시작해요!';
+  if (r >= 0.8) return `거의 다 왔어요! ${left}칸만 더 오르면 정상이에요`; if (r >= 0.5) return '절반 넘게 올라왔어요. 이 페이스 그대로 가 봐요!'; return '한 칸씩 잘 오르고 있어요. 오늘 하나만 더 해 볼까요?'; }
+function drawGame(t) {
+  const cv = document.getElementById('gCanvas'); if (!cv) return; const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  if (cv.width !== Math.round(W*dpr) || cv.height !== Math.round(H*dpr)) { cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
+  const { total, done } = climb; const p = climb.dur ? Math.min(1, (t - climb.t0)/climb.dur) : 1;
+  if (p >= 1 && !climb.arrived) { climb.arrived = true; buzz(done === total && total ? 30 : 10); }
+  const step = Math.floor(p*done); if (step !== climb.lastStep) { climb.lastStep = step; buzz(4); }
+  const position = climb.arrived ? done : p*done, complete = total > 0 && done === total;
+  const mood = !climb.arrived ? 'climb' : complete ? 'summit' : 'cheer', loop = ((t - climb.t0) / 1400) % 1;
+  // 상단·메시지
+  const pct = total ? Math.round(done*100/total) : 0;
+  const td = today(), inM = d => d.getFullYear()===td.getFullYear() && d.getMonth()===td.getMonth();
+  const todayN = S.tasks.filter(x => x.done && x.completedAt && sameDay(new Date(x.completedAt), td) && (x.due ? inM(fromKey(x.due)) : inM(new Date(x.createdAt)))).length;
+  const stHtml = `${done} / ${total}칸 · ${pct}%${todayN ? ` <span class="pill" style="background:var(--skytint);margin-left:6px">오늘 +${todayN}칸</span>` : ''}`;
+  const gs = document.getElementById('gStat'); if (gs.innerHTML !== stHtml) gs.innerHTML = stHtml; document.getElementById('gBar').style.width = pct + '%';
+  const night = isDark();
+  const msg = document.getElementById('gMsg'); const mt = !climb.arrived ? ['올라가는 중…','이번 달에 끝낸 할 일만큼 올라가요'] : complete ? ['정상 도착! 🎉', `${today().getMonth()+1}월 할 일 ${total}개를 모두 끝냈어요. 정말 멋져요!${S.settings.pet !== 'none' ? ` ${PET_LABEL[S.settings.pet]}도 신났어요!` : ''}`] : [total ? `${total-done}칸 남았어요` : '아직 계단이 없어요', encouragement({ total, done })];
+  const html = `<b class="${complete && climb.arrived ? 'gt':''}">${mt[0]}</b><span>${mt[1]}</span>`; if (msg.innerHTML !== html) msg.innerHTML = html;
+  // 구름
+  if (night) { let sd = 3; const rr = () => (sd = (sd*16807) % 2147483647) / 2147483647; // 밤하늘: 별과 달
+    for (let i = 0; i < 26; i++) { const sx = rr()*W, sy = rr()*H*0.45, tw = 0.45 + 0.55*(0.5 + 0.5*Math.sin((loop + i*0.37)*Math.PI*2)); c.fillStyle = `rgba(255,255,255,${tw*0.8})`; c.beginPath(); c.arc(sx, sy, 1.1 + rr(), 0, 7); c.fill(); }
+    c.fillStyle = '#FFF1B8'; c.beginPath(); c.arc(W*0.82, 30, 13, 0, 7); c.fill(); c.fillStyle = '#0F2140'; c.beginPath(); c.arc(W*0.82 + 6, 26, 11, 0, 7); c.fill(); }
+  else { c.fillStyle = 'rgba(255,255,255,.75)'; [[W*.18,34,16],[W*.72,18,12]].forEach(([x,y,r]) => { [[0,0,1],[r,4,.8],[-r,5,.7]].forEach(([dx,dy,k]) => { c.beginPath(); c.arc(x+dx,y+dy,r*k,0,7); c.fill(); }); }); }
+  // v0.5: 칸 최소 폭 + 카메라, 캐릭터·펫은 보이는 폭 기준으로 한 칸 안에 나란히 (앱: StairPainter)
+  const pet = petSprite(), sp = sprite();
+  const n = Math.max(total, 1), mX = 12, topRoom = 92, gY = H - 18, sW = Math.max((W - mX*2 - 28)/(n+1), pet ? 72 : 54), sH = Math.max(30, Math.min(46, (gY - topRoom)/n));
+  const xOf = k => mX + k*sW, topOf = k => gY - k*sH, cx = k => xOf(k) + sW/2;
+  const base = Math.min(Math.floor(position), n), frac = Math.min(1, Math.max(0, position - base)), next = Math.min(base+1, n);
+  const stepX = cx(base) + (cx(next) - cx(base))*frac, floorY = topOf(base) + (topOf(next) - topOf(base))*frac;
+  const worldW = mX*2 + 28 + (n+1)*sW, camX = Math.max(0, Math.min(Math.max(0, worldW - W), stepX - W*0.45)), camY = Math.max(0, Math.min(Math.max(0, topRoom - topOf(n)), H*0.62 - floorY));
+  c.save(); c.translate(-camX, camY);
+  c.fillStyle = night ? '#1B2E4A' : '#CFE8FF'; c.beginPath(); c.roundRect(camX - 20, gY, W + 40, H + camY + 20, 10); c.fill();
+  const cs = pet ? Math.max(30, Math.min(50, sW*0.64)) : Math.max(32, Math.min(56, sW*0.88)), ps = cs*0.72;
+  if (total > 0) {
+    for (let k = 1; k <= total; k++) { const climbed = k <= Math.floor(position); const x = xOf(k), y = topOf(k); if (x + sW < camX - 2 || x > camX + W + 2) continue;
+      if (climbed) { const g = c.createLinearGradient(0, y, 0, gY); g.addColorStop(0, '#4CC3FF'); g.addColorStop(1, '#2F7BFF'); c.fillStyle = g; } else c.fillStyle = night ? '#223652' : '#fff';
+      c.fillRect(x, y, sW + 0.5, gY - y); c.strokeStyle = climbed ? 'rgba(255,255,255,.7)' : (night ? '#34507A' : '#BFD6EE'); c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x + sW, y); c.stroke(); }
+    const fx = xOf(total) + sW - 1, fy = topOf(total), ph = cs + 18, wave = Math.sin(loop*Math.PI*2)*3;
+    c.strokeStyle = night ? '#fff' : '#1A2433'; c.lineWidth = 2; c.beginPath(); c.moveTo(fx, fy); c.lineTo(fx, fy - ph); c.stroke();
+    c.fillStyle = mood === 'summit' ? '#FF5D73' : '#4CC3FF'; c.beginPath(); c.moveTo(fx, fy-ph); c.lineTo(fx+22, fy-ph+6+wave); c.lineTo(fx, fy-ph+13); c.fill();
+  }
+  const cols = s2 => { let lo = s2.size, hi = -1; s2.px.forEach((v, i) => { if (!v) return; const x = i % s2.size; if (x < lo) lo = x; if (x > hi) hi = x; }); return hi < 0 ? [0, s2.size-1] : [lo, hi]; };
+  const span = (s2, size) => { const [lo, hi] = cols(s2), q = size/s2.size; return { w: (hi - lo + 1)*q, off: ((lo + hi + 1)/2 - s2.size/2)*q }; };
+  const cSp = span(sp, cs), pSp = pet ? span(pet, ps) : { w: 0, off: 0 }, gap = pet ? Math.max(4, cs*0.14) : 0;
+  const pairL = stepX - (pSp.w + gap + cSp.w)/2 - Math.min(8, Math.max(0, (sW - (pSp.w + gap + cSp.w))/2 - 2)), x = pairL + pSp.w + gap + cSp.w/2 - cSp.off, petX = pairL + pSp.w/2 - pSp.off, hop = Math.sin(frac*Math.PI);
+  let bottom = floorY - hop*cs*0.35, tilt = 0, armsUp = false, wave2 = 0, petLift = hop*ps*0.45, petTilt = 0;
+  if (mood === 'summit') { bottom -= Math.abs(Math.sin(loop*Math.PI*4))*cs*0.45; armsUp = true; tilt = Math.sin(loop*Math.PI*4)*0.08; petLift += Math.abs(Math.sin((loop + 0.12)*Math.PI*4))*ps*0.6; }
+  else if (mood === 'cheer') { bottom -= Math.abs(Math.sin(loop*Math.PI*2))*cs*0.12; wave2 = Math.sin(loop*Math.PI*4); petLift += Math.abs(Math.sin((loop + 0.5)*Math.PI*4))*ps*0.15; petTilt = Math.sin(loop*Math.PI*4)*0.12; }
+  const drawSp = (s2, size) => { const q = size/s2.size; s2.px.forEach((v, i) => { if (!v) return; c.fillStyle = argbCss(v); c.fillRect(-size/2 + (i % s2.size)*q, -size + Math.floor(i / s2.size)*q, q + .5, q + .5); }); };
+  if (pet) { c.fillStyle = 'rgba(26,36,51,.13)'; c.beginPath(); c.ellipse(petX + pSp.off, floorY + 2, pSp.w*0.4, 2, 0, 0, 7); c.fill();
+    c.save(); c.translate(petX, floorY - petLift); c.rotate(petTilt); drawSp(pet, ps); c.restore(); }
+  c.fillStyle = 'rgba(26,36,51,.13)'; c.beginPath(); c.ellipse(x + cSp.off, floorY + 2, cSp.w*0.4, 2.5, 0, 0, 7); c.fill();
+  c.save(); c.translate(x, bottom); c.rotate(tilt);
+  const q = cs/sp.size, [lo, hi] = cols(sp), left = (lo - sp.size/2)*q, right = (hi + 1 - sp.size/2)*q, top = -cs, aw = Math.max(2, q*1.6);
+  c.fillStyle = night ? '#fff' : '#2E3A55';
+  if (armsUp) { c.beginPath(); c.roundRect(left - aw, top - cs*.15, aw, cs*.55, aw); c.roundRect(right, top - cs*.15, aw, cs*.55, aw); c.fill(); }
+  else if (wave2) { c.save(); c.translate(right + aw/2, top + cs*.55); c.rotate(-0.9 + wave2*0.5); c.beginPath(); c.roundRect(-aw/2, -cs*.4, aw, cs*.4, aw); c.fill(); c.restore(); }
+  drawSp(sp, cs);
+  c.restore();
+  c.restore(); // 카메라
+  if (mood === 'summit') { const cols = ['#4CC3FF','#2F7BFF','#FFC94D','#FF6B8A','#3FD48C']; let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 42; i++) { const sp2 = 0.6 + rnd()*0.8, xx = rnd()*W + Math.sin((loop*sp2 + i)*Math.PI*2)*10, yy = ((rnd() + loop*sp2) % 1)*H*0.85;
+      c.save(); c.translate(xx, yy); c.rotate((loop*6 + i) % 6.283); c.fillStyle = cols[i % 5]; c.fillRect(-3, -1.5, 6, 3); c.restore(); } }
+}
+// 사진 → 픽셀 캐릭터 (앱: game/pixel_art.dart 와 같은 순서. 미리보기는 AI 마스크 대신 테두리 색으로 배경 제거)
+document.getElementById('photoIn').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = () => { const sc = Math.min(1, 320 / Math.max(im.width, im.height)), w = Math.round(im.width*sc), h = Math.round(im.height*sc);
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d'); c.drawImage(im, 0, 0, w, h); URL.revokeObjectURL(url);
+    const px = pixelate(w, h, c.getImageData(0, 0, w, h).data, 24, 10);
+    if (!px.some(v => v)) { dialogBox({ title:'사람을 찾지 못했어요', message:'얼굴이나 상반신이 잘 보이는 사진으로 다시 해 주세요.', okLabel:'확인', onOk(){} }); return; }
+    S.settings.char = px; S.settings.charStyle = 'photo'; commit(); if (document.getElementById('sheet2').classList.contains('show')) openCustomize(); startClimb(); toast('내 캐릭터를 만들었어요'); };
+  im.src = url;
+});
+function pixelate(width, height, rgba, size, colors) {
+  const side = Math.min(width, height), left = (width - side)/2, top = (height - side)/2;
+  let r = 0, g = 0, b = 0, n = 0; const st = Math.max(1, Math.floor(side/40));
+  for (let i = 0; i < side; i += st) for (const [x, y] of [[left+i, top], [left+i, top+side-1], [left, top+i], [left+side-1, top+i]]) { const o = (Math.min(height-1, Math.floor(y))*width + Math.min(width-1, Math.floor(x)))*4; r += rgba[o]; g += rgba[o+1]; b += rgba[o+2]; n++; }
+  const bg = [r/n, g/n, b/n], cell = side/size, ss = Math.max(1, Math.floor(cell/5));
+  const C = [], op = [];
+  for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) { let R = 0, Gg = 0, B = 0, N = 0;
+    for (let y = Math.floor(top + j*cell); y < Math.min(height, Math.ceil(top + (j+1)*cell)); y += ss) for (let x = Math.floor(left + i*cell); x < Math.min(width, Math.ceil(left + (i+1)*cell)); x += ss) { const o = (y*width + x)*4; R += rgba[o]; Gg += rgba[o+1]; B += rgba[o+2]; N++; }
+    const col = N ? [R/N, Gg/N, B/N] : [0,0,0]; C.push(col); op.push(N > 0 && Math.hypot(col[0]-bg[0], col[1]-bg[1], col[2]-bg[2]) > 42); }
+  const pts = []; op.forEach((o, k) => { if (o) pts.push(k); }); const out = new Array(size*size).fill(0); if (!pts.length) return out;
+  const K = Math.min(colors, pts.length), luma = k => C[k][0]*.3 + C[k][1]*.59 + C[k][2]*.11, sortedP = [...pts].sort((a, b) => luma(a) - luma(b));
+  let cen = Array.from({ length:K }, (_, c) => [...C[sortedP[Math.min(sortedP.length-1, Math.floor((c+.5)*sortedP.length/K))]]]); const asg = {};
+  for (let it = 0; it < 8; it++) { pts.forEach(p => { let best = 0, bd = Infinity; cen.forEach((cc, ci) => { const d = (C[p][0]-cc[0])**2 + (C[p][1]-cc[1])**2 + (C[p][2]-cc[2])**2; if (d < bd) { bd = d; best = ci; } }); asg[p] = best; });
+    cen = cen.map((cc, ci) => { let a = [0,0,0], m = 0; pts.forEach(p => { if (asg[p] === ci) { a[0] += C[p][0]; a[1] += C[p][1]; a[2] += C[p][2]; m++; } }); return m ? a.map(v => v/m) : cc; }); }
+  const vivid = cc => { const l = (cc[0]+cc[1]+cc[2])/3, ch = v => Math.max(0, Math.min(255, Math.round((l + (v-l)*1.25 - 128)*1.08 + 128))); return (0xFF000000 | (ch(cc[0]) << 16) | (ch(cc[1]) << 8) | ch(cc[2])) >>> 0; };
+  pts.forEach(p => out[p] = vivid(cen[asg[p]]));
+  const res = [...out];
+  for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) { const k = j*size + i; if (out[k]) continue;
+    if ((i > 0 && out[k-1]) || (i < size-1 && out[k+1]) || (j > 0 && out[k-size]) || (j < size-1 && out[k+size])) res[k] = 0xFF1A2433; }
+  return res;
+}
+
+// ------------------------------------------------------------------ 시작
+const datePull = { onScroll: sc => {
+    const o = sc.over(), th = 70, sel = selected(), prev = adjacent(sel, -1), next = adjacent(sel, 1);
+    const show = (el, p, label, ok, up) => { el.style.opacity = p > 0.02 ? p : 0; const ready = p >= 1 && ok; el.classList.toggle('ready', ready); el.innerHTML = `${up?'↑':'↓'} ${ready ? '놓으면 이동' : label}`; };
+    show(document.getElementById('hintTop'), Math.min(1, -Math.min(0, o)/th), prev ? `${rel(prev, today())} 일정으로` : '이전 일정 없음', !!prev, true);
+    show(document.getElementById('hintBottom'), Math.min(1, Math.max(0, o)/th), next ? `${rel(next, today())} 일정으로` : '다음 일정 없음', !!next, false);
+  },
+  onRelease: o => { if (Math.abs(o) < 70) return false; const t = adjacent(selected(), o < 0 ? -1 : 1); if (!t) { buzz(4); return false; } buzz(15); setTimeout(() => selectDate(t), 0); return true; } };
+scrollers.push(new Scroller(document.getElementById('sc0')), new Scroller(document.getElementById('sc1')), new Scroller(document.getElementById('sc2'), datePull));
+if (!load()) addSamples();
+const tick = () => { const d = now(); document.getElementById('clock').textContent = `${d.getHours()}:${pad(d.getMinutes())}`; };
+tick(); setInterval(tick, 30000);
+setPagesX(pageX(), false);
+render();
+if (document.fonts) document.fonts.ready.then(() => render());
+if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => render());
+window.addEventListener('resize', () => { setPagesX(pageX(), false); render(); });
+window.__keepy = { S, UI, render, goPage, openGame, monthStat };
+})();
+</script>
+</body>
+</html>
