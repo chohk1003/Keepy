@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Keepy MP3 Firestore 보안 규칙
+// Firebase 콘솔 → Firestore Database → 규칙(Rules) 탭에 이 내용을 그대로 붙여넣고 [게시]
+//
+// 1) 로그인한 본인 데이터(users/{내 uid}/tasks/...)만 읽고 쓸 수 있다.
+// 2) 충돌 처리(LWW): 서버에 있는 것보다 "오래된" 버전으로는 덮어쓸 수 없다.
+//    오프라인이던 기기가 나중에 옛날 값을 올려도 다른 기기의 최신 수정이 지워지지 않는다.
+// 3) 삭제는 문서를 지우지 않고 deleted:true 로 표시(tombstone)하므로 delete 는 막는다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/tasks/{taskId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+      function validTask() {
+        let d = request.resource.data;
+        return d.title is string
+          && d.title.size() <= 300
+          && d.updatedAtMs is int
+          && d.deleted is bool;
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner() && validTask();
+      allow update: if isOwner() && validTask()
+        && request.resource.data.updatedAtMs >= resource.data.updatedAtMs;
+      allow delete: if false;
+    }
+  }
+}
