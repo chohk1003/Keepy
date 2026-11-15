@@ -33,8 +33,10 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
           priority: draft.priority);
       }
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('저장 실패: $error')));
+      }
     }
   }
 
@@ -42,8 +44,10 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
     try {
       await ref.read(taskViewModelProvider).delete(task.id);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('삭제 실패: $error')));
+      }
     }
   }
 
@@ -51,8 +55,10 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
     try {
       await ref.read(taskViewModelProvider).toggle(task);
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('상태 변경 실패: $error')));
+      }
     }
   }
 

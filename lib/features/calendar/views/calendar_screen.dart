@@ -64,8 +64,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       try {
                         await ref.read(taskViewModelProvider).toggle(task);
                       } catch (error) {
-                        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('상태 변경 실패: $error')));
+                        }
                       }
                     },
                   ),

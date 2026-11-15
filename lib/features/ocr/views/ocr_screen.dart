@@ -36,8 +36,10 @@ class _OcrScreenState extends ConsumerState<OcrScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('태스크에 등록했습니다.')));
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('등록 실패: $error')));
+      }
     }
   }
 
