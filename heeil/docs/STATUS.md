@@ -1,6 +1,6 @@
 # 작업 현황
 
-> 최종 수정: 2026-11-09 · 기준 브랜치: `희일` · Flutter 3.47.9 stable
+> 최종 수정: 2026-11-16 · 기준 브랜치: `희일` (`현규` 브랜치의 MP3 리베이스 반영) · Flutter 3.47.9 stable
 > **규칙: 할 일은 위, 끝난 일은 [완료](#완료)로 내린다.** 자세한 구조는 [docs/README.md](README.md) 참고.
 
 ## 한눈에
@@ -23,37 +23,38 @@ flowchart LR
 | 영역 | 상태 | 문서 |
 |---|---|---|
 | 화면·제스처·태스크·로컬 저장 | 🟢 | [screens](screens.md) · [gestures](gestures.md) · [tasks](tasks.md) · [storage](storage.md) |
-| 로그인 | 🔴 진입점만 있음 | [auth](auth.md) |
-| Firebase 동기화 | 🟡 선행 끝, 연결만 남음 | [firebase](firebase.md) |
+| 로그인 | 🟢 이메일/비밀번호 로그인·가입·로그아웃 | [auth](auth.md) |
+| Firebase 동기화 | 🟡 코드 완료, 콘솔 설정·실측 남음 | [firebase](firebase.md) · [구조 보고서](FIREBASE_구조_보고서.md) |
 | 카메라 OCR | 🟡 코드 완료, 실기기 검증 남음 | [ocr](ocr.md) |
 | 알림·외부 서비스 | 🔴 설정 토글만 | [integrations](integrations.md) |
 
-## 🔵 라운드 2 — 다음 배치
+## 🔵 라운드 2 — 진행 중
 
-라운드 1(2026-11-09)은 전원 완료. 결과는 [완료](#완료) 참고. 다음 배치는 아래 순서로 묶는다.
+②·③(Firebase 연결 + 로그인 화면)은 `현규` 브랜치에서 끝나 2026-11-16에 리베이스로 들어왔다. 남은 건 ①④⑤.
 
 ```mermaid
 flowchart TD
     A["① app/ 폴더 이동<br/>경로가 바뀌므로 단독 실행"]:::now
-    B["② Firebase 연결<br/>⚠ 사용자 계정 승인 필요"]
-    C["③ 로그인 화면"]
+    B["② Firebase 연결"]:::done
+    C["③ 로그인 화면"]:::done
     D["④ 회귀 테스트 3건<br/>+ 날짜·설정 화면 테스트"]
     E["⑤ 실기기 검증<br/>OCR·제스처·NFR 측정"]
 
-    A --> B --> C
     A --> D
     A --> E
+    B --> C
 
     classDef now fill:#0A84FF,stroke:#0060df,color:#fff
+    classDef done fill:#30D158,stroke:#1a7a33,color:#fff
 ```
 
-| 순서 | 담당 | 선행 조건 |
+| 순서 | 담당 | 상태 |
 |---|---|---|
-| ① `app/` 이동 | 헤드 단독 | 라운드 1 종료 ✅ |
-| ② Firebase 연결 + `FirestoreBackend` | sync 담당 | **사용자가 Firebase 프로젝트 생성·`flutterfire configure`** |
-| ③ 로그인 화면 | auth 담당 | ② 완료 |
-| ④ 회귀 테스트 3건 | test 담당 | ① 완료 |
-| ⑤ 실기기 검증 | 사용자 | ① 완료 |
+| ① `app/` 이동 | 헤드 단독 | 🔴 남음 |
+| ② Firebase 연결 + `FirestoreBackend` | sync 담당 | 🟢 완료 (2026-11-15) — 콘솔 설정은 사용자 몫 |
+| ③ 로그인 화면 | auth 담당 | 🟢 완료 (2026-11-15) — `pages/account_page.dart` |
+| ④ 회귀 테스트 3건 | test 담당 | 🔴 남음 |
+| ⑤ 실기기 검증 | 사용자 | 🔴 남음 |
 
 **④ 회귀 테스트 3건** (라운드 1에서 고친 버그가 다시 안 생기게)
 
@@ -102,21 +103,23 @@ flowchart LR
 
 ## 🟠 MP3 — Firebase Auth + Firestore
 
-→ 설계·구조: [firebase.md](firebase.md), [auth.md](auth.md)
-→ **선행 작업은 2026-11-09에 끝났다** (아래 완료 참고). 남은 건 실제 Firebase 연결뿐.
+→ 설계·구조: [firebase.md](firebase.md), [auth.md](auth.md) · 전체 그림: [FIREBASE_구조_보고서.md](FIREBASE_구조_보고서.md)
+→ **코드는 2026-11-15에 다 들어왔다** (아래 완료 참고). 남은 건 **사용자만 할 수 있는 콘솔 설정과 실측**.
 
-- [ ] **Firebase 프로젝트 생성** + Android/iOS 앱 등록, `flutterfire configure` — **사용자 계정 승인 필요**
-- [ ] **의존성 추가** — `firebase_core`, `firebase_auth`, `cloud_firestore`
-- [ ] **`.env` / `.env.example` 분리** + `.gitignore`에 `.env` 추가 (NFR-06, CST-04)
-- [ ] **`FirestoreBackend` 구현** — `SyncBackend` 인터페이스는 이미 있음. `push` `pullTasks` `watchTasks` 채우면 됨
-- [ ] **`AppState.reloadFrom(TaskStore)` 추가** — ⚠ **지금 유일한 실질 공백.** 서버에서 병합된 결과를 화면에 반영할 통로가 없어 `SyncStore.onRemoteTasks` 콜백이 비어 있다
-- [ ] **`main.dart` 한 줄 교체** — `AppState(store: SyncStore(local: store, backend: FirestoreBackend(...)))`. `AppState.store`가 이미 `TaskStore?`라 다른 수정 불필요
-- [ ] **로그인 화면** — 설정의 '게스트' 행이 진입점
-- [ ] **tombstone 실제 전환** — 필드·조회 필터(8곳)는 깔려 있음. `remove()`/`clearDone()`을 `deleted = true`로 바꾸고 `restore()`에 `touch()` 추가. ⚠ 되돌리기 UX가 `task_actions.dart`·`task_editor.dart`에 묶여 있어 **위젯 담당과 같이 바꿔야 함**
-- [ ] **쓰기 단위 결정** — `SyncStore.write()`가 지금은 전체 목록을 보낸다. 문서당 쓰기로 줄이려면 `TaskStore` 계약 변경 필요. **NFR-03/04 측정 전에 정할 것**
-- [ ] **tombstone 정리 기준** — 며칠 뒤 실제 삭제할지 미정
-- [ ] **v1 키 정리 시점** — 마이그레이션 후에도 남겨 둠. MP3 마무리 때 제거 판단
+### 사용자가 할 일 (절차: [MP3_따라하기.md](MP3_따라하기.md))
+
+- [ ] **Firebase 프로젝트 생성** + Android 앱 등록 → `.env` 값 4개 채우기
+- [ ] **Authentication → 이메일/비밀번호 로그인 켜기** (안 켜면 `operation-not-allowed`)
+- [ ] **Firestore Database 생성 + [`firestore.rules`](../firestore.rules) 게시**
 - [ ] **측정** — 동기화 3초 이내(NFR-03), 오프라인 복귀 5초 이내(NFR-04) 실측값 README 기록
+- [ ] **스크린샷** — 기기 A 추가 · 기기 B 동기화 · 오프라인→온라인 · Firestore 콘솔
+
+### 코드로 남은 일
+
+- [ ] **tombstone 정리 기준** — 며칠 뒤 실제 삭제할지 미정. 지금은 계정에 계속 쌓인다
+- [ ] **`doneLog`·설정 동기화 여부** — 지금은 기기별 로컬 보관. `SyncBackend.push()`가 받는 `log`·`settings` 인자를 `FirestoreBackend`가 쓰지 않아 오해 소지가 있다
+- [ ] **v1 키 정리 시점** — 마이그레이션 후에도 남겨 둠. MP3 마무리 때 제거 판단
+- [ ] **시계 어긋남** — `updatedAt`이 기기 시계라서 시계가 크게 틀리면 LWW 판정이 어긋난다. 서버 시각 기준으로 바꿀지 판단 (`serverUpdatedAt`은 이미 올라간다)
 ## 🟡 MP4 — 카메라 + ML Kit
 
 → 설계·구조: [ocr.md](ocr.md)
@@ -157,11 +160,9 @@ flowchart LR
 
 | 심각도 | 증상 | 위치 |
 |---|---|---|
-| 중간 | **OCR 일괄 추가에 1~100자 검증이 없다** — 입력 바는 100자 제한인데 OCR 경로만 뚫려 있어 긴 줄이 그대로 들어온다 (CST-03 불일치) | `AppState.addAll` · `ocr_pages.dart` |
 | 낮음 | `Toast`의 정적 `Timer`가 위젯 트리보다 오래 산다 — 토스트 뜨는 흐름의 테스트는 1.2초를 `pump` 해야 함 | `lib/widgets/toast.dart` |
 | 낮음 | `DatePage.build`가 빌드 중에 상태 필드를 바꾼다 (`_titleDay`, `_dir`) — 지금은 예외 없음 | `lib/pages/date_page.dart` |
 | 낮음 | `WeekCalendar.build`가 `PageController`를 빌드 안에서 만들고 매 빌드마다 `addPostFrameCallback`을 건다 | `lib/widgets/week_calendar.dart` |
-| 낮음 | '완료 항목 지우기' 되돌리기가 목록 전체 스냅샷을 덮어쓴다 — 지운 뒤 0.6초 안에 새 할 일을 추가하고 취소하면 그 항목이 사라짐 | `AppState.clearDone` / `restoreAll` |
 | 낮음 | 작은 화면(720x1280)에서 '달력 행' 4로 두면 날짜 칸이 찌그러진다 (예외는 없음) | `DatePage` CST-01 고정 높이 |
 
 ### 그 외
@@ -175,6 +176,36 @@ flowchart LR
 ---
 
 ## 완료
+
+<details open>
+<summary><b>MP3 — Firebase 동기화</b> (2026-11-15, `현규` 브랜치 → 2026-11-16 리베이스)</summary>
+
+**인증**
+- [x] BaaS 선정 — Firebase (오프라인 큐·실시간·문서형 모델 때문에, 비교표는 [firebase.md](firebase.md#왜-firebase인가-supabase와-비교))
+- [x] 로그인 방식 — 이메일/비밀번호. **익명 로그인 제외** (기기마다 uid가 달라 FR-11이 성립하지 않음)
+- [x] `AuthService` — 로그인·가입·로그아웃 + 오류 코드 한국어 번역
+- [x] 계정 화면 `pages/account_page.dart` + 설정 계정 행이 상태에 따라 문구 변경
+- [x] 로그아웃 정책 — 이 기기 목록은 남고 동기화만 멈춤
+
+**동기화**
+- [x] `FirestoreBackend` — `push` · `pullTasks` · `watchTasks(snapshots)` · uid 전환 시 재구독
+- [x] `AppState.applyRemote()` — 실시간 수신분을 항목별 LWW 병합 (**객체 교체 없이 필드만** 수정)
+- [x] 스키마 확정 `users/{uid}/tasks/{taskId}` + 서버용 `updatedAtMs`·`serverUpdatedAt`
+- [x] 보안 규칙 `firestore.rules` — 본인 문서만 + **서버 측 LWW 강제** + `delete` 금지
+- [x] `remove()`·`clearDone()` tombstone 전환 + `_rawIndexOfLive()` 되돌리기 인덱스 변환
+- [x] 첫 실행 샘플을 고정 id + `updatedAt = 2000년`으로 — 기기 간 중복·부활 방지
+- [x] 쓰기 단위 — `FirestoreBackend._known`(id → `updatedAt`) 비교로 **바뀐 문서만** `set()`. `TaskStore` 계약 변경 없이 해결
+- [x] 오프라인 큐 — 직접 구현하지 않고 Firestore SDK에 맡김(`set()`을 await 하지 않음). 앱은 네트워크 상태를 감시하지 않는다
+
+**설정·안전장치**
+- [x] `.env` / `.env.example` 분리 + `.gitignore`(`.env` · `google-services.json` · `firebase_options.dart`) (NFR-06, CST-04)
+- [x] `.env`가 없거나 초기화가 실패하면 **로컬 전용 게스트 모드로 계속 실행** (크래시 없음)
+- [x] Android `minSdk` 23 상향
+- [x] `test/sync_test.dart` 9건 — 메모리 가짜 백엔드로 로그인 승계·LWW·실시간 반영·tombstone 전파 검증
+- [x] OCR 일괄 추가(`addAll`)에 1~100자 규칙 적용 — 품질 표의 '중간' 항목 해소 (CST-03)
+- [x] `clearDone()` 되돌리기가 목록 전체를 덮어쓰지 않도록 수정 — 그사이 추가한 할 일이 사라지지 않는다
+
+</details>
 
 <details open>
 <summary><b>라운드 1 — 서브에이전트 4개 병렬</b> (2026-11-09) · analyze 0건 / test 79개 전부 통과</summary>
