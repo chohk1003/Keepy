@@ -86,6 +86,10 @@ flowchart LR
 | `lib/state/app_state.dart` | `statusOf()` — 지연·늦은 완료 판정 |
 ```
 
+**경로 기준**: 문서에 적는 코드 경로는 Flutter 프로젝트 폴더인 **`app/` 기준**이다.
+`lib/state/app_state.dart`는 저장소에서 `heeil/app/lib/state/app_state.dart`를 가리킨다.
+`flutter` 명령도 전부 `heeil/app`에서 실행한다. (2026-11-16 폴더 정비 — [STATUS.md](STATUS.md#-제출-폴더-구조--이동-완료-2026-11-16))
+
 ### 4. 상태 표시는 3가지만
 
 🟢 완료 · 🟡 일부 · 🔴 미착수. 그 외 기호는 쓰지 않는다.

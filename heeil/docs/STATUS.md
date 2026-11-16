@@ -1,6 +1,7 @@
 # 작업 현황
 
 > 최종 수정: 2026-11-16 · 기준 브랜치: `희일` (`현규` 브랜치의 MP3 리베이스 반영) · Flutter 3.47.9 stable
+> 앱은 `heeil/app`, 문서는 `heeil/docs`. **문서의 코드 경로는 `app/` 기준**이고 `flutter` 명령도 `heeil/app`에서 실행한다.
 > **규칙: 할 일은 위, 끝난 일은 [완료](#완료)로 내린다.** 자세한 구조는 [docs/README.md](README.md) 참고.
 
 ## 한눈에
@@ -30,19 +31,19 @@ flowchart LR
 
 ## 🔵 라운드 2 — 진행 중
 
-②·③(Firebase 연결 + 로그인 화면)은 `현규` 브랜치에서 끝나 2026-11-16에 리베이스로 들어왔다. 남은 건 ①④⑤.
+②·③(Firebase 연결 + 로그인 화면)은 `현규` 브랜치에서 끝나 2026-11-16에 리베이스로 들어왔고, ①(폴더 이동)도 같은 날 끝났다. 남은 건 ④⑤ — **둘 다 실기기·측정 쪽**이다.
 
 ```mermaid
 flowchart TD
-    A["① app/ 폴더 이동<br/>경로가 바뀌므로 단독 실행"]:::now
+    A["① heeil/app 폴더 이동"]:::done
     B["② Firebase 연결"]:::done
     C["③ 로그인 화면"]:::done
-    D["④ 회귀 테스트 3건<br/>+ 날짜·설정 화면 테스트"]
-    E["⑤ 실기기 검증<br/>OCR·제스처·NFR 측정"]
+    D["④ 회귀 테스트 3건<br/>+ 날짜·설정 화면 테스트"]:::now
+    E["⑤ 실기기 검증<br/>OCR·제스처·NFR 측정"]:::now
 
     A --> D
     A --> E
-    B --> C
+    B --> C --> E
 
     classDef now fill:#0A84FF,stroke:#0060df,color:#fff
     classDef done fill:#30D158,stroke:#1a7a33,color:#fff
@@ -50,11 +51,11 @@ flowchart TD
 
 | 순서 | 담당 | 상태 |
 |---|---|---|
-| ① `app/` 이동 | 헤드 단독 | 🔴 남음 |
+| ① `heeil/app` 이동 | 헤드 단독 | 🟢 완료 (2026-11-16) — analyze 0 · test 89 · APK 빌드 확인 |
 | ② Firebase 연결 + `FirestoreBackend` | sync 담당 | 🟢 완료 (2026-11-15) — 콘솔 설정은 사용자 몫 |
-| ③ 로그인 화면 | auth 담당 | 🟢 완료 (2026-11-15) — `pages/account_page.dart` |
+| ③ 로그인 화면 | auth 담당 | 🟢 완료 (2026-11-15) — `app/lib/pages/account_page.dart` |
 | ④ 회귀 테스트 3건 | test 담당 | 🔴 남음 |
-| ⑤ 실기기 검증 | 사용자 | 🔴 남음 |
+| ⑤ 실기기 검증 + MP3 측정 | 사용자 | 🔴 남음 ([MP3_따라하기.md](MP3_따라하기.md) 6·7장) |
 
 **④ 회귀 테스트 3건** (라운드 1에서 고친 버그가 다시 안 생기게)
 
@@ -66,38 +67,41 @@ flowchart TD
 
 - OCR 실측 시간(NFR-02) · 원본 미저장(NFR-05) · 권한 거부 안내(NFR-07) · 비행기 모드(CST-02)
 - 제스처 손맛 — 임계값은 코드상 문서와 일치하지만 데스크톱·웹에서만 확인됨
-## 🟠 제출 폴더 구조 — 확정
+## 🟢 제출 폴더 구조 — 이동 완료 (2026-11-16)
 
-심사기준이 요구하는 구조다. **지금은 루트가 바로 Flutter 프로젝트**라 이동이 필요하다.
+심사기준이 요구하는 구조(`app/` + `README.md` + `screenshots/` + `prompts_log.md`)를 **개인 폴더 안에 그대로** 갖췄다. 비교·선정이 끝나면 **고른 폴더의 내용을 루트로 올리기만** 하면 된다.
 
 ```mermaid
 flowchart LR
-    subgraph NOW["지금"]
-        N1["Keepy/<br/>├ pubspec.yaml<br/>├ lib/<br/>├ android/ ios/ web/<br/>├ test/<br/>└ docs/"]
+    subgraph REPO["저장소 루트"]
+        R1["Keepy/<br/>├ README.md  (폴더 배치 안내)<br/>├ .gitignore<br/>├ mergeProject/  통합 대상<br/>└ heeil/"]
     end
-    subgraph TARGET["옮긴 뒤"]
-        T1["Keepy/<br/>├ app/<br/>│ ├ pubspec.yaml<br/>│ ├ lib/<br/>│ └ android/ ios/ web/ test/<br/>├ README.md<br/>├ screenshots/<br/>├ prompts_log.md<br/>└ docs/"]
+    subgraph MINE["heeil/ — 내 구현"]
+        M1["├ app/            Flutter 프로젝트<br/>│  ├ pubspec.yaml · lib/ · test/<br/>│  ├ android/ ios/ web/ windows/<br/>│  └ firestore.rules · .env.example<br/>├ README.md      앱 설명·조작·구조<br/>├ docs/          기능별 문서<br/>├ screenshots/<br/>├ prompts_log.md<br/>└ TEAM_NOTES.md"]
     end
-    NOW -->|git mv| TARGET
+    REPO --> MINE
 ```
+
+**flutter 명령은 `heeil/app`에서 실행한다.**
 
 | 항목 | 필수 | 내용 | 상태 |
 |---|---|---|---|
-| `app/` | ✅ | 앱 소스 전체 | 🔴 이동 필요 |
-| `README.md` | ✅ | 화면 구성 · 데이터 구조 · 실행 절차 | 🟡 실행 절차 경로 수정 필요 |
+| `app/` | ✅ | 앱 소스 전체 | 🟢 `heeil/app` |
+| `README.md` | ✅ | 화면 구성 · 데이터 구조 · 실행 절차 | 🟡 더미 데이터 구조 설명 보강 남음 |
 | `screenshots/` | ✅ | 화면별 1장 이상 | 🔴 촬영 필요 |
 | `prompts_log.md` | ✅ | 프롬프트 + AI 응답의 **채택/수정 판단** | 🟡 틀만 있음 |
 
-**이동 시 함께 고칠 것** (경로가 바뀌면 깨지는 것들)
+**이동하며 같이 고친 것**
 
-- [ ] `git mv` 로 이동 — 이력 보존. 그냥 복사하면 히스토리가 끊긴다
-- [ ] `README.md` 실행 절차 — `cd app` 추가
-- [ ] `TEAM_NOTES.md` 2장 처음 받기 절차 — `cd Keepy/app`
-- [ ] `docs/*.md` 의 모든 코드 경로 — `lib/…` → `app/lib/…`
-- [ ] `keepy.iml`, `.idea/` — IDE 설정 경로
+- [x] `git mv` 로 이동 — 전부 R100(내용 변경 없음)으로 이력 보존
+- [x] `README.md` · `TEAM_NOTES.md` 실행 절차에 `cd app` 반영
+- [x] 이동으로 깨진 상대 링크 5개 (`.env.example` · `firestore.rules`)
+- [x] 루트 `README.md` 복구 + 루트 `.gitignore` 추가 (앱 쪽 규칙은 `heeil/app/.gitignore`가 담당)
+- [x] `docs/*.md`의 코드 경로는 **`app/` 기준이라고 한 번만 명시** — 80곳 넘는 `lib/…`를 전부 바꾸는 대신 [docs/README.md](README.md#3-구현-위치는-파일-단위로)에 기준을 적었다
+- [ ] `keepy.iml`, `.idea/` — IDE 설정 경로 (열어 보고 어긋나면)
 - [ ] GitHub Actions 등 CI가 생기면 working-directory
 
-> **라운드 1이 끝나기 전에는 옮기지 않는다.** 서브에이전트 4개가 `lib/`·`test/`·`pubspec.yaml`·`android/` 를 수정 중이라 경로가 바뀌면 전부 깨진다.
+> 이동 후 `heeil/app`에서 확인: `flutter analyze` 0건 · `flutter test` 89개 통과 · `flutter build apk --debug` 성공.
 
 ---
 
@@ -144,14 +148,12 @@ flowchart LR
 - [ ] **측정 구간 합의** — 지금은 사진을 받은 뒤부터 줄 추출까지만 잰다(카메라 앱 체류 시간 제외). NFR-02를 다르게 읽어야 하면 `recognize_io.dart`의 Stopwatch 시작 위치만 올리면 된다
 ## 🟢 제출 준비
 
-> 폴더 구조는 [확정됨](#-제출-폴더-구조--확정). 이동은 라운드 1 종료 직후.
+> 폴더 구조는 [이동 완료](#-제출-폴더-구조--이동-완료-2026-11-16). 남은 건 내용 채우기.
 
-- [ ] **`app/` 이동 실행** — `git mv` + 경로 참조 전부 수정 ([체크리스트](#-제출-폴더-구조--확정))
 - [ ] **`prompts_log.md` 내용 채우기** — 틀은 만들어 둠. 각자 쓴 프롬프트·판단을 취합할 것
 - [ ] **`screenshots/` 촬영** — 찍을 목록은 `screenshots/README.md` 에 단계별로 정리됨
-- [ ] **README 보강** — 심사기준이 요구하는 3가지: 화면 구성 · **더미(샘플) 데이터 구조** · 실행 절차
+- [ ] **README 보강** — 심사기준이 요구하는 3가지 중 **더미(샘플) 데이터 구조** 설명이 아직 없다
 - [ ] **MP2 저장 방식 비교** — shared_preferences vs sqflite vs Hive, 고른 이유 ([storage.md](storage.md#할-일))
-- [ ] **테스트용 커밋 정리** — `희일` 브랜치의 `만든 폴더/`, `flutter_01.png`(0바이트)
 - [ ] 요구사항 명세서 문구 수정 — "왼쪽으로 스와이프 시 설정"이 손가락 방향과 반대 ([screens.md](screens.md#스와이프-방향))
 
 ## ⚪ 품질

@@ -1,6 +1,7 @@
 # Firebase 동기화 구조 보고서
 
-> 작성: 2026-11-16 · 기준 커밋: `0d0c896` (브랜치 `희일`) · 분석 대상: 리베이스로 들어온 `0d6a331` "MP3: Firebase 동기화"
+> 작성: 2026-11-16 · 브랜치 `희일` · 분석 대상: 리베이스로 들어온 `0d6a331` "MP3: Firebase 동기화"
+> 코드 경로는 **`heeil/app/` 기준**이다 (예: `lib/data/sync_store.dart` → `heeil/app/lib/data/sync_store.dart`).
 > 읽는 목적: **리베이스로 합쳐진 Firebase 코드가 어디에 어떻게 끼워졌는지** 파악
 
 ---
@@ -319,23 +320,31 @@ flowchart LR
 
 ## 9. 리베이스 후 확인해야 할 것
 
-분석 중에 나온, 지금 상태에서 **비어 있거나 어긋난 부분**이다.
+분석 중에 나왔던 항목과 그 뒤 처리 결과다.
 
 | # | 항목 | 상태 |
 |---|---|---|
-| 1 | `pubspec.lock`, `windows/flutter/generated_plugin*` 미커밋 변경 | `flutter pub get`이 Firebase 3종을 반영한 결과. 커밋할지 결정 필요 |
-| 2 | `docs/MP3_따라하기.md` **없음** | `README.md:15`·`README.md`(백엔드 설정 절차 절)·`docs/firebase.md` 상단이 이 파일을 가리키는데 어떤 커밋에도 존재하지 않는다 (링크 깨짐) |
-| 3 | `docs/auth.md` 내용이 옛것 | "🔴 미착수 — 진입점만 있음"이라고 써 있지만 `AuthService`·`AccountPage`가 이미 구현돼 있다 |
-| 4 | `docs/STATUS.md` 내용이 옛것 | 로그인 🔴, Firebase 🟡 "연결만 남음" — 실제로는 연결 코드까지 들어왔다 |
-| 5 | `.env` 실제 값 | `.env.example`만 있다. 실행에는 Firebase 콘솔 값이 담긴 `.env`가 필요하고, 없으면 게스트 모드로만 돈다 |
-| 6 | NFR-03 / NFR-04 측정값 | README 표가 "_측정 후 기록_" 상태. 두 기기 동기화 3초, 오프라인 복귀 5초 실측이 남아 있다 |
-| 7 | `doneLog` · `settings` 동기화 | `SyncBackend.push()`는 `log`·`settings`를 인자로 받지만 `FirestoreBackend`는 **쓰지 않고 버린다**. 설계상 "기기별 보관"이라 의도된 것이지만, 인자로 남아 있어 오해 소지가 있다 |
-| 8 | tombstone 정리 | 오래된 `deleted: true` 문서를 지우는 로직이 없다 (`docs/firebase.md`에도 미완 항목으로 적혀 있음) |
-| 9 | `android/app/google-services.json` 없음 | `.gitignore`에 들어 있고, 설정은 `--dart-define`으로 넘기므로 현재 방식에선 필수는 아니다 |
+| 1 | `pubspec.lock`, `windows/flutter/generated_plugin*` 미커밋 변경 | 🟢 해결 — 커밋됨 (`flutter pub get`이 Firebase 3종을 반영한 결과) |
+| 2 | `docs/MP3_따라하기.md` **없음** (링크 깨짐) | 🟢 해결 — [MP3_따라하기.md](MP3_따라하기.md) 작성 |
+| 3 | `docs/auth.md` 내용이 옛것 ("🔴 미착수") | 🟢 해결 — 구현 반영해 다시 씀 |
+| 4 | `docs/STATUS.md` 내용이 옛것 | 🟢 해결 — 상태 표·라운드 2·MP3 절 갱신 |
+| 5 | `.env` 실제 값 | 🔴 **남음** — `.env.example`만 있다. 콘솔 값이 담긴 `app/.env`가 없으면 게스트 모드로만 돈다 |
+| 6 | NFR-03 / NFR-04 측정값 | 🔴 **남음** — [README](../README.md) 표가 "_측정 후 기록_" 상태 |
+| 7 | `doneLog` · `settings` 동기화 | 🟡 의도된 설계(기기별 보관)지만 `SyncBackend.push()`의 `log`·`settings` 인자가 쓰이지 않아 오해 소지가 있다 |
+| 8 | tombstone 정리 | 🔴 **남음** — 오래된 `deleted: true` 문서를 지우는 로직이 없다 |
+| 9 | `app/android/app/google-services.json` 없음 | 🟢 문제 아님 — `.gitignore` 대상이고, 설정은 `--dart-define`으로 넘긴다 |
+
+> 2026-11-16에 저장소가 제출 심사기준 구조(`heeil/app` + `heeil/docs`)로 정리됐다. 이 문서의 `lib/…` 경로는 **`heeil/app/` 기준**이다.
 
 ---
 
 ## 10. 한눈에 보는 실행 방법
+
+`heeil/app`에서 실행한다.
+
+```bash
+cd heeil/app
+```
 
 ```bash
 flutter run --dart-define-from-file=.env
@@ -345,4 +354,4 @@ flutter run --dart-define-from-file=.env
 flutter run
 ```
 
-위가 동기화 모드(`.env` 필요), 아래가 로컬 전용 게스트 모드. 보안 규칙은 Firebase 콘솔 → Firestore Database → 규칙 탭에 `firestore.rules` 내용을 붙여 넣고 게시해야 적용된다.
+가운데가 동기화 모드(`app/.env` 필요), 마지막이 로컬 전용 게스트 모드. 보안 규칙은 Firebase 콘솔 → Firestore Database → 규칙 탭에 `app/firestore.rules` 내용을 붙여 넣고 게시해야 적용된다. 전체 절차는 [MP3_따라하기.md](MP3_따라하기.md).

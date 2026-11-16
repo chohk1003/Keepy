@@ -29,7 +29,7 @@ flowchart LR
    - 이름은 아무거나 (예: `keepy-mp3`). **Google 애널리틱스는 끈다** (필요 없고 설정만 길어진다)
    - 요금제는 **Spark(무료)** 그대로. 카드 등록이 필요 없다
 2. 프로젝트 개요에서 **Android 아이콘**을 눌러 앱 등록
-   - **Android 패키지 이름**: `kr.ac.hansung.keepy` ← `android/app/build.gradle.kts`의 `applicationId`와 **글자 하나까지 같아야 한다**
+   - **Android 패키지 이름**: `kr.ac.hansung.keepy` ← `app/android/app/build.gradle.kts`의 `applicationId`와 **글자 하나까지 같아야 한다**
    - 앱 닉네임·디버그 서명 인증서(SHA-1)는 비워도 된다 (이메일/비밀번호 로그인에는 불필요)
 3. **`google-services.json` 다운로드** — 파일을 프로젝트에 넣지는 않는다. 다음 단계에서 값 4개만 꺼내 쓴다
 
@@ -37,11 +37,17 @@ flowchart LR
 
 ## 2. `.env` 만들기
 
-`.env.example`을 복사해 같은 폴더에 `.env`로 저장하고, 1단계에서 받은 `google-services.json`에서 값을 옮긴다.
+`.env.example`과 `.env`는 **Flutter 프로젝트 폴더인 `heeil/app/`** 에 둔다. 아래 명령부터 끝까지 전부 그 폴더에서 실행한다.
+
+```bash
+cd heeil/app
+```
 
 ```bash
 cp .env.example .env
 ```
+
+1단계에서 받은 `google-services.json`에서 값을 옮긴다.
 
 | `.env` 키 | `google-services.json`의 위치 |
 |---|---|
@@ -74,7 +80,7 @@ FIREBASE_PROJECT_ID=keepy-mp3
 1. 콘솔 → **Firestore Database** → 데이터베이스 만들기
    - 위치: `asia-northeast3`(서울) 권장
    - 모드: 아무거나 골라도 된다. **바로 다음 단계에서 규칙을 덮어쓴다**
-2. **규칙(Rules)** 탭 → 저장소 루트의 [`firestore.rules`](../app/firestore.rules) 내용을 **전부 복사해 붙여넣고 [게시]**
+2. **규칙(Rules)** 탭 → [`app/firestore.rules`](../app/firestore.rules) 내용을 **전부 복사해 붙여넣고 [게시]**
 
 규칙이 하는 일 세 가지 ([firebase.md](firebase.md#보안-규칙-firestorerules)):
 
@@ -85,6 +91,8 @@ FIREBASE_PROJECT_ID=keepy-mp3
 > 게시를 빼먹으면 기본 규칙(전체 거부 또는 30일 테스트 모드)이 남아 업로드가 조용히 실패한다. 콘솔 로그에 `PERMISSION_DENIED`가 보이면 이 단계다.
 
 ## 5. 실행하고 로그인
+
+`heeil/app`에서 실행한다.
 
 ```bash
 flutter run --dart-define-from-file=.env
@@ -154,7 +162,7 @@ flutter run --dart-define-from-file=.env -d emulator-5554
 | 콘솔에 문서가 안 보인다 | 로그인했는지, `users/{uid}`의 uid가 Authentication의 사용자 UID와 같은지 확인 |
 | 두 기기 목록이 다르다 | 같은 계정인지 먼저 확인. 한쪽이 게스트면 동기화하지 않는다 |
 | 지운 항목이 다른 기기에 남아 있다 | `deleted: true` 문서가 올라갔는지 콘솔에서 확인 (문서는 지워지지 않는 게 정상) |
-| 빌드 실패 `minSdk` | `android/app/build.gradle.kts`의 `minSdk = maxOf(flutter.minSdkVersion, 23)` 확인. Firestore는 21+ |
+| 빌드 실패 `minSdk` | `app/android/app/build.gradle.kts`의 `minSdk = maxOf(flutter.minSdkVersion, 23)` 확인. Firestore는 21+ |
 
 로그는 `flutter run` 터미널에 `[sync]` 접두사로 나온다.
 
