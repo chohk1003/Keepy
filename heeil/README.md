@@ -66,6 +66,8 @@ assets/fonts/                Pretendard (SIL OFL 1.1)
 
 - **[docs/STATUS.md](docs/STATUS.md)** — 남은 작업 현황 (할 일이 위, 끝난 일이 아래)
 - [docs/](docs/README.md) — 기능별 구조 문서 (화면 · 태스크 · 제스처 · 저장 · 로그인 · Firebase · OCR)
+- [docs/MP3_따라하기.md](docs/MP3_따라하기.md) — Firebase 설정부터 두 기기·오프라인 검증까지 순서대로
+- [docs/FIREBASE_구조_보고서.md](docs/FIREBASE_구조_보고서.md) — 동기화 코드 전체 그림
 - [TEAM_NOTES.md](TEAM_NOTES.md) — 팀 환경·브랜치·규칙
 
 ## MP3 — 백엔드 동기화

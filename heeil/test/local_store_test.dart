@@ -18,6 +18,12 @@ void main() {
     return LocalStore.open();
   }
 
+  /// 샘플 시드가 끼지 않는 "이미 한 번 쓴" 빈 저장소.
+  /// 태스크 키가 있으면 hasData 가 true 라서 AppState 가 _seed() 대신
+  /// _load() 를 탄다. (restoreAll([]) 은 clearDone 되돌리기 전용이 되어
+  /// 더 이상 목록을 비우지 않는다 — app_state.dart 의 restoreAll 주석 참고)
+  Future<LocalStore> openEmptyStore() => openStore({'keepy.tasks.v2': '[]'});
+
   /// 타이머가 남지 않도록 테스트가 끝나면 정리
   AppState boot(LocalStore store) {
     final s = AppState(store: store);
@@ -53,9 +59,8 @@ void main() {
 
   group('AppState ↔ LocalStore 왕복', () {
     test('저장한 태스크·내역·설정이 다시 켰을 때 그대로 복원된다', () async {
-      final store = await openStore();
+      final store = await openEmptyStore();
       final a = boot(store);
-      a.restoreAll([]); // 첫 실행 샘플 7개를 비우고 시작
 
       final t = a.add('운영체제 과제',
           due: DateTime(2026, 11, 3), tags: {TaskTag.assignment, TaskTag.team});
@@ -102,9 +107,8 @@ void main() {
     });
 
     test('변경 뒤 0.25초가 지나면 자동 저장된다', () async {
-      final store = await openStore();
+      final store = await openEmptyStore();
       final a = boot(store);
-      a.restoreAll([]);
 
       a.add('자동 저장');
       expect(store.readTasks(), isEmpty, reason: '아직 디바운스 중');
@@ -146,13 +150,26 @@ void main() {
     });
 
     test('저장된 태스크가 0개여도 샘플을 다시 넣지 않는다', () async {
+      final store = await openEmptyStore();
+      expect(store.hasData, isTrue, reason: '빈 목록이라도 쓴 적은 있음');
+
+      final a = boot(store);
+      expect(a.tasks, isEmpty, reason: '전부 지운 상태가 유지돼야 함');
+    });
+
+    test('전부 지우고 다시 켜도 샘플이 되살아나지 않는다', () async {
       final store = await openStore();
       final a = boot(store);
-      a.restoreAll([]);
+      expect(a.tasks.length, 7, reason: '첫 실행 샘플');
+
+      for (final t in a.tasks.toList()) {
+        a.remove(t); // tombstone — 저장에는 남고 목록에서만 빠진다
+      }
+      expect(a.tasks, isEmpty);
       await a.flush();
 
       final b = boot(await LocalStore.open());
-      expect(b.tasks, isEmpty, reason: '전부 지운 상태가 유지돼야 함');
+      expect(b.tasks, isEmpty, reason: '지운 표식이 복원돼야 함');
     });
   });
 }

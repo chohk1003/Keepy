@@ -12,8 +12,10 @@
 | [tasks.md](tasks.md) | Task 모델, 분류(지연/늦은 완료), 필터·정렬 | 🟢 |
 | [gestures.md](gestures.md) | 스와이프·제스처·모션 토큰 | 🟢 |
 | [storage.md](storage.md) | 로컬 영속성 (shared_preferences) | 🟢 |
-| [auth.md](auth.md) | 로그인·계정 | 🔴 |
+| [auth.md](auth.md) | 로그인·계정 | 🟢 |
 | [firebase.md](firebase.md) | Firebase Auth·Firestore 동기화 | 🟡 |
+| [FIREBASE_구조_보고서.md](FIREBASE_구조_보고서.md) | 동기화 코드 전체 그림 (계층·흐름·파일 역할) | 🟢 |
+| [MP3_따라하기.md](MP3_따라하기.md) | Firebase 콘솔 설정 → 실행 → 두 기기·오프라인 검증 절차 | 🟢 |
 | [ocr.md](ocr.md) | 카메라 + ML Kit 텍스트 인식 | 🟡 |
 | [integrations.md](integrations.md) | 알림, eclass, 에브리타임 | 🔴 |
 

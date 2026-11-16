@@ -4,12 +4,8 @@
 
 ## 할 일
 
-- [ ] **`remove()`를 tombstone 방식으로 전환** — Firestore를 붙일 때 (지금은 목록에서 실제로 뺀다)
-    조회 쪽은 이미 `AppState._live`에서 `deleted`를 걸러 두었으므로 바꿀 곳은
-    `remove()` · `clearDone()` 두 군데와 **`restore(index, task)`의 인덱스 의미**다
-    (tombstone이 `_tasks`에 남으면 `_live` 기준 인덱스와 어긋난다)
-- [ ] 오래된 tombstone 정리 기준 정하기 (며칠 지나면 실제 삭제할지)
-- [ ] 제목 길이 상한을 모델에서도 검증 — 현재는 입력 바 UI에서만 1~100자 제한 (CST-03)
+- [ ] 오래된 tombstone 정리 기준 정하기 (며칠 지나면 실제 삭제할지) — [firebase.md](firebase.md#할-일)
+- [ ] 제목 길이 상한을 `Task` 생성자에서도 검증 — 지금은 입력 바 UI와 `addAll()`(OCR 경로)에서만 1~100자로 자른다 (CST-03)
 - [ ] 샘플 데이터(`_seed()` 7개) 유지 여부 결정
 
 ## 모델
@@ -123,8 +119,8 @@ flowchart LR
 | 동작 | 되돌리는 방법 |
 |---|---|
 | 완료 토글 | 토스트의 취소 (0.52초 뒤 실제 반영되므로 그 전에도 가능) |
-| 삭제 | `remove()`가 인덱스를 반환 → `restore(index, task)` (tombstone으로 바꾸지 않은 이유) |
-| 완료 일괄 삭제 | `clearDone()`이 전체 스냅샷 반환 → `restoreAll(snapshot)` |
+| 삭제 | `remove()`가 **보이는 목록 기준** 인덱스를 반환 → `restore(index, task)`. tombstone이 `_tasks`에 남아 화면 인덱스와 어긋나므로 `_rawIndexOfLive()`로 변환한다 |
+| 완료 일괄 삭제 | `clearDone()`이 지우기 전 보이던 목록을 반환 → `restoreAll(snapshot)` (그사이 추가한 할 일은 사라지지 않는다) |
 
 ## 테스트
 
@@ -140,6 +136,9 @@ flowchart LR
 
 - [x] 동기화용 필드 `updatedAt` · `deleted` 추가 + 구버전 JSON 하위호환 (2026-11-09)
 - [x] 조회 전체를 `_live`로 모아 tombstone 필터 (2026-11-09)
+- [x] **`remove()` · `clearDone()`을 tombstone 방식으로 전환** — 목록에서 빼지 않고 `deleted = true` + `touch()`.
+      되돌리기는 `_rawIndexOfLive()`로 화면 인덱스를 `_tasks` 위치로 변환한다 (2026-11-15)
+- [x] OCR 경로(`addAll`)에도 제목 1~100자 규칙 적용 (2026-11-15)
 - [x] Task 모델 + JSON 직렬화 (2026-11-02)
 - [x] 태그 4종, 그라데이션 색 (2026-11-02)
 - [x] 추가·수정·삭제·완료 토글, 되돌리기 (2026-11-03)
