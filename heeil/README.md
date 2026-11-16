@@ -5,6 +5,7 @@
 ## 실행
 
 ```powershell
+cd app                                     # Flutter 프로젝트는 app/ 아래에 있다
 flutter pub get
 flutter run --dart-define-from-file=.env   # Android 에뮬레이터 권장 (MP3 동기화 포함)
 flutter run                                # .env 없이 → 로그인 없는 로컬 전용(게스트) 모드
@@ -13,7 +14,7 @@ flutter test
 ```
 
 > **처음 MP3 설정을 하는 사람은 [docs/MP3_따라하기.md](docs/MP3_따라하기.md)를 순서대로 따라 하면 된다.**
-> Firebase 설정값은 `.env`에 넣고 커밋하지 않는다. 필요한 키 목록은 [.env.example](.env.example).
+> Firebase 설정값은 `.env`에 넣고 커밋하지 않는다. 필요한 키 목록은 [.env.example](app/.env.example).
 
 ## 조작
 
@@ -37,6 +38,8 @@ flutter test
 | 설정 | 달력 행 / 이번 주 위치 / 완료율(바·원형·그래프) | 날짜 화면에 즉시 반영 |
 
 ## 구조
+
+저장소 전체 배치는 [../README.md](../README.md). 아래는 `app/`(Flutter 프로젝트) 내부 기준.
 
 ```
 lib/
@@ -102,7 +105,7 @@ AppState ──► SyncStore ──┬─► LocalStore (shared_preferences)   �
 
 1. **항목 단위 Last-Write-Wins** — 같은 할 일을 두 기기에서 고치면, `updatedAt`(마지막 수정 시각)이 더 늦은 쪽이 이긴다.
    다른 할 일끼리는 서로 영향이 없다.
-2. **서버에서도 강제** — Firestore 보안 규칙([firestore.rules](firestore.rules))이 서버에 있는 것보다 오래된 버전으로
+2. **서버에서도 강제** — Firestore 보안 규칙([firestore.rules](app/firestore.rules))이 서버에 있는 것보다 오래된 버전으로
    덮어쓰는 것을 거절한다. 오프라인이던 기기가 나중에 옛날 값을 올려도 다른 기기의 최신 수정이 지워지지 않는다.
 3. **로그인 직후에는 받고 나서 올린다** — 서버를 먼저 읽어 병합한 뒤, 이 기기 쪽이 더 최신인 것만 올린다.
 4. **삭제는 tombstone** — 문서를 지우지 않고 `deleted: true`로 표시한다. 그래야 오프라인 기기에도 삭제가 전달되고,

@@ -74,7 +74,7 @@ FIREBASE_PROJECT_ID=keepy-mp3
 1. 콘솔 → **Firestore Database** → 데이터베이스 만들기
    - 위치: `asia-northeast3`(서울) 권장
    - 모드: 아무거나 골라도 된다. **바로 다음 단계에서 규칙을 덮어쓴다**
-2. **규칙(Rules)** 탭 → 저장소 루트의 [`firestore.rules`](../firestore.rules) 내용을 **전부 복사해 붙여넣고 [게시]**
+2. **규칙(Rules)** 탭 → 저장소 루트의 [`firestore.rules`](../app/firestore.rules) 내용을 **전부 복사해 붙여넣고 [게시]**
 
 규칙이 하는 일 세 가지 ([firebase.md](firebase.md#보안-규칙-firestorerules)):
 

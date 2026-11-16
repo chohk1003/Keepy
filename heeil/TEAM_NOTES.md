@@ -26,6 +26,7 @@
 git clone https://github.com/chohk1003/Keepy.git
 cd Keepy
 git checkout <본인 브랜치>   # 희일 / 현규 / 도현 / 서윤
+cd heeil/app                # 희일 브랜치 기준 (다른 브랜치는 루트가 바로 프로젝트)
 flutter pub get
 flutter run -d windows      # 또는 -d chrome / 안드로이드 에뮬레이터
 ```
@@ -51,6 +52,8 @@ main  ← 비교 후 '선정된 결과'만 올림
 - 단계(MP)마다 각자의 결과를 비교 → 팀이 하나를 선정 → **선정된 내용만 `main`에 올림**.
 - `dev` 브랜치는 현재 쓰지 않음.
 - 이 문서와 여기 적힌 개발 내역은 **`희일` 브랜치 기준**임. 다른 브랜치에는 없음.
+- `희일` 브랜치는 개인 폴더 `heeil/` 아래에 심사기준 구조(`app/` + `README.md` + `screenshots/` + `prompts_log.md`)를 갖춰 둠.
+  선정되면 그 폴더 **내용을 루트로 올리기만** 하면 됨.
 - `pubspec.lock`은 커밋함 (앱 프로젝트이므로 버전 고정 목적).
 - `희일` 브랜치에 남아 있는 테스트용 커밋 파일(`만튼 파일.txt`, `만든 폴더/`)은 비교 전에 정리. (`main`에는 `README.md`만 있음)
 
@@ -163,7 +166,8 @@ flutter run -d web-server --web-hostname 0.0.0.0 --web-port 8080
 ## 9. 제출 전 체크 (심사기준)
 
 - [ ] **폴더 구조**: 심사기준은 `app/` (앱 소스) + `README.md` + `screenshots/` + `prompts_log.md` 를 요구.
-      지금 저장소는 루트가 바로 Flutter 프로젝트 → `app/`으로 옮길지 **팀 결정 필요** (늦을수록 경로 충돌 커짐)
+      `희일`은 `heeil/` 아래에 이 구조를 갖춰 둠(2026-11-16) → 선정된 폴더의 내용을 루트로 올리면 기준 충족.
+      나머지 브랜치는 아직 루트가 바로 Flutter 프로젝트 → **팀 결정 필요** (늦을수록 경로 충돌 커짐)
 - [ ] `prompts_log.md`: AI 도구 프롬프트 + **채택/수정 판단** 기록 — 각자 쓴 것 모을 것 (모든 MP 공통)
 - [ ] `screenshots/`: MP1 목록·추가·완료·빈 상태 / MP2 수정·삭제·필터 + 재시작 전·후 비교
 - [ ] MP2 README: **저장 방식 선택 이유를 대안과 비교** (shared_preferences vs sqlite vs Hive 등) — 아직 없음

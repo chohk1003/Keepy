@@ -110,7 +110,7 @@ flowchart LR
 
 - [ ] **Firebase 프로젝트 생성** + Android 앱 등록 → `.env` 값 4개 채우기
 - [ ] **Authentication → 이메일/비밀번호 로그인 켜기** (안 켜면 `operation-not-allowed`)
-- [ ] **Firestore Database 생성 + [`firestore.rules`](../firestore.rules) 게시**
+- [ ] **Firestore Database 생성 + [`firestore.rules`](../app/firestore.rules) 게시**
 - [ ] **측정** — 동기화 3초 이내(NFR-03), 오프라인 복귀 5초 이내(NFR-04) 실측값 README 기록
 - [ ] **스크린샷** — 기기 A 추가 · 기기 B 동기화 · 오프라인→온라인 · Firestore 콘솔
 
