@@ -1,7 +1,7 @@
 name: keepy
 description: "Keepy(키피) — 제스처 중심 태스크 관리 앱 (#2109)"
 publish_to: "none"
-version: 0.5.0+5
+version: 0.6.0+6
 
 environment:
   # 팀 기준 SDK: Flutter stable 3.47.9 (docs/prompts_log.md #1)
@@ -25,6 +25,8 @@ dependencies:
   google_mlkit_selfie_segmentation: ^0.10.0
   # 미니게임: 사진 디코딩·축소 (순수 Dart)
   image: ^4.2.0
+  # MP3: Supabase REST 호출 (인증·할 일 동기화). SDK 대신 이것 하나만 쓴다.
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

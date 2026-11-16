@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.6.0 — 2026-11-16 · 미니프로젝트 3단계: 백엔드 동기화
+
+**서버 동기화 (Supabase)**
+- 회원가입·로그인·로그아웃 (이메일 + 비밀번호), 로그인 상태 기기 저장, 토큰 자동 갱신
+- 같은 계정 기기끼리 할 일 추가·수정·완료·삭제·순서·태그 동기화
+- 오프라인 대기열: 변경을 기기 장부에 모아 두었다가 연결되면 자동 반영 (앱을 꺼도 유지, 오프라인이면 10초마다 재시도)
+- 충돌 처리: 할 일 단위 마지막 수정 우선 + 삭제 표시 + 로그인 시 할 일의 수정 시각으로 합치기, 서버 트리거로도 강제
+- 동기화 시점: 앱 시작·복귀, 변경 1.2초 뒤, 20초마다, '지금 동기화'
+
+**화면**
+- 설정 > 계정 → '계정 · 동기화' 시트 (로그인/회원가입 탭, 상태·마지막 동기화·올릴 변경 수, 지금 동기화, 로그아웃 확인)
+- 메인 머리 오른쪽 ☁ 배지 (✓ / ↻ / ↑N / 오프라인 / 오류) — 로그인했을 때만
+
+**설정·보안**
+- 설정 키는 `app/.env` → `--dart-define-from-file=.env` → `String.fromEnvironment` (코드에 없음). 값이 없으면 동기화만 꺼진 채 실행
+- 프로젝트 키는 `apikey` 헤더에만 (새 형식 `sb_publishable_` 키 지원)
+- `app/supabase/schema.sql`: 테이블, RLS(자기 줄만, DELETE 차단), 마지막 수정 우선 트리거 — PostgreSQL 에서 실행 검증
+- 설정 스크립트가 안드로이드 인터넷 권한 추가 (정식 빌드용)
+
+**코드**
+- 추가: `core/env.dart`, `services/sync/`(supabase_backend, sync_backend, sync_ledger), `state/sync_controller.dart`, `ui/pages/account_sheet.dart`
+- `TaskStore.applyRemote` 추가 (기존 메서드는 그대로), 쓰지 않던 `services/sync_service.dart` 계약 삭제
+- 의존성 `http: ^1.2.2` 하나 추가
+- 테스트 `test/sync_test.dart` 11개 (가짜 서버로 두 기기·오프라인·재시작·충돌)
+
+**문서**
+- README.md 를 3단계 제출용으로 (BaaS 선택 이유·충돌 처리 방침·백엔드 설정 절차·실행 절차·키 관리·자체 점검)
+- 새 문서: `docs/MP3_실행_매뉴얼.md`, `docs/단계별_정리_MP1-MP3.md`, `docs/MP3_프롬프트.md`
+- IMPLEMENTATION·MODIFY_GUIDE·README_KEEPY·PROMPTS·TEAM_NOTES·prompts_log(34~37) 갱신
+
 ## 0.5.0 — 2026-11-15
 
 **미니게임**

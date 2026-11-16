@@ -26,6 +26,14 @@
 - 팀원 이름·학번이 들어간 명세서 PDF → `docs/private/` 에 두면 gitignore 됨
 - 실제 메모 사진
 
+## 서버 동기화 (MP3) 키 나누기
+
+- Supabase 주소·공개 키는 각자 `app/.env` 에만 둔다. 채팅방·문서·커밋 메시지에 붙이지 않는다.
+- 같은 서버를 같이 쓰려면 프로젝트 소유자가 팀원을 Supabase 조직에 초대 → 각자 대시보드에서 복사.
+  따로 쓰려면 각자 무료 프로젝트를 만들고 `app/supabase/schema.sql` 을 실행한다.
+- Secret key·`service_role` 키는 앱에 절대 넣지 않는다.
+- 실행: `flutter run -d chrome --dart-define-from-file=.env` (자세한 순서는 `docs/MP3_실행_매뉴얼.md`).
+
 ## AI 사용 기록
 
 - AI 결과는 실행 화면·`flutter test`·`flutter analyze` 로 확인한 뒤 반영하고, 고친 경우 이유를 `docs/prompts_log.md` 에 남긴다.

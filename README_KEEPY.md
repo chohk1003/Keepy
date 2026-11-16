@@ -1,12 +1,13 @@
 # Keepy (키피) — 총정리
 
-> 제스처 중심 할 일 앱 · 팀 프로젝트 #2109 · Flutter · **v0.5.0** (2026-11-15)
+> 제스처 중심 할 일 앱 · 팀 프로젝트 #2109 · Flutter · **v0.6.0** (2026-11-16)
 >
-> MP2 제출용 문서는 [README.md](README.md), 이 문서는 지금까지 만든 Keepy 전체를 한눈에 보는 정리본입니다.
+> 제출용 문서(3단계)는 [README.md](README.md), 이 문서는 지금까지 만든 Keepy 전체를 한눈에 보는 정리본입니다.
 
 메인 화면을 가운데 두고 왼쪽 **설정**, 오른쪽 **날짜** 화면을 넘겨 쓰는 3단 구조의 할 일 앱입니다.
 할 일 블럭을 당겨서 날짜를 바꾸고, 종이 메모를 찍어 할 일로 바꾸고, 이번 달에 끝낸 만큼
 내 픽셀 캐릭터가 펫과 함께 계단을 오르는 미니게임으로 성취감을 줍니다.
+로그인하면 **여러 기기에서 같은 목록**을 보고, 오프라인에서 쓴 할 일도 연결되면 서버에 올라갑니다 (v0.6, Supabase).
 
 | 바로 가기 | |
 |---|---|
@@ -16,6 +17,8 @@
 | 어디를 고치면 되나 | [docs/MODIFY_GUIDE.md](docs/MODIFY_GUIDE.md) |
 | 프롬프트 가이드 (초기 제작·이어서 고치기) | [docs/PROMPTS.md](docs/PROMPTS.md) |
 | 팀 공유 메모 (브랜치 규칙 등) | [docs/TEAM_NOTES.md](docs/TEAM_NOTES.md) |
+| 3단계 실행 매뉴얼 (Supabase·두 기기·오프라인) | [docs/MP3_실행_매뉴얼.md](docs/MP3_실행_매뉴얼.md) |
+| 단계별 정리 (MP1~MP3) | [docs/단계별_정리_MP1-MP3.md](docs/단계별_정리_MP1-MP3.md) |
 | AI 사용 기록 | [prompts_log.md](prompts_log.md) |
 
 ---
@@ -27,8 +30,9 @@
 | MP1 (팀) | 화면·상태 관리 프로토타입 — prompts_log #1~#13 의 결정 |
 | **v0.2.0** | 3단 화면, CRUD·필터·빈 상태, 로컬 저장, 스와이프(날짜·태그·삭제), 지연/늦은 완료, 0.6초 되돌리기 알림, 카메라 OCR 흐름, 웹 미리보기 |
 | **v0.3.0** | 하늘색·파란색 그라데이션 + 나눔스퀘어라운드, 글자 한 단계 축소, ← 당기기 = 날짜만(+1/+2/+7), 아래로 내리면 취소, 편집 모드 순서 바꾸기, 태그 관리, 한 달 캘린더, 미니게임(계단 오르기) |
-| **v0.5.0** | 나와 펫이 같은 칸에서 함께 오르기, 더 둥글고 귀여운 캐릭터·펫, 메인 '오늘 요약' 카드(누르면 이동), 완료한 일 접기·비우기(되돌리기), 카드 테두리 |
 | **v0.4.0** | 다크 모드, 수정 시트 제목 글자 표시 문제 수정, 간편 날짜 선택(칩 + 달력), 태그 순서 바꾸기, 미니게임 꾸미기(남/여/내 사진 + 강아지·고양이·토끼 펫, 밤하늘, 진행 막대), 메인의 'K' 동그라미 제거, MP1·MP2 제출 구조(app/·screenshots/·README) |
+| **v0.5.0** | 나와 펫이 같은 칸에서 함께 오르기, 더 둥글고 귀여운 캐릭터·펫, 메인 '오늘 요약' 카드(누르면 이동), 완료한 일 접기·비우기(되돌리기), 카드 테두리 |
+| **v0.6.0** | **미니프로젝트 3단계**: Supabase 로그인·두 기기 동기화·오프라인 대기열·충돌 처리(마지막 수정 우선 + 삭제 표시), 계정 · 동기화 시트, 메인 ☁ 배지, 설정 키 `.env` 분리 |
 
 ## 2. 처음 실행하기
 
@@ -86,6 +90,20 @@ flutter run -d chrome    # 웹으로 빠르게 확인 (OCR·사람 분할 AI 는
 - 바탕·카드·글자·구분선·캘린더 농도·탭 바·미니게임 배경이 함께 바뀌고, 하늘색→파란색 강조는 두 모드 공통.
 - 모드를 바꿔도 보던 탭이 유지됨.
 
+## 6-1. 서버 동기화 (v0.6 · 미니프로젝트 3단계)
+
+| 할 일 | 방법 |
+|---|---|
+| 켜기 | `app/.env` 에 Supabase 주소·공개 키 → `flutter run -d chrome --dart-define-from-file=.env` ([매뉴얼](docs/MP3_실행_매뉴얼.md)) |
+| 로그인 | 설정 > 계정 → 회원가입 / 로그인 (다른 기기에서 같은 계정) |
+| 상태 보기 | 메인 오른쪽 위 ☁ 배지: ✓ 맞춰짐 · ↻ 동기화 중 · ↑N 올릴 변경 · 오프라인 · 오류. 누르면 계정 · 동기화 시트 |
+| 바로 맞추기 | 계정 시트의 **지금 동기화** (자동: 앱 시작·복귀, 변경 1.2초 뒤, 20초마다) |
+| 오프라인 | 그냥 쓰면 됨. 기기에 모아 두었다가 연결되면 자동으로 올림 (앱을 꺼도 유지) |
+| 같은 할 일을 두 기기에서 고치면 | 나중에 고친 쪽이 남음 (README 4절) |
+| 로그아웃 | 이 기기의 할 일은 남음. 다시 로그인하면 계정과 합쳐짐 |
+
+설정 키가 없으면 동기화만 꺼지고 나머지는 2단계와 똑같이 이 기기에 저장됩니다.
+
 ## 7. 프로젝트 구조
 
 ```
@@ -93,28 +111,30 @@ Keepy1/
 ├─ README.md / README_KEEPY.md / prompts_log.md / screenshots/
 ├─ app/                          Flutter 앱
 │  ├─ lib/
-│  │  ├─ main.dart, app.dart     시작 · 화면 모드 · MaterialApp
-│  │  ├─ core/                   theme(라이트·다크 팔레트, 글꼴, 모션), shadows, dates
+│  │  ├─ main.dart, app.dart     시작 · 화면 모드 · 동기화 연결 · MaterialApp
+│  │  ├─ core/                   theme(라이트·다크 팔레트, 글꼴, 모션), shadows, dates, env(설정 키)
 │  │  ├─ models/                 Task(순서), TaskStatus(지연·늦은 완료), AppSettings(화면 모드·태그·미니게임)
 │  │  ├─ data/                   저장소 계약 + shared_preferences 구현
-│  │  ├─ state/                  TaskStore, SettingsStore, KeepyScope
-│  │  ├─ services/               OCR, 사진→캐릭터, 사람 분할 AI, 이미지 삭제, 동기화 계약
+│  │  ├─ state/                  TaskStore, SettingsStore, SyncController(동기화), KeepyScope
+│  │  ├─ services/               OCR, 사진→캐릭터, 사람 분할 AI, 이미지 삭제, sync/(Supabase REST·장부)
 │  │  ├─ game/pixel_art.dart     픽셀아트 변환, 남/여 캐릭터·펫 그림
 │  │  └─ ui/  shell · pages · widgets(task_tile, mini_calendar, tag_manager_sheet …) · game · ocr
-│  ├─ test/                      모델·스토어·순서·태그·월 통계·픽셀아트·그림자·위젯(다크 모드·날짜 칩·꾸미기)
+│  ├─ supabase/schema.sql        서버 표·보안 규칙·충돌 처리 트리거
+│  ├─ test/                      모델·스토어·순서·태그·월 통계·픽셀아트·그림자·위젯·동기화(두 기기·오프라인·충돌)
 │  ├─ assets/fonts/              나눔스퀘어라운드 R/B/EB + OFL 라이선스
 │  └─ tool/                      플랫폼 설정 스크립트
 ├─ preview/                      웹 미리보기 (index.html + 글꼴 일부)
-└─ docs/                         IMPLEMENTATION, CHANGELOG, MODIFY_GUIDE, PROMPTS, TEAM_NOTES
+└─ docs/                         MP3 실행 매뉴얼, 단계별 정리, MP3 프롬프트, IMPLEMENTATION, CHANGELOG, MODIFY_GUIDE, PROMPTS, TEAM_NOTES
 ```
 
-의존 방향: `ui → state → data/models`, `ui → services → game`. 화면은 저장 방식을 모릅니다.
+의존 방향: `ui → state → data/models`, `ui → services → game`, `SyncController → TaskStore · services/sync`. 화면은 저장·동기화 방식을 모릅니다.
 
 ## 8. 사용 패키지
 
 | 패키지 | 용도 |
 |---|---|
-| `shared_preferences` | 로컬 저장 (선택 이유는 [README.md](README.md) 4절) |
+| `shared_preferences` | 로컬 저장·동기화 장부 (선택 이유는 [README.md](README.md) 10절) |
+| `http` | Supabase REST (로그인·동기화, v0.6) |
 | `cupertino_icons` | 아이콘 |
 | `image_picker` | 메모 촬영·캐릭터 사진 |
 | `google_mlkit_text_recognition` | 온디바이스 OCR (한글) |
@@ -129,5 +149,7 @@ Keepy1/
 - [x] PC 에서 `flutter run -d chrome` 실행 확인 (2026-11-15, 첫 실행 컴파일 오류·꾸미기 시트 넘침 수정 후)
 - [ ] `flutter analyze` / `flutter test` / Android·iOS 실기기 실행 확인
 - [ ] 제출용 스크린샷을 실기기 캡처로 교체 (지금은 웹 미리보기 캡처)
-- [ ] MP3: BaaS 로그인·동기화 (`SyncService` 계약, `.env.example`)
+- [x] MP3: Supabase 로그인·동기화·오프라인 대기열·충돌 처리 (v0.6)
+- [ ] MP3 실서버 확인 + 스크린샷 `mp3_01~05` ([실행 매뉴얼](docs/MP3_실행_매뉴얼.md))
+- [ ] (다음 후보) 실시간 반영(Realtime), 태그 목록·설정 동기화
 - [ ] 알림(푸시) 실제 예약, eclass·에브리타임 일정 가져오기

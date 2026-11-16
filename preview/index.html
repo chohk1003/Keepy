@@ -52,6 +52,15 @@ button,input,textarea{font-family:inherit}
 .logo{font-size:23px;font-weight:800;letter-spacing:-1px;display:flex;align-items:flex-end;line-height:1;margin-right:auto}
 .logo i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g-primary);margin:0 0 3px 2px}
 .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(76,195,255,.18),rgba(47,123,255,.14));font-weight:800;font-size:13px}
+.syncbtn{height:32px;padding:0 9px;border-radius:10px;background:var(--skytint);display:flex;align-items:center;gap:4px;cursor:pointer;border:0;color:var(--blue);font:inherit;font-size:11.5px;font-weight:800;transition:transform .16s var(--ease)}
+.syncbtn:active{transform:scale(.88)}.syncbtn .st{display:flex}
+.actabs{display:flex;padding:3px;border-radius:12px;background:var(--fill)}.actabs button{flex:1;height:34px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:13.5px;color:var(--label2);cursor:pointer}
+.actabs button.on{background:var(--card);color:var(--label);font-weight:800;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+.acf{margin-top:12px}.acf input{width:100%;border:0;outline:0;background:transparent;font:inherit;font-size:15px;padding:14px 16px;color:var(--label)}.acf .hr{height:.6px;background:var(--sep);margin-left:16px}
+.acnote{margin-top:10px;font-size:12px;line-height:1.45;color:var(--blue)}.acnote.err{color:#FF4D5E}
+.acc{padding:16px}.acc .em{font-size:15px;font-weight:800}.acc .stl{display:flex;align-items:center;gap:6px;margin-top:3px;font-size:12px;font-weight:700}.acc .stl i{width:7px;height:7px;border-radius:50%;display:block;flex:none}
+.acc .kv{display:flex;justify-content:space-between;font-size:12px;color:var(--label2);margin-top:8px}.acc .kv b{color:var(--label)}
+.acout{display:block;margin:6px auto 0;border:0;background:none;color:#FF4D5E;font:inherit;font-size:14.5px;font-weight:800;padding:10px;cursor:pointer}
 .gamebtn{width:32px;height:32px;border-radius:10px;background:var(--skytint);display:grid;place-items:center;cursor:pointer;border:0;transition:transform .16s var(--ease)}
 .gamebtn:active{transform:scale(.88)}
 .badge{display:inline-grid;place-items:center;min-width:28px;height:22px;padding:0 8px;border-radius:10px;background:rgba(47,123,255,.1);font-weight:800;font-size:13px}
@@ -320,7 +329,7 @@ button,input,textarea{font-family:inherit}
 </div>
 
 <div class="guide">
-  <h1><i>keepy</i> 미리보기 <span style="font-size:13px;color:#8792A5">v0.5</span></h1>
+  <h1><i>keepy</i> 미리보기 <span style="font-size:13px;color:#8792A5">v0.6</span></h1>
   <p>Flutter 앱과 같은 화면·조작을 브라우저에서 해 볼 수 있는 버전입니다. 마우스로 끌어도 됩니다.</p>
   <ul>
     <li><span class="new">NEW</span><b>다크 모드</b> — 설정 &gt; 화면 &gt; 시스템/라이트/다크</li>
@@ -425,7 +434,7 @@ function adjacent(from, dir) {
 }
 const selected = () => UI.selected ? fromKey(UI.selected) : today();
 
-function commit() { save(); render(); }
+function commit() { save(); syncAfterChange(); render(); }
 function addTask(title, due, tags) { if (!valid(title)) return null; const t = { id:newId(), title:norm(title), createdAt:Date.now(), due: due?keyOf(due):null, tags:[...tags], done:false, completedAt:null, completedLate:false, order: nextOrder() }; S.tasks.push(t); commit(); return t; }
 function put(t) { const i = S.tasks.findIndex(x => x.id === t.id); if (i < 0) S.tasks.push(t); else S.tasks[i] = t; commit(); }
 function toggle(id) {
@@ -474,7 +483,7 @@ function clearDone() { const removed = []; S.tasks.forEach((t, i) => { if (t.don
 function renderMain() {
   const all = sorted(S.tasks), delayed = all.filter(t => status(t)==='delayed'), todo = all.filter(t => status(t)==='todo'), done = all.filter(t => t.done);
   const total = S.tasks.length, open = total - done.length; if (!total) UI.editing = false;
-  let h = `<div class="hdr"><div class="logo">keepy<i></i></div>${S.settings.game?`<button class="gamebtn" data-act="game" title="미니게임">${I.stairs}</button>`:''}</div>
+  let h = `<div class="hdr"><div class="logo">keepy<i></i></div><span style="margin-left:auto;display:flex;gap:8px">${SY.email?syncBadge():''}${S.settings.game?`<button class="gamebtn" data-act="game" title="미니게임">${I.stairs}</button>`:''}</span></div>
     <div class="caption" style="margin-top:12px">${full(today())}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:2px"><div class="large">모든 할 일</div><span class="badge"><span class="gt">${total}</span></span>${total?`<button class="editbtn ${UI.editing?'on':''}" data-act="edit">${UI.editing?'완료':'편집'}</button>`:''}</div>
     ${total?`<div class="sum">${[['today','오늘 할 일',S.tasks.filter(t=>!t.done&&t.due&&sameDayAny(t.due,today())).length,'#2F7BFF'],['delayed','지연',delayed.length,'#FF9F2E'],['donetoday','오늘 완료',S.tasks.filter(t=>t.done&&t.completedAt&&sameDayAny(t.completedAt,today())).length,'#34C77B']].map(([k,l,n,c],i)=>`${i?'<span class="dv"></span>':''}<button data-act="sum" data-k="${k}"><small><i style="background:${c}"></i>${l}</small><b class="${n?'':'z'}" style="color:${c}">${n}</b></button>`).join('')}</div>`:''}
@@ -543,7 +552,7 @@ function renderSettings() {
     <div class="hdr"><div class="logo" style="font-size:20px">keepy<i></i></div></div>
     <div class="large" style="margin-top:10px">설정</div>
     <div class="gtitle">계정</div>
-    <div class="group">${row(`<div class="avatar" style="width:40px;height:40px;flex:none;background:var(--skytint);color:var(--blue)"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4.1 3.6-7 8-7s8 2.9 8 7Z"/></svg></div><div>${esc(s.userName)}<span class="sub">로그인 전 · 이 기기에 저장 중</span></div><span class="chev2" style="margin-left:auto">›</span>`, 'tap', 'data-act="account"')}</div>
+    <div class="group">${row(`<div class="avatar" style="width:40px;height:40px;flex:none;background:var(--skytint);color:var(--blue)"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4.1 3.6-7 8-7s8 2.9 8 7Z"/></svg></div><div>${esc(SY.email || s.userName)}<span class="sub">${SY.email ? esc(syStatus()) : '로그인하고 여러 기기에서 같은 목록 보기'}</span></div><span class="chev2" style="margin-left:auto">›</span>`, 'tap', 'data-act="account"')}</div>
     <div class="gtitle">화면</div>
     <div class="group">${row(`<span style="color:var(--blue);display:flex">${isDark()?'<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>':'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>'}</span>화면 모드${seg('appearance',['system','light','dark'], v => ({system:'시스템',light:'라이트',dark:'다크'})[v])}`)}</div>
     <div class="note">시스템을 고르면 휴대폰의 다크 모드 설정을 따라가요.</div>
@@ -582,7 +591,7 @@ function renderSettings() {
     <div class="gtitle">데이터</div>
     <div class="group">${row('샘플 할 일 넣기<span class="v">시연용</span><span class="chev2">›</span>','tap','data-act="samples"')}${row('모든 할 일 지우기','tap red','data-act="clear"')}</div>
     <div class="note">할 일은 이 기기(브라우저)에 저장되어 다시 열어도 그대로 남아요.</div>
-    <div class="foot" style="text-align:center;margin:20px 0 10px">Keepy 0.5.0 · 웹 미리보기</div>`;
+    <div class="foot" style="text-align:center;margin:20px 0 10px">Keepy 0.6.0 · 웹 미리보기</div>`;
 }
 
 function renderChrome() {
@@ -770,7 +779,7 @@ phone.addEventListener('click', e => {
     case 'tagmgr': openTagManager(); return;
     case 'samples': addSamples(); commit(); toast('샘플 할 일을 넣었어요'); return;
     case 'clear': actionSheet('모든 할 일을 지울까요? 되돌릴 수 없어요.', [['지우기','red', () => { S.tasks = []; UI.open = null; commit(); }]]); return;
-    case 'account': actionSheet('로그인·여러 기기 동기화는 BaaS 연동 단계에서 지원됩니다. 지금은 이 기기에만 저장돼요.', [['로그아웃','red', () => toast('로그인 기능은 아직 준비 중이에요')]]); return;
+    case 'account': buzz(4); openAccount(); return;
     case 'remind': actionSheet('미리 알림', [0,1,2,3].map(d => [d===0?'당일':d+'일 전', S.settings.remind===d?'b':'', () => { S.settings.remind = d; commit(); }])); return;
     case 'time': { const cur = `${pad(Math.floor(S.settings.remindMin/60))}:${pad(S.settings.remindMin%60)}`;
       openSheet(`<div class="title">알림 시간</div><input type="time" id="tmIn" class="tin" value="${cur}" step="300" style="margin:14px 0 18px"><button class="btn" id="tmOk">완료</button>`);
@@ -797,6 +806,121 @@ document.getElementById('cam').innerHTML = I.camera;
 document.getElementById('cam').addEventListener('click', openCapture);
 
 // ------------------------------------------------------------------ 시트·대화상자
+// ---- 서버 동기화 미리보기 (앱: state/sync_controller.dart · ui/pages/account_sheet.dart)
+// 실제 Supabase 대신 이 브라우저 안의 '가상 서버'를 쓴다. 흐름·상태 표시·대기열은 앱과 같다.
+const SYNC_KEY = 'keepy.preview.sync.v1', SRV_KEY = 'keepy.preview.server.v1';
+const SY = { email: null, ledger: {}, last: null, phase: 'out', offline: false, msg: '' };
+let syncTimer = null, accountOpen = false, acMode = 'in', acNote = '', acErr = false, acEmailVal = '';
+const CLOUD = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7 18.5h10.2a4.3 4.3 0 0 0 .6-8.55A6 6 0 0 0 6.2 9.1 4.7 4.7 0 0 0 7 18.5Z"/></svg>';
+const SYI = {
+  ok: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  spin: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 12a8 8 0 0 1-14 5.3M4 12a8 8 0 0 1 14-5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>',
+  up: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>',
+  off: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/><path d="M3 3l18 18"/></svg>',
+  err: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>'
+};
+function syLoad() { try { const v = JSON.parse(localStorage.getItem(SYNC_KEY) || 'null'); if (v) { Object.assign(SY, v); SY.phase = SY.email ? 'idle' : 'out'; } } catch (e) {} }
+function sySave() { try { localStorage.setItem(SYNC_KEY, JSON.stringify({ email: SY.email, ledger: SY.ledger, last: SY.last, offline: SY.offline })); } catch (e) {} }
+function srv() { try { return JSON.parse(localStorage.getItem(SRV_KEY) || 'null') || { users: {}, rows: {} }; } catch (e) { return { users: {}, rows: {} }; } }
+function srvSave(v) { try { localStorage.setItem(SRV_KEY, JSON.stringify(v)); } catch (e) {} }
+const syPending = () => Object.values(SY.ledger).filter(e => e.d).length;
+function syStatus() {
+  const n = syPending();
+  if (SY.phase === 'syncing') return '동기화 중…';
+  if (SY.phase === 'offline') return n ? `오프라인 · 올릴 변경 ${n}개` : '오프라인';
+  if (n) return `올릴 변경 ${n}개`;
+  if (!SY.last) return '동기화 준비됨';
+  const sec = (Date.now() - SY.last) / 1000;
+  return '동기화됨 · ' + (sec < 60 ? '방금' : sec < 3600 ? `${Math.floor(sec/60)}분 전` : `${pad(new Date(SY.last).getHours())}:${pad(new Date(SY.last).getMinutes())}`);
+}
+function syColor() { const n = syPending(); return SY.phase === 'syncing' ? '#2F7BFF' : SY.phase === 'offline' ? '#FF9F2E' : SY.phase === 'error' ? '#FF4D5E' : n ? '#FF9F2E' : '#2FC27A'; }
+function syncBadge() {
+  const n = syPending(), ic = SY.phase === 'syncing' ? SYI.spin : SY.phase === 'offline' ? SYI.off : SY.phase === 'error' ? SYI.err : n ? SYI.up : SYI.ok;
+  return `<button class="syncbtn" data-act="account" id="syncBadge" title="동기화: ${esc(syStatus())}">${CLOUD}<span class="st" style="color:${syColor()}">${ic}</span>${n && SY.phase !== 'syncing' ? `<span style="color:${syColor()}">${n}</span>` : ''}</button>`;
+}
+// 할 일 목록 vs 장부 → 바뀐 것을 '올릴 변경' 으로 (앱: _markLocalChanges)
+function syMark(useTaskTime) {
+  const now = Date.now(), seen = new Set(); let changed = false;
+  S.tasks.forEach(t => { seen.add(t.id); const j = JSON.stringify(t), e = SY.ledger[t.id];
+    if (e && !e.x && e.j === j) return;
+    const at = useTaskTime ? (t.updatedAt || t.createdAt || now) : now;
+    SY.ledger[t.id] = { u: e ? Math.max(at, e.u + 1) : at, d: true, x: false, j }; changed = true; });
+  Object.keys(SY.ledger).forEach(id => { const e = SY.ledger[id]; if (e.x || seen.has(id)) return;
+    SY.ledger[id] = { u: Math.max(now, e.u + 1), d: true, x: true, j: e.j }; changed = true; });
+  return changed;
+}
+function syncAfterChange() { if (!SY.email) return; if (syMark(false)) { sySave(); clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, 1200); } }
+function syRefresh() { render(); if (accountOpen) drawAccount(); }
+function syncNow() {
+  if (!SY.email) return;
+  clearTimeout(syncTimer); SY.phase = 'syncing'; syRefresh();
+  setTimeout(() => {
+    if (!SY.email) return;
+    syMark(false);
+    if (SY.offline) { SY.phase = 'offline'; SY.msg = '인터넷에 연결되면 자동으로 올려요.'; sySave(); syRefresh(); syncTimer = setTimeout(syncNow, 10000); return; }
+    const sv = srv(), mine = sv.rows[SY.email] = sv.rows[SY.email] || {};
+    // 당겨오기: 내 변경이 더 최신이거나 같은 버전이면 건너뜀 (마지막 수정 우선)
+    const ups = [], dels = new Set();
+    Object.entries(mine).forEach(([id, r]) => { const e = SY.ledger[id];
+      if (e && e.d && e.u > r.u) return;
+      if (e && !e.d && e.u === r.u && !!e.x === !!r.x) return;
+      if (r.x) { dels.add(id); SY.ledger[id] = { u: r.u, d: false, x: true, j: e ? e.j : r.j }; }
+      else { ups.push(JSON.parse(r.j)); SY.ledger[id] = { u: r.u, d: false, x: false, j: r.j }; } });
+    if (ups.length || dels.size) { S.tasks = S.tasks.filter(t => !dels.has(t.id)); ups.forEach(u => { const i = S.tasks.findIndex(t => t.id === u.id); if (i < 0) S.tasks.push(u); else S.tasks[i] = u; }); save(); }
+    // 올리기: 서버도 더 오래된 쓰기는 무시
+    Object.entries(SY.ledger).forEach(([id, e]) => { if (!e.d) return; const old = mine[id]; if (!old || e.u >= old.u) mine[id] = { u: e.u, x: e.x, j: e.j }; e.d = false; });
+    srvSave(sv); SY.phase = 'idle'; SY.msg = ''; SY.last = Date.now(); sySave(); syRefresh();
+    syncTimer = setTimeout(syncNow, 20000);
+  }, 450);
+}
+function openAccount() { accountOpen = true; drawAccount(); }
+function drawAccount() {
+  let body;
+  if (!SY.email) {
+    body = `<div class="actabs"><button class="${acMode==='in'?'on':''}" data-m="in">로그인</button><button class="${acMode==='up'?'on':''}" data-m="up">회원가입</button></div>
+      <div class="group acf"><input id="acEmail" type="email" placeholder="이메일" autocomplete="email" value="${esc(acEmailVal)}"><div class="hr"></div><input id="acPw" type="password" placeholder="${acMode==='up'?'비밀번호 (6자 이상)':'비밀번호'}"></div>
+      ${acNote ? `<div class="acnote ${acErr?'err':''}">${esc(acNote)}</div>` : ''}
+      <div style="height:16px"></div><button class="btn" id="acGo">${acMode==='up'?'가입하고 동기화 시작':'로그인'}</button>
+      <div class="note" style="padding-top:12px">로그인하면 이 기기에 있던 할 일도 계정에 합쳐져요.<br>다른 기기에서 같은 계정으로 로그인하면 같은 목록을 봐요.<br><b>미리보기:</b> 실제 서버 대신 이 브라우저 안의 가상 서버를 써요.</div>`;
+  } else {
+    const d = SY.last ? new Date(SY.last) : null;
+    body = `<div class="group acc"><div style="display:flex;align-items:center;gap:12px"><div class="avatar" style="width:40px;height:40px;flex:none;background:var(--skytint);color:var(--blue)"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c0-4.1 3.6-7 8-7s8 2.9 8 7Z"/></svg></div>
+        <div style="min-width:0"><div class="em">${esc(SY.email)}</div><div class="stl" id="acStatus" style="color:${syColor()}"><i style="background:${syColor()}"></i>${esc(syStatus())}</div></div></div>
+        <div class="kv" style="margin-top:14px"><span>마지막 동기화</span><b>${d ? `${d.getMonth()+1}월 ${d.getDate()}일 ${pad(d.getHours())}:${pad(d.getMinutes())}` : '아직 없음'}</b></div>
+        <div class="kv"><span>서버에 올릴 변경</span><b>${syPending()}개</b></div>
+        ${SY.phase === 'offline' && SY.msg ? `<div class="kv" style="color:${syColor()}">${esc(SY.msg)}</div>` : ''}</div>
+      <div style="height:16px"></div><button class="btn" id="acSync" ${SY.phase==='syncing'?'disabled':''}>${SY.phase==='syncing'?'동기화 중…':'지금 동기화'}</button>
+      <button class="acout" id="acOut">로그아웃</button>
+      <div class="group" style="margin-top:6px"><div class="srow">오프라인 흉내 <span class="sub" style="display:inline;margin-left:6px">미리보기 전용</span><div class="sw ${SY.offline?'on':''}" id="acOff"></div></div></div>
+      <div class="note" style="padding-top:10px">• 앱을 열 때, 다시 앞으로 올 때, 할 일을 바꾼 직후, 그리고 20초마다 자동으로 맞춰요.<br>• 오프라인에서 바꾼 것은 이 기기에 모아 두었다가 연결되면 올려요.<br>• 두 기기에서 같은 할 일을 고치면 나중에 고친 쪽이 남아요.</div>`;
+  }
+  openSheet(`<div style="display:flex;align-items:center;gap:8px;color:#2F7BFF">${CLOUD}<span class="title" style="color:var(--label)">계정 · 동기화</span></div>
+    <div class="caption" style="margin:4px 0 14px">같은 계정으로 로그인한 기기끼리 할 일 목록이 맞춰져요.</div>${body}`);
+  const sh = document.getElementById('sheet');
+  sh.onclose = () => { accountOpen = false; };
+  sh.querySelectorAll('.actabs button').forEach(b => b.onclick = () => { acEmailVal = (document.getElementById('acEmail') || {}).value || acEmailVal; acMode = b.dataset.m; acNote = ''; drawAccount(); });
+  const go = document.getElementById('acGo');
+  if (go) {
+    const pw = document.getElementById('acPw');
+    pw.onkeydown = e => { if (e.key === 'Enter') go.click(); };
+    go.onclick = () => {
+      const email = document.getElementById('acEmail').value.trim(), p = pw.value; acEmailVal = email;
+      const fail = m => { acNote = m; acErr = true; buzz(10); drawAccount(); };
+      if (!email.includes('@') || !email.includes('.')) return fail('이메일을 확인해 주세요.');
+      if (p.length < 6) return fail('비밀번호는 6자 이상이에요.');
+      const sv = srv();
+      if (acMode === 'up') { if (sv.users[email]) return fail('이미 가입된 이메일이에요. 로그인해 주세요.'); sv.users[email] = p; srvSave(sv); }
+      else if (sv.users[email] !== p) return fail('이메일 또는 비밀번호가 맞지 않아요.');
+      SY.email = email; SY.ledger = {}; SY.last = null; SY.phase = 'idle'; syMark(true); sySave(); acNote = ''; buzz(6);
+      drawAccount(); render(); syncNow();
+    };
+  }
+  const sn = document.getElementById('acSync'); if (sn) sn.onclick = () => { buzz(4); syncNow(); };
+  const off = document.getElementById('acOff'); if (off) off.onclick = () => { SY.offline = !SY.offline; sySave(); buzz(4); if (!SY.offline) syncNow(); else { SY.phase = 'offline'; SY.msg = '인터넷에 연결되면 자동으로 올려요.'; syRefresh(); } };
+  const out = document.getElementById('acOut');
+  if (out) out.onclick = () => { const n = syPending(); dialogBox({ title: '로그아웃할까요?', message: n ? `아직 서버에 못 올린 변경이 ${n}개 있어요. 로그아웃하면 이 변경은 이 기기에만 남아요.` : '이 기기의 할 일은 그대로 남아요. 다시 로그인하면 계정과 합쳐져요.', okLabel: '로그아웃', red: true, onOk: () => { clearTimeout(syncTimer); SY.email = null; SY.ledger = {}; SY.last = null; SY.phase = 'out'; sySave(); render(); drawAccount(); } }); };
+}
+
 const action = document.getElementById('action');
 const layer = n => ({ scrim: document.getElementById(n === 2 ? 'scrim2' : 'scrim'), sheet: document.getElementById(n === 2 ? 'sheet2' : 'sheet') });
 function openSheet(html, n = 1) { const L = layer(n); L.sheet.innerHTML = '<div class="grab"></div>' + html; L.scrim.classList.add('show'); L.sheet.classList.add('show'); }
@@ -1079,6 +1203,7 @@ const datePull = { onScroll: sc => {
   onRelease: o => { if (Math.abs(o) < 70) return false; const t = adjacent(selected(), o < 0 ? -1 : 1); if (!t) { buzz(4); return false; } buzz(15); setTimeout(() => selectDate(t), 0); return true; } };
 scrollers.push(new Scroller(document.getElementById('sc0')), new Scroller(document.getElementById('sc1')), new Scroller(document.getElementById('sc2'), datePull));
 if (!load()) addSamples();
+syLoad(); if (SY.email) setTimeout(syncNow, 600);
 const tick = () => { const d = now(); document.getElementById('clock').textContent = `${d.getHours()}:${pad(d.getMinutes())}`; };
 tick(); setInterval(tick, 30000);
 setPagesX(pageX(), false);
@@ -1086,7 +1211,7 @@ render();
 if (document.fonts) document.fonts.ready.then(() => render());
 if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', () => render());
 window.addEventListener('resize', () => { setPagesX(pageX(), false); render(); });
-window.__keepy = { S, UI, render, goPage, openGame, monthStat };
+window.__keepy = { S, UI, render, goPage, openGame, monthStat, commit };
 })();
 </script>
 </body>

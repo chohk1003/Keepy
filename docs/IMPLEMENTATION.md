@@ -1,9 +1,33 @@
-# 구현 정리 — Keepy v0.5.0
+# 구현 정리 — Keepy v0.6.0
 
-작성일 2026-11-15 (v0.2.0 MP2 → v0.3.0 → v0.4.0 → v0.5.0 사용자 요청 반영) · 파일 경로는 `app/` 기준 · 기준 문서 우선순위: **prompts_log.md → UI 설계서 v2 → 요구사항 명세서 v1.0**
+작성일 2026-11-15 (v0.2.0 MP2 → v0.3.0 → v0.4.0 → v0.5.0 → v0.6.0 MP3 사용자 요청 반영) · 파일 경로는 `app/` 기준 · 기준 문서 우선순위: **prompts_log.md → UI 설계서 v2 → 요구사항 명세서 v1.0**
 (문서끼리 다르면 앞 문서를 따랐습니다. 아래 "문서 간 차이를 어떻게 정했나" 참고)
 
 상태 표기: ✅ 구현 · 🟡 일부/화면만 · ⏭ 다음 단계(MP3)
+
+---
+
+## 0000. v0.6.0 — 미니프로젝트 3단계: 백엔드 동기화
+
+| 과제 항목 | 구현 | 위치 |
+|---|---|---|
+| BaaS 에 할 일 저장·조회 | Supabase `keepy_tasks` 표, REST(`http`)로 올리기·새로 온 줄만 받기 | `services/sync/supabase_backend.dart`, `app/supabase/schema.sql` |
+| 두 기기 동기화 | 같은 계정 로그인 → 앱 시작·복귀·변경 직후·20초·'지금 동기화' 때 맞춤 | `state/sync_controller.dart` |
+| 오프라인 작성 → 온라인 반영 | 기기에 저장되는 동기화 장부(대기열), 오프라인이면 10초마다 재시도 | `services/sync/sync_ledger.dart`, `SyncController` |
+| 충돌 처리 | 할 일 단위 마지막 수정 우선 + 삭제 표시 + 로그인 시 할 일 수정 시각으로 합치기 + 서버 트리거 | `SyncController._applyRemoteRows`, `schema.sql` |
+| 설정 키 분리 | `.env` → `--dart-define-from-file` → `String.fromEnvironment`, `.env.example` 만 제출 | `core/env.dart`, `app/.env.example` |
+| 계정 화면 | 가입·로그인·로그아웃, 상태·대기 수·마지막 동기화·지금 동기화 | `ui/pages/account_sheet.dart`, `settings_page.dart` 계정 줄 |
+| 상태 표시 | 메인 ☁ 배지 (로그인했을 때만) | `main_page.dart` `_SyncBadge` |
+| 기존 기능 보존 | 기기 저장 그대로, `TaskStore.applyRemote` 만 추가, 동기화 안 넘기면 '꺼짐' 컨트롤러 → 기존 테스트 수정 없음 | `app.dart`, `state/task_store.dart` |
+
+**검증:** `test/sync_test.dart` 11개(가짜 서버) · `schema.sql` 을 PostgreSQL 16 에서 실행(재실행 안전, LWW, RLS, DELETE 차단) ·
+새로 만든 파일 괄호 짝·참조 이름 기계 점검 · 실서버 확인은 [MP3_실행_매뉴얼.md](MP3_실행_매뉴얼.md).
+
+**설계 메모**
+- 공식 SDK(supabase_flutter) 대신 REST: 의존성 하나, 플랫폼 설정 없음, 1·2단계 패키지와 충돌 없음.
+- 새 형식 키(`sb_publishable_…`)는 JWT 가 아니라 `Authorization` 에 넣으면 거절됨(공식 문서) → `apikey` 헤더에만.
+- 실시간 구독(Realtime)은 넣지 않음: 통과 기준이 '새로고침 후 표시'. 필요하면 다음 단계에서 추가.
+- 동기화 대상은 할 일만. 태그 목록·화면 모드 등 설정은 기기별로 둔다 (할 일에 붙은 태그 이름은 할 일과 함께 동기화됨).
 
 ---
 
@@ -76,7 +100,7 @@
 
 | ID | 기능 | 상태 | 구현 위치 · 내용 |
 |---|---|---|---|
-| FR-01 | 로그인/인증 | ⏭ | 설정 > 계정에 현재 계정 표시, 로그아웃 시트(안내). 실제 로그인은 BaaS 단계. 계약: `services/sync_service.dart` |
+| FR-01 | 로그인/인증 | ✅ | v0.6: Supabase Auth 이메일·비밀번호 가입/로그인/로그아웃, 로그인 유지·토큰 갱신 (`ui/pages/account_sheet.dart`, `services/sync/supabase_backend.dart`) |
 | FR-02 | 태스크 추가 | ✅ | 하단 입력 바 (`widgets/quick_input_bar.dart`) → `TaskStore.add` |
 | FR-03 | 완료 토글 | ✅ | 네모 체크박스 → 체크·취소선이 보인 뒤 0.24초 후 완료 목록으로 이동, 되돌리기 알림 |
 | FR-04 | 수정·삭제 | ✅ | 블럭 누르기 → 수정 시트(제목·태그·기한·삭제). 오른쪽 스와이프 삭제 |
@@ -86,8 +110,8 @@
 | FR-08 | 캘린더 뷰 | ✅ | 위 1/4 캘린더(행 1~4), 아래 3/4 고른 날 목록 |
 | FR-09 | 다이얼식 날짜 지정 | ✅ | 왼쪽으로 당긴 거리에 따라 +1/+2/+7 단계, 놓으면 저장 (v0.3) |
 | FR-10 | 로컬 영속성 | ✅ | `shared_preferences` 에 JSON 저장, 재실행 후 복원. 깨진 데이터는 별도 키에 백업 |
-| FR-11 | 다중 기기 동기화 | ⏭ | `SyncService` 계약 + `Task.updatedAt`(병합 기준) 준비 |
-| FR-12 | 오프라인 지원 | 🟡 | 지금은 전부 로컬이라 오프라인에서 완전 동작. 온라인 복귀 병합은 BaaS 단계 |
+| FR-11 | 다중 기기 동기화 | ✅ | v0.6: `SyncController` 당겨오기·올리기, 마지막 수정 우선 + 삭제 표시 (`state/sync_controller.dart`) |
+| FR-12 | 오프라인 지원 | ✅ | 기기 저장으로 오프라인 완전 동작 + v0.6 동기화 장부(대기열)로 온라인 복귀 시 자동 반영 |
 | FR-13 | OCR 텍스트 추출 | ✅ | `image_picker` 촬영/앨범 → ML Kit 한글 인식 → 줄 단위 후보(글머리표·번호·중복 정리) |
 | FR-14 | 검토 UI 등록 | ✅ | 후보 글자 직접 수정, 체크박스 선택, '선택한 N개 추가' 일괄 등록 |
 
@@ -153,7 +177,7 @@
 - **이 코드는 작성 환경에서 Flutter SDK를 받을 수 없어 `flutter analyze/test` 를 아직 돌리지 못했습니다 (v0.2, v0.3 모두).**
   처음 받으면 `flutter analyze` → `flutter test` 순서로 확인해 주세요. 웹 미리보기는 실제 브라우저에서 모든 조작을 검증했습니다.
 - 알림(푸시)·eclass·에브리타임: 설정 저장까지만. 푸시는 `flutter_local_notifications` 추가가 다음 단계.
-- 로그인·동기화(FR-01/11/12): `SyncService` 계약 구현 필요 (Supabase 또는 Firebase).
+- 로그인·동기화(FR-01/11/12): v0.6 에서 Supabase 로 구현. 실서버 확인은 `docs/MP3_실행_매뉴얼.md`. 실시간 구독·설정 동기화는 다음 단계 후보.
 - 촬영 화면은 시스템 카메라를 엽니다. 프레임 안 실시간 미리보기가 필요하면 `camera` 패키지로 교체.
 - 웹 미리보기는 시연용 차이가 있습니다: 처음에 샘플 할 일이 들어 있고, 카메라는 예시 메모를 쓰며, 캐릭터 사진은 테두리 색으로 배경을 지웁니다.
 - `google_mlkit_selfie_segmentation` 과 `google_mlkit_text_recognition` 은 같은 `google_mlkit_commons` 를 씁니다. `flutter pub get` 에서 버전 충돌이 나면 두 패키지를 같은 시기 버전으로 맞춰 주세요.

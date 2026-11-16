@@ -8,6 +8,7 @@ import 'models/app_settings.dart';
 import 'services/ocr_service.dart';
 import 'state/keepy_scope.dart';
 import 'state/settings_store.dart';
+import 'state/sync_controller.dart';
 import 'state/task_store.dart';
 import 'ui/shell/home_shell.dart';
 
@@ -18,17 +19,23 @@ class KeepyApp extends StatefulWidget {
     required this.tasks,
     required this.settings,
     required this.ocr,
+    this.sync,
   });
 
   final TaskStore tasks;
   final SettingsStore settings;
   final OcrService ocr;
 
+  /// 서버 동기화 (MP3). 안 주면(테스트·키 없는 실행) 꺼진 상태로 동작한다.
+  final SyncController? sync;
+
   @override
   State<KeepyApp> createState() => _KeepyAppState();
 }
 
 class _KeepyAppState extends State<KeepyApp> with WidgetsBindingObserver {
+  late final SyncController _sync = widget.sync ?? SyncController.disabled();
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +45,14 @@ class _KeepyAppState extends State<KeepyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (widget.sync == null) _sync.dispose(); // 직접 만든 것만 정리
     super.dispose();
+  }
+
+  /// 앱이 다시 앞으로 오면 다른 기기에서 바뀐 것을 받아 온다 (MP3).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _sync.onResumed();
   }
 
   /// 휴대폰의 다크 모드 설정이 바뀌면 '시스템' 모드일 때 따라간다.
@@ -64,6 +78,7 @@ class _KeepyAppState extends State<KeepyApp> with WidgetsBindingObserver {
           tasks: widget.tasks,
           settings: widget.settings,
           ocr: widget.ocr,
+          sync: _sync,
           child: AnnotatedRegion<SystemUiOverlayStyle>(
             value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
               statusBarColor: Colors.transparent,

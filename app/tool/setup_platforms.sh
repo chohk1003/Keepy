@@ -31,6 +31,18 @@ PY
   fi
   echo "  + $DEP"
 fi
+# MP3 서버 동기화: 정식(release) 빌드에도 인터넷 권한이 필요하다
+MANIFEST=android/app/src/main/AndroidManifest.xml
+if [ -f "$MANIFEST" ] && ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
+  python3 - "$MANIFEST" <<'PY'
+import re, sys
+path = sys.argv[1]
+s = open(path, encoding="utf-8").read()
+s = re.sub(r"(<manifest[^>]*>)", r'\1\n    <uses-permission android:name="android.permission.INTERNET"/>', s, count=1)
+open(path, "w", encoding="utf-8").write(s)
+PY
+  echo "  + INTERNET permission (MP3 sync)"
+fi
 
 echo "[3/4] iOS: camera/photo permission + platform 15.5"
 PLIST=ios/Runner/Info.plist

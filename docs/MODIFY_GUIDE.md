@@ -49,11 +49,19 @@
 3. 수정 시트 `task_editor_sheet.dart`, 필요하면 블럭 `_metaWidgets`
 4. `app/test/task_status_test.dart` JSON 왕복 테스트에 추가
 
-**BaaS 동기화 (FR-01/11/12)**
-1. `.env.example` → `.env` 에 키 (커밋 금지)
-2. `services/sync_service.dart` 의 `SyncService` 를 구현한 클래스 작성
-3. `TaskStore._commit` 뒤에 `push`, `main.dart` 시작 시 `pull` → 병합 기준 `Task.updatedAt`
-4. 설정 > 계정 시트의 로그아웃을 실제 동작으로
+**서버 동기화 (MP3, FR-01/11/12) — 이미 구현됨, 고칠 곳**
+| 바꾸고 싶은 것 | 파일 | 위치 |
+|---|---|---|
+| 자동 동기화 간격 (20초 / 오프라인 재시도 10초 / 변경 후 1.2초) | `app/lib/state/sync_controller.dart` | 생성자 `pollInterval`, `retryInterval`, `debounce` |
+| 충돌 규칙 (지금: 할 일 단위 마지막 수정 우선) | `sync_controller.dart` + `app/supabase/schema.sql` | `_applyRemoteRows`, 트리거 `keepy_tasks_lww` — 둘을 같이 바꾸고 `test/sync_test.dart` 도 |
+| 서버 주소·키 | `app/.env` (코드 아님) | `SUPABASE_URL`, `SUPABASE_ANON_KEY` |
+| 다른 BaaS 로 바꾸기 (Firebase 등) | `app/lib/services/sync/` | `SyncBackend` 계약을 구현한 클래스 하나 + `main.dart` 에서 교체 |
+| 오류 안내 문구 | `services/sync/supabase_backend.dart` | `_check`, `_authMessage` |
+| 계정 화면 | `app/lib/ui/pages/account_sheet.dart` | |
+| 메인 ☁ 배지 | `app/lib/ui/pages/main_page.dart` | `_SyncBadge` |
+| 서버 표·보안 규칙 | `app/supabase/schema.sql` | 고친 뒤 SQL Editor 에서 다시 Run (여러 번 실행해도 안전) |
+
+주의: 서버에서 받은 변경은 `TaskStore.applyRemote` 로만 넣는다. 다른 메서드로 넣으면 '내 변경' 으로 보고 다시 올라간다.
 
 **푸시 알림**
 `flutter_local_notifications` 추가 → `AppSettings.remindDaysBefore/remindMinutes` 로 예약 → 할 일 추가·수정·완료 때 다시 예약

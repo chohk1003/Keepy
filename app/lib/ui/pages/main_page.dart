@@ -6,10 +6,12 @@ import '../../core/dates.dart';
 import '../../core/theme.dart';
 import '../../models/task.dart';
 import '../../state/keepy_scope.dart';
+import '../../state/sync_controller.dart';
 import '../../state/task_store.dart';
 import '../game/stair_game_page.dart';
 import '../widgets/basics.dart';
 import '../widgets/task_actions.dart';
+import 'account_sheet.dart';
 
 enum TaskFilter { all, open, done }
 
@@ -76,6 +78,7 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
             _Header(
               showGame: settings.miniGameEnabled,
               onGame: () => StairGamePage.open(context),
+              sync: scope.sync,
             ),
             const SizedBox(height: 12),
             Text(formatFull(store.today), style: KeepyText.caption),
@@ -259,9 +262,10 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.showGame, required this.onGame});
+  const _Header({required this.showGame, required this.onGame, required this.sync});
   final bool showGame;
   final VoidCallback onGame;
+  final SyncController sync;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +275,17 @@ class _Header extends StatelessWidget {
         children: <Widget>[
           const KeepyLogo(),
           const Spacer(),
+          // MP3: 로그인했을 때만 동기화 상태 아이콘 (누르면 계정 · 동기화).
+          // 동기화 상태가 바뀌어도 목록 전체가 아니라 이 배지만 다시 그린다.
+          ListenableBuilder(
+            listenable: sync,
+            builder: (context, _) => !sync.isSignedIn
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: EdgeInsets.only(right: showGame ? 8 : 0),
+                    child: _SyncBadge(sync: sync),
+                  ),
+          ),
           // 미니게임 바로가기 (설정에서 켰을 때만). v0.4: 옆의 계정 'K' 동그라미는 쓰임이 없어 뺐다.
           if (showGame)
             PressScale(
@@ -467,3 +482,53 @@ class _DoneHeader extends StatelessWidget {
   }
 }
 
+/// 메인 머리의 동기화 상태 (MP3). 맞춰짐 ✓ / 동기화 중 ↻ / 올릴 변경 ↑ / 오프라인 / 오류.
+class _SyncBadge extends StatelessWidget {
+  const _SyncBadge({required this.sync});
+  final SyncController sync;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = sync.pendingCount;
+    final (IconData icon, Color color) = switch (sync.phase) {
+      SyncPhase.syncing => (CupertinoIcons.arrow_2_circlepath, KeepyColors.blue),
+      SyncPhase.offline => (CupertinoIcons.wifi_slash, KeepyColors.orange),
+      SyncPhase.error => (CupertinoIcons.exclamationmark_circle, KeepyColors.red),
+      _ => pending > 0
+          ? (CupertinoIcons.arrow_up, KeepyColors.orange)
+          : (CupertinoIcons.checkmark_alt, KeepyColors.green),
+    };
+    return Semantics(
+      label: '동기화: ${sync.statusText}',
+      button: true,
+      child: PressScale(
+        key: const Key('sync-status'),
+        onTap: () => showAccountSheet(context),
+        scale: 0.88,
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 9),
+          decoration: BoxDecoration(
+            color: KeepyColors.skyTint,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Icon(CupertinoIcons.cloud, size: 17, color: KeepyColors.blue),
+              const SizedBox(width: 4),
+              AnimatedSwitcher(
+                duration: KeepyMotion.fast,
+                child: Icon(icon, key: ValueKey<IconData>(icon), size: 13, color: color),
+              ),
+              if (pending > 0 && sync.phase != SyncPhase.syncing) ...<Widget>[
+                const SizedBox(width: 2),
+                Text('$pending', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: color)),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

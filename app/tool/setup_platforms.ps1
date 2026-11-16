@@ -6,6 +6,7 @@
 # 하는 일
 #   1) flutter create 로 android / ios / web 폴더 생성 (lib, test 는 건드리지 않음)
 #   2) Android: 한글 OCR 모델 의존성 추가 (google_mlkit_text_recognition 한글)
+#      + 인터넷 권한 (MP3 서버 동기화 — 정식 빌드에도 필요)
 #   3) iOS: 카메라·사진 권한 문구, 최소 버전 15.5 (ML Kit 요구)
 #   4) flutter pub get
 # 여러 번 실행해도 같은 내용을 중복으로 넣지 않는다.
@@ -42,6 +43,15 @@ if ($text -notmatch [regex]::Escape($koreanDep)) {
     Write-Host "  + $koreanDep"
 } else {
     Write-Host "  (already added)"
+}
+$manifest = Join-Path $root "android\app\src\main\AndroidManifest.xml"
+if (Test-Path $manifest) {
+    $m = Get-Content $manifest -Raw -Encoding UTF8
+    if ($m -notmatch "android.permission.INTERNET") {
+        $m = [regex]::Replace($m, "(<manifest[^>]*>)", "`$1`n    <uses-permission android:name=`"android.permission.INTERNET`"/>")
+        Save-Text $manifest $m
+        Write-Host "  + INTERNET permission (MP3 sync)"
+    }
 }
 
 Write-Host "[3/4] iOS: camera/photo permission + platform 15.5" -ForegroundColor Cyan

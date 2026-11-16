@@ -7,11 +7,13 @@ import '../../core/theme.dart';
 import '../../models/app_settings.dart';
 import '../../state/keepy_scope.dart';
 import '../../state/settings_store.dart';
+import '../../state/sync_controller.dart';
 import '../../state/task_store.dart';
 import '../game/stair_game_page.dart';
 import '../widgets/basics.dart';
 import '../widgets/tag_manager_sheet.dart';
 import '../widgets/undo_toast.dart';
+import 'account_sheet.dart';
 
 /// 설정 화면 (UI 설계서 01 / 요구사항 3.2 '설정 및 완료 이벤트').
 class SettingsPage extends StatefulWidget {
@@ -34,11 +36,12 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
     final scope = KeepyScope.of(context);
     final store = scope.settings;
     final tasks = scope.tasks;
+    final sync = scope.sync;
 
     return SafeArea(
       bottom: false,
       child: ListenableBuilder(
-        listenable: Listenable.merge(<Listenable>[store, tasks]),
+        listenable: Listenable.merge(<Listenable>[store, tasks, sync]),
         builder: (context, _) {
           final s = store.settings;
           final characterLabel = switch (s.effectiveCharacterStyle) {
@@ -67,11 +70,20 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(color: KeepyColors.skyTint, shape: BoxShape.circle),
-                    child: const Icon(CupertinoIcons.person_fill, color: KeepyColors.blue, size: 21),
+                    child: Icon(
+                      sync.isSignedIn ? CupertinoIcons.person_fill : CupertinoIcons.person,
+                      color: KeepyColors.blue,
+                      size: 21,
+                    ),
                   ),
-                  title: s.userName,
-                  subtitle: '로그인 전 · 이 기기에 저장 중',
-                  onTap: () => _showAccountSheet(context),
+                  // MP3: 로그인하면 이메일과 동기화 상태를 보여 준다.
+                  title: sync.isSignedIn ? (sync.email ?? s.userName) : s.userName,
+                  subtitle: sync.phase == SyncPhase.notConfigured
+                      ? '로그인 전 · 이 기기에 저장 중'
+                      : sync.isSignedIn
+                          ? sync.statusText
+                          : '로그인하고 여러 기기에서 같은 목록 보기',
+                  onTap: () => showAccountSheet(context),
                 ),
               ]),
 
@@ -248,7 +260,7 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
               ]),
               const _Footnote('할 일은 이 기기에 저장되어 앱을 다시 켜도 그대로 남아요.'),
               const SizedBox(height: 12),
-              Center(child: Text('Keepy 0.5.0', style: KeepyText.footnote)),
+              Center(child: Text('Keepy 0.6.0', style: KeepyText.footnote)),
             ],
           );
         },
@@ -257,30 +269,6 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
   }
 
   // ------------------------------------------------------------ 시트·대화상자
-
-  void _showAccountSheet(BuildContext context) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: const Text('계정'),
-        message: const Text('로그인·여러 기기 동기화는 BaaS 연동 단계(MP3)에서 지원됩니다.\n지금은 이 기기에만 저장돼요.'),
-        actions: <Widget>[
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(ctx);
-              widget.toast.show('로그인 기능은 아직 준비 중이에요');
-            },
-            child: const Text('로그아웃'),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('닫기'),
-        ),
-      ),
-    );
-  }
 
   void _pickRemind(BuildContext context, SettingsStore store) {
     showCupertinoModalPopup<void>(

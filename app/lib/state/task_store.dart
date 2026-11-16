@@ -366,6 +366,29 @@ class TaskStore extends ChangeNotifier {
     _commit();
   }
 
+  /// 서버에서 받은 변경을 한 번에 반영 (MP3 동기화 전용).
+  ///
+  /// [upserts] 는 넣거나 바꿀 할 일, [deletes] 는 다른 기기에서 지운 할 일 id.
+  /// 화면·저장은 다른 변경과 똑같이 갱신된다. 어떤 변경이 서버에서 왔는지는
+  /// 동기화 쪽(SyncController)이 기억하므로 다시 서버로 올라가지 않는다.
+  void applyRemote({List<Task> upserts = const <Task>[], Set<String> deletes = const <String>{}}) {
+    if (upserts.isEmpty && deletes.isEmpty) return;
+    final list = <Task>[
+      for (final t in _tasks)
+        if (!deletes.contains(t.id)) t,
+    ];
+    for (final u in upserts) {
+      final index = list.indexWhere((t) => t.id == u.id);
+      if (index < 0) {
+        list.add(u);
+      } else {
+        list[index] = u;
+      }
+    }
+    _tasks = list;
+    _commit();
+  }
+
   /// 시연용 샘플 (설정 > 데이터).
   void addSamples() {
     final t = today;
