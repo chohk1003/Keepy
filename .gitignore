@@ -6,5 +6,5 @@
 Thumbs.db
 *.swp
 
-# 빌드 도구가 루트에 남기는 산출물
-/build/
+# 빌드 산출물 (Gradle 이 Flutter 프로젝트 바깥에도 빈 트리를 만든다)
+build/
