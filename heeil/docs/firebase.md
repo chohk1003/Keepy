@@ -11,7 +11,7 @@
 
 - [ ] Firebase 콘솔에서 프로젝트 생성 + Android 앱 등록 → `.env` 값 4개 채우기
 - [ ] Authentication → 이메일/비밀번호 로그인 켜기
-- [ ] Firestore Database 만들기 + [`firestore.rules`](../firestore.rules) 붙여넣고 게시
+- [ ] Firestore Database 만들기 + [`firestore.rules`](../app/firestore.rules) 붙여넣고 게시
 
 ### 검증 (FR-11 · FR-12 · NFR-03 · NFR-04)
 
@@ -95,7 +95,7 @@ users/{uid}/tasks/{taskId}
 
 `updatedAt`·`deleted`가 동기화를 위해 새로 필요했던 두 필드다. 로컬 저장 키도 `keepy.*.v2`로 올렸다 ([storage.md](storage.md#키-버전-마이그레이션-v1--v2)).
 
-### 보안 규칙 ([firestore.rules](../firestore.rules))
+### 보안 규칙 ([firestore.rules](../app/firestore.rules))
 
 클라이언트를 믿지 않고 서버에서도 같은 규칙을 강제한다.
 

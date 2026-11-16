@@ -1,0 +1,10 @@
+# 저장소 루트에는 개인 폴더만 둔다.
+# 앱 쪽 무시 규칙은 각 개인 폴더의 app/.gitignore 를 따른다.
+
+# OS · 에디터
+.DS_Store
+Thumbs.db
+*.swp
+
+# 빌드 산출물 (Gradle 이 Flutter 프로젝트 바깥에도 빈 트리를 만든다)
+build/
