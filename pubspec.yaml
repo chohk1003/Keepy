@@ -1,0 +1,43 @@
+name: keepy
+description: "Keepy - 할 일 앱 (UI설계서 기준)"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^2.3.0
+  cupertino_icons: ^1.0.8
+  # MP4 카메라·OCR — 모바일 전용. 웹·데스크톱에서는 lib/pages/ocr/ 의 폴백이 돌아간다.
+  image_picker: ^1.2.4
+  google_mlkit_text_recognition: ^1.0.1
+  # MP3 동기화 — Firebase 설정값은 .env 로 넘긴다 (lib/data/firebase_env.dart)
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_firestore: ^7.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+          weight: 400
+        - asset: assets/fonts/Pretendard-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700
+        - asset: assets/fonts/Pretendard-ExtraBold.otf
+          weight: 800
