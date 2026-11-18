@@ -1,6 +1,6 @@
 ﻿# Keepy 플랫폼 폴더 생성 + OCR/카메라 설정 (Windows PowerShell)
 #
-#   cd C:\Keepy1\app
+#   cd C:\Keepy\Keepy\seoyoon\app      (내 것만 있는 폴더라면 C:\Keepy1\app)
 #   powershell -ExecutionPolicy Bypass -File tool\setup_platforms.ps1
 #
 # 하는 일

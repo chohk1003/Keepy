@@ -2,10 +2,14 @@
 
 > 이 문서는 **본인 브랜치에만** 둡니다 (prompts_log #6).
 
-## 브랜치 규칙
+## 브랜치 · 폴더 규칙 (2026-11-18 팀장 공지 '깃 관리' 기준)
 
-- 각자 **개인 브랜치**에서 구현한다. (`dev` 브랜치 흐름은 쓰지 않음)
-- 구현 결과를 비교해 **선정본만 `main`** 에 올린다.
+- 저장소 루트에는 **개인 폴더만** 둔다. 내 폴더는 `seoyoon/` — 내 작업은 전부 이 안에서만 한다.
+  (개인 폴더 안에 `app/` + `README.md` + `screenshots/` + `prompts_log.md` = 심사 기준 구조)
+- 순서: 개인 브랜치(`서윤`)에서 폴더 구조를 맞춰 **`dev` 로 풀 리퀘스트** → 모두 끝나면 **`dev` 를 내 브랜치로 가져오기**
+  (GitHub Desktop: Branch → Merge into current branch → `origin/dev` → Push).
+- `mergeProject/`(build 폴더)는 **팀장만** 다룬다. 다른 사람 폴더의 파일도 고치거나 커밋하지 않는다 → 충돌이 생기지 않는다.
+- 팀원 결과물은 저장소의 각자 폴더(`heeil/app` 등)에서 실행만 한다.
 - 커밋 전 `flutter analyze` / `flutter test` 통과 확인.
 
 ## 개발 환경

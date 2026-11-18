@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-18 · 팀 저장소 구조 맞추기 (앱 코드 변경 없음)
+
+- 팀 저장소에서 내 결과물을 `seoyoon/` 폴더로 옮김 (팀장 공지 '깃 관리': 루트에는 개인 폴더만, dev 로 풀 리퀘스트)
+- `app/.gitignore`: 실행할 때 자동으로 생기는 `android/ ios/ web/ linux/ macos/ windows/ pubspec.lock .metadata README.md` 제외
+- `app/analysis_options.yaml`: 분석에서 `web/**` 제외
+- 실행 안내 경로를 팀 저장소(`C:\Keepy\Keepy\seoyoon\app`) 기준으로 보강, TEAM_NOTES 브랜치 규칙 갱신
+
 ## 0.6.0 — 2026-11-16 · 미니프로젝트 3단계: 백엔드 동기화
 
 **서버 동기화 (Supabase)**

@@ -39,7 +39,7 @@
 필요한 것: **Flutter stable 3.47.9**
 
 ```powershell
-cd C:\Keepy1\app
+cd C:\Keepy\Keepy\seoyoon\app   # 팀 저장소 기준 (내 것만 있는 폴더라면 C:\Keepy1\app)
 powershell -ExecutionPolicy Bypass -File tool\setup_platforms.ps1   # android/ios/web 생성 + OCR 설정 + pub get
 flutter analyze
 flutter test
@@ -107,7 +107,7 @@ flutter run -d chrome    # 웹으로 빠르게 확인 (OCR·사람 분할 AI 는
 ## 7. 프로젝트 구조
 
 ```
-Keepy1/
+seoyoon/                         팀 저장소의 개인 폴더 (로컬 원본 C:\Keepy1 과 내용 같음)
 ├─ README.md / README_KEEPY.md / prompts_log.md / screenshots/
 ├─ app/                          Flutter 앱
 │  ├─ lib/

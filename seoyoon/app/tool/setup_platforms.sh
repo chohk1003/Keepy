@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Keepy 플랫폼 폴더 생성 + OCR/카메라 설정 (macOS / Linux)
 #
-#   cd Keepy1/app && bash tool/setup_platforms.sh
+#   cd seoyoon/app && bash tool/setup_platforms.sh   (팀 저장소 기준)
 #
 # Windows 는 tool/setup_platforms.ps1 을 쓰세요. 하는 일은 같습니다.
 set -euo pipefail
