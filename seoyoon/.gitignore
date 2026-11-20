@@ -1,0 +1,15 @@
+# --- 비밀 키 (NFR-06, CST-04) ---
+.env
+.env.*
+!.env.example
+
+# --- 개인정보가 담긴 자료 (CST-04) ---
+# 팀원 이름·학번이 들어간 명세서 PDF, 실제 메모·얼굴 사진은 올리지 않는다
+docs/private/
+*.heic
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# Flutter 생성물은 app/.gitignore 에서 제외
