@@ -1,0 +1,47 @@
+name: keepy
+description: "Keepy(키피) — 제스처 중심 태스크 관리 앱 (#2109)"
+publish_to: "none"
+version: 0.6.0+6
+
+environment:
+  # 팀 기준 SDK: Flutter stable 3.47.9 (docs/prompts_log.md #1)
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # 아이콘 폰트 — 빠지면 모든 아이콘이 네모로 깨짐 (prompts_log #10)
+  cupertino_icons: ^1.0.8
+  # 로컬 영속성 (FR-10)
+  shared_preferences: ^2.3.2
+  # 촬영 / 앨범 선택 (FR-13, 미니게임 캐릭터 사진)
+  image_picker: ^1.1.2
+  # 온디바이스 OCR (FR-13, CST-02)
+  google_mlkit_text_recognition: ^0.15.0
+  # 미니게임: 사진에서 사람만 오려내는 온디바이스 AI (배경 제거)
+  google_mlkit_selfie_segmentation: ^0.10.0
+  # 미니게임: 사진 디코딩·축소 (순수 Dart)
+  image: ^4.2.0
+  # MP3: Supabase REST 호출 (인증·할 일 동기화). SDK 대신 이것 하나만 쓴다.
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  # 나눔스퀘어라운드 — 미세하게 둥근 고딕 (OFL, assets/fonts/LICENSE-NanumSquareRound.txt)
+  fonts:
+    - family: NanumSquareRound
+      fonts:
+        - asset: assets/fonts/NanumSquareRoundR.ttf
+          weight: 400
+        - asset: assets/fonts/NanumSquareRoundB.ttf
+          weight: 700
+        - asset: assets/fonts/NanumSquareRoundEB.ttf
+          weight: 800
