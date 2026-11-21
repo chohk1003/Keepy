@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import '../../auth/viewmodels/auth_view_model.dart';
+import '../../auth/views/login_screen.dart';
 import '../viewmodels/settings_view_model.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -12,6 +11,8 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsViewModelProvider);
     final viewModel = ref.read(settingsViewModelProvider.notifier);
+    final auth = ref.watch(firebaseAuthProvider);
+    final user = auth == null ? null : ref.watch(firebaseUserProvider).value;
     final time = TimeOfDay(hour: settings.reminderHour,
       minute: settings.reminderMinute);
     return Scaffold(
@@ -19,10 +20,28 @@ class SettingsScreen extends ConsumerWidget {
       body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 800),
         child: ListView(padding: const EdgeInsets.all(18), children: [
           const _SectionTitle('계정'),
-          const Card(child: ListTile(
-            leading: Icon(Icons.account_circle_outlined), title: Text('데모 사용자'),
-            subtitle: Text('실제 이메일 로그인 구현 전 · 로컬 체험 계정'),
+          Card(child: ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(user?.email ?? (auth == null ? '로컬 사용자' : '익명 사용자')),
+            subtitle: Text(auth == null
+                ? '할 일은 이 기기에 저장됩니다.'
+                : user?.isAnonymous == true
+                    ? '기존 할 일을 유지하려면 이메일 계정을 연결하세요.'
+                    : '같은 계정으로 로그인한 기기와 할 일을 동기화합니다.'),
           )),
+          if (auth != null && user != null && user.isAnonymous)
+            OutlinedButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('익명 계정에 이메일 연결'),
+                  content: SingleChildScrollView(
+                    child: EmailAuthForm(auth: auth, anonymousUser: user),
+                  ),
+                ),
+              ),
+              child: const Text('이메일 계정 연결'),
+            ),
           const SizedBox(height: 14),
           const _SectionTitle('알림'),
           Card(child: Column(children: [
@@ -75,10 +94,26 @@ class SettingsScreen extends ConsumerWidget {
               title: Text('에브리타임 시간표 연동'), subtitle: Text('후속 개발 예정')),
           ])),
           const SizedBox(height: 20),
-          OutlinedButton.icon(onPressed: () {
-            ref.read(authViewModelProvider.notifier).signOut();
-            context.go('/login');
-          }, icon: const Icon(Icons.logout), label: const Text('데모 로그아웃')),
+          if (user?.isAnonymous != true)
+            OutlinedButton.icon(
+              onPressed: () async {
+                if (auth == null) {
+                  ref.read(authViewModelProvider.notifier).signOut();
+                  return;
+                }
+                try {
+                  await auth.signOut();
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('로그아웃에 실패했습니다. 다시 시도해 주세요.')),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.logout),
+              label: Text(auth == null ? '데모 로그아웃' : '로그아웃'),
+            ),
           const SizedBox(height: 18),
           const Center(child: Text('Keepy Prototype 0.1 · MVVM + Repository')),
         ]),

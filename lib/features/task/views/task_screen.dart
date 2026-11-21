@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/task.dart';
+import '../../../core/services/firebase/firestore_task_repository.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/task_tile.dart';
 import '../viewmodels/task_view_model.dart';
@@ -65,6 +66,7 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(tasksProvider);
+    final repository = ref.watch(taskRepositoryProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Keepy')),
       floatingActionButton: FloatingActionButton.extended(
@@ -83,6 +85,25 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
             }).toList();
             return ListView(padding: const EdgeInsets.fromLTRB(18, 10, 18, 100),
               children: [
+                if (repository is FirestoreTaskRepository)
+                  ValueListenableBuilder<TaskSyncStatus>(
+                    valueListenable: repository.status,
+                    builder: (context, status, _) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(status.pending
+                            ? '서버 동기화 대기 중'
+                            : status.fromCache ? '기기에 저장된 목록' : '서버와 동기화됨',
+                          style: Theme.of(context).textTheme.labelLarge),
+                        if (status.rejected)
+                          TextButton.icon(
+                            onPressed: repository.dismissWriteError,
+                            icon: const Icon(Icons.error_outline),
+                            label: const Text('변경 사항 일부를 서버에 저장하지 못했습니다.'),
+                          ),
+                      ],
+                    ),
+                  ),
                 _SummaryCard(total: tasks.length, completed: completed),
                 const SizedBox(height: 22),
                 Text('할 일 목록', style: Theme.of(context).textTheme.titleLarge?.copyWith(

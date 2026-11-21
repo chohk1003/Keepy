@@ -5,8 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/task.dart';
 import '../../../core/repositories/shared_preferences_task_repository.dart';
 import '../../../core/repositories/task_repository.dart';
+import '../../../core/services/firebase/firestore_task_repository.dart';
+import '../../auth/viewmodels/auth_view_model.dart';
 
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
+  final auth = ref.watch(firebaseAuthProvider);
+  if (auth != null) {
+    final uid = ref.watch(
+      firebaseUserProvider.select((user) => user.value?.uid),
+    );
+    if (uid == null) throw StateError('Firebase sign-in is required.');
+    final repository = FirestoreTaskRepository(uid: uid, auth: auth);
+    ref.onDispose(repository.dispose);
+    return repository;
+  }
   final repository = SharedPreferencesTaskRepository();
   ref.onDispose(repository.dispose);
   return repository;
@@ -16,7 +28,7 @@ final taskViewModelProvider = Provider<TaskViewModel>(
   (ref) => TaskViewModel(ref.watch(taskRepositoryProvider)),
 );
 
-final tasksProvider = StreamProvider<List<Task>>(
+final tasksProvider = StreamProvider.autoDispose<List<Task>>(
   (ref) => ref.watch(taskViewModelProvider).watchTasks(),
 );
 

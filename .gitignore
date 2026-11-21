@@ -9,3 +9,13 @@ android/local.properties
 android/key.properties
 **/Pods/
 *.iml
+.env
+.env.*
+!.env.example
+lib/firebase_options.dart
+firebase.flutterfire.local.json
+.firebaserc
+**/google-services.json
+**/GoogleService-Info.plist
+firebase-debug.log*
+firestore-debug.log*
