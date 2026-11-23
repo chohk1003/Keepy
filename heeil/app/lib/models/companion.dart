@@ -1,5 +1,6 @@
-/// Character artwork is replaceable; progress never depends on the animal.
-enum CompanionKind { dog, cat }
+/// 캐릭터는 오리 하나다 (서윤님 v0.7.0 마스코트).
+/// 진척은 캐릭터에 기대지 않으므로 그림만 갈아 끼울 수 있다.
+const companionName = '오리';
 
 enum ActivityKind { study, teamwork, life, other }
 

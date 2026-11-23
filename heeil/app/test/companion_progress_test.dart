@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:keepy/models/companion.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:keepy/data/local_store.dart';
-import 'package:keepy/models/companion.dart';
 import 'package:keepy/models/task.dart';
 import 'package:keepy/state/app_state.dart';
 
@@ -95,7 +95,7 @@ void main() {
     expect(state.doneLog.length, 100, reason: '기존 최근 내역 UI와 장기 기록은 분리');
   });
 
-  test('재시작 후 대기·전달 상태와 동물 선택 복원', () async {
+  test('재시작 후 대기·전달 상태 복원', () async {
     SharedPreferences.setMockInitialValues({});
     final local = await LocalStore.open();
     final app = AppState(store: local, clock: () => now);
@@ -105,12 +105,10 @@ void main() {
     app.deliverCredits();
     final b = app.add('대기');
     app.setDone(b, true);
-    app.setCompanion(CompanionKind.cat);
     await app.flush();
     final loaded = AppState(store: await LocalStore.open(), clock: () => now);
     addTearDown(loaded.dispose);
     expect(loaded.pendingCredits.map((t) => t.title), ['대기']);
-    expect(loaded.companion, CompanionKind.cat);
     expect(loaded.creditedTasks.length, 2);
   });
 

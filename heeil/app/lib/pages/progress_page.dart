@@ -196,26 +196,6 @@ class _ProgressPageState extends State<ProgressPage> {
               style: T.footnote,
             ),
             const SizedBox(height: 26),
-            Text('함께할 친구', style: T.headline),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                for (final animal in CompanionKind.values)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
-                      child: ChoiceChip(
-                        label: Text(
-                          animal == CompanionKind.dog ? '강아지' : '고양이',
-                        ),
-                        selected: state.companion == animal,
-                        onSelected: (_) => state.setCompanion(animal),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
             Text('모은 보상', style: T.headline),
             const SizedBox(height: 12),
             ...companionRewards.map((reward) {
