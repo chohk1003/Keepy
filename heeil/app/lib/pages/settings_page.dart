@@ -38,7 +38,7 @@ class SettingsPage extends StatelessWidget {
               children: [
                 _Row(
                   icon: CupertinoIcons.bell_fill,
-                  colors: const [Color(0xFFFF453A), Color(0xFFFF2D55)],
+                  colors: K.deleteColors,
                   title: '알림',
                   trailing: CupertinoSwitch(
                     value: s.notify,
@@ -116,7 +116,7 @@ class SettingsPage extends StatelessWidget {
               children: [
                 _Block(
                   icon: CupertinoIcons.hourglass,
-                  colors: const [Color(0xFFFF453A), Color(0xFFFF2D55)],
+                  colors: K.deleteColors,
                   title: '기한 없는 할 일 → 지연',
                   child: _Segmented<int>(
                     value: s.overdueDays,
@@ -284,7 +284,8 @@ class SettingsPage extends StatelessWidget {
       context,
       '지움',
       icon: CupertinoIcons.trash_fill,
-      colors: const [Color(0xFFFF453A), Color(0xFFFF2D55)],
+      colors: K.deleteColors,
+      life: undoToastLife,
       undo: () => s.restoreAll(snapshot),
     );
   }
@@ -399,7 +400,7 @@ class _Row extends StatelessWidget {
         leading ??
         (icon == null ? null : _IconBox(icon: icon!, colors: colors));
     final content = AnimatedOpacity(
-      duration: Motion.fast,
+      duration: Motion.press,
       opacity: enabled ? 1 : 0.4,
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -481,7 +482,7 @@ class _Block extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-      duration: Motion.fast,
+      duration: Motion.press,
       opacity: enabled ? 1 : 0.4,
       child: IgnorePointer(
         ignoring: !enabled,
@@ -567,7 +568,7 @@ class _Toggle extends StatelessWidget {
       onTap: onTap,
       scale: 0.88,
       child: AnimatedContainer(
-        duration: Motion.med,
+        duration: Motion.feedback,
         // 색·그라데이션을 보간하므로 1을 넘어 튀는 Motion.spring은 쓰지 않는다
         curve: Motion.out,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),

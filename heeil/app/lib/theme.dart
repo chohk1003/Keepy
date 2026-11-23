@@ -31,6 +31,21 @@ abstract final class K {
   static const gray3 = Color(0xFFC7C7CC);
   static const gray5 = Color(0xFFE5E5EA);
 
+  // 서윤님 구현에서 가져온 '정돈된 골격' — 색이 아니라 바탕·테두리·모서리 규칙
+  static const bgSoft = Color(0xFFF6F4FB); // 목록 바탕 (흰 카드가 떠 보이게)
+  static const hairline = Color(0x121A2433); // 카드 테두리 (잉크 7%)
+  static const doneCard = Color(0xFFFAF9FD); // 완료한 타일 배경
+  static const tint = Color(0x1F6549C9); // 칩·아이콘 배경 (blue 12%)
+  static const radiusCard = 16.0;
+  static const radiusControl = 12.0;
+
+  // 상태 색 — 화면 파일에서 직접 쓰지 말고 이 이름으로 (TEAM_NOTES 6장)
+  static const lateInk = Color(0xFFAC8043); // 늦은 완료
+  static const overdueInk = Color(0xFFB75D53); // 지연·삭제 바탕
+  static const inputFill = Color(0xFFF0EDFF); // 입력 바 바탕
+  static const inputLine = Color(0xFFB4A4F4); // 입력 바 테두리
+  static const deleteColors = [Color(0xFFFF453A), Color(0xFFFF2D55)];
+
   // 그라데이션
   static const brand = LinearGradient(
     begin: Alignment.topLeft,
@@ -58,10 +73,18 @@ abstract final class K {
     colors: [blue, blue],
   );
 
-  static const shadow = [
-    BoxShadow(color: Color(0x08000000), blurRadius: 2, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 3)),
-  ];
+  /// 카드 그림자 — [elevation] 은 0~1. 입력을 clamp 하는 것이 핵심이다:
+  /// 탄성 곡선([Motion.spring]) 값이 들어와도 blurRadius 가 음수가 되지 않는다.
+  static List<BoxShadow> cardShadow([double elevation = 0]) {
+    final e = elevation.clamp(0.0, 1.0);
+    return [
+      BoxShadow(
+        color: const Color(0xFF0F172A).withValues(alpha: 0.04 + 0.06 * e),
+        blurRadius: 10 + 14 * e,
+        offset: Offset(0, 2 + 6 * e),
+      ),
+    ];
+  }
 
   static List<BoxShadow> glow(Color c, {double a = 0.35, double blur = 16}) => [
     BoxShadow(
@@ -88,16 +111,16 @@ abstract final class Motion {
   static const chart = Duration(milliseconds: 300);
   static const celebration = Duration(milliseconds: 550);
   static const delivery = Duration(milliseconds: 1250);
-  static const fast = Duration(milliseconds: 120);
-  static const med = feedback;
-  static const slow = chart;
+
+  /// 계속 도는 장식용 움직임 (떠다니기·스캔 띠). 조작 반응과 섞이지 않게 느리게.
+  static const ambient = Duration(milliseconds: 2400);
 }
 
 /// 타이포그래피 — iOS 텍스트 스타일 크기
 abstract final class T {
   static const largeTitle = TextStyle(
     fontFamily: K.font,
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.9,
     height: 1.15,
@@ -105,49 +128,49 @@ abstract final class T {
   );
   static const title2 = TextStyle(
     fontFamily: K.font,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: FontWeight.w800,
     letterSpacing: -0.6,
     color: K.label,
   );
   static const title3 = TextStyle(
     fontFamily: K.font,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.5,
     color: K.label,
   );
   static const headline = TextStyle(
     fontFamily: K.font,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.4,
     color: K.label,
   );
   static const body = TextStyle(
     fontFamily: K.font,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: FontWeight.w400,
     letterSpacing: -0.4,
     color: K.label,
   );
   static const subhead = TextStyle(
     fontFamily: K.font,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: FontWeight.w500,
     letterSpacing: -0.2,
     color: K.label,
   );
   static const footnote = TextStyle(
     fontFamily: K.font,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: FontWeight.w500,
     letterSpacing: -0.1,
     color: K.label2,
   );
   static const caption = TextStyle(
     fontFamily: K.font,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: FontWeight.w600,
     color: K.label2,
   );
@@ -163,7 +186,8 @@ ThemeData buildTheme() {
     useMaterial3: true,
     fontFamily: K.font,
     colorScheme: scheme,
-    scaffoldBackgroundColor: K.bg,
+    // 흰 카드가 떠 보이도록 바탕만 아주 옅게 (서윤님 #F1F5FA 자리)
+    scaffoldBackgroundColor: K.bgSoft,
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     hoverColor: Colors.transparent,

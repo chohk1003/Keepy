@@ -57,7 +57,7 @@ class _PressableState extends State<Pressable> {
             },
       child: AnimatedScale(
         scale: _down ? widget.scale : 1,
-        duration: _down ? Motion.press : Motion.med,
+        duration: _down ? Motion.press : Motion.feedback,
         curve: _down ? Curves.easeOut : Motion.spring,
         child: widget.child,
       ),
@@ -316,7 +316,7 @@ class _FloatingState extends State<Floating>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2400),
+    duration: Motion.ambient,
   )..repeat(reverse: true);
 
   @override
@@ -351,7 +351,7 @@ class RollingText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: Motion.med,
+      duration: Motion.feedback,
       switchInCurve: Motion.spring,
       switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, a) {

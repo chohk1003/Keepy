@@ -20,7 +20,7 @@ abstract final class Toast {
     required IconData icon,
     List<Color> colors = const [Color(0xFF0A84FF), Color(0xFF5E5CE6)],
     VoidCallback? undo,
-    Duration life = const Duration(milliseconds: 600),
+    Duration? life,
   }) {
     if (!context.mounted) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
@@ -55,7 +55,7 @@ abstract final class Toast {
     overlay.insert(entry);
     _entry = entry;
     _view = key;
-    _timer = Timer(life, dismiss);
+    _timer = Timer(life ?? const Duration(milliseconds: 600), dismiss);
   }
 
   static void dismiss({bool immediate = false}) {
@@ -102,8 +102,8 @@ class _ToastViewState extends State<_ToastView>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 160),
-    reverseDuration: const Duration(milliseconds: 140),
+    duration: Motion.dismiss,
+    reverseDuration: Motion.dismiss,
   )..forward();
 
   Future<void> hide() => _c.reverse();

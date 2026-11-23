@@ -21,8 +21,8 @@ void openCapture(BuildContext context) {
   FocusScope.of(context).unfocus();
   Navigator.of(context).push(
     PageRouteBuilder<void>(
-      transitionDuration: Motion.slow,
-      reverseTransitionDuration: Motion.med,
+      transitionDuration: Motion.expansion,
+      reverseTransitionDuration: Motion.navigation,
       pageBuilder: (_, _, _) => const CapturePage(),
       transitionsBuilder: (_, a, _, child) => FadeTransition(
         opacity: a,
@@ -49,11 +49,11 @@ class _CapturePageState extends State<CapturePage>
     with TickerProviderStateMixin {
   late final AnimationController _scan = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1800),
+    duration: Motion.ambient,
   )..repeat(reverse: true);
   late final AnimationController _flash = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 380),
+    duration: Motion.feedback,
   );
   bool _busy = false;
   bool _pressed = false;
@@ -156,7 +156,7 @@ class _CapturePageState extends State<CapturePage>
             right: 0,
             child: Center(
               child: AnimatedSwitcher(
-                duration: Motion.med,
+                duration: Motion.feedback,
                 child: Container(
                   key: ValueKey(_busy),
                   padding: const EdgeInsets.symmetric(
@@ -187,9 +187,7 @@ class _CapturePageState extends State<CapturePage>
                 onTap: _shoot,
                 child: AnimatedScale(
                   scale: _pressed ? 0.86 : 1,
-                  duration: _pressed
-                      ? const Duration(milliseconds: 90)
-                      : Motion.slow,
+                  duration: _pressed ? Motion.press : Motion.feedback,
                   curve: _pressed ? Curves.easeOut : Motion.spring,
                   child: Container(
                     width: 78,
@@ -200,7 +198,7 @@ class _CapturePageState extends State<CapturePage>
                       border: Border.all(color: Colors.white, width: 4),
                     ),
                     child: AnimatedContainer(
-                      duration: Motion.med,
+                      duration: Motion.feedback,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: _busy ? K.brand : null,
@@ -419,7 +417,9 @@ class _ReviewPageState extends State<ReviewPage> {
                 itemCount: _ctrls.length,
                 itemBuilder: (context, i) => TweenAnimationBuilder<double>(
                   tween: Tween<double>(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 380 + i * 70),
+                  duration: Duration(
+                    milliseconds: Motion.expansion.inMilliseconds + i * 50,
+                  ),
                   curve: Motion.spring,
                   builder: (context, v, child) => Opacity(
                     opacity: v.clamp(0.0, 1.0),
@@ -434,11 +434,11 @@ class _ReviewPageState extends State<ReviewPage> {
                       vertical: 5,
                     ),
                     child: AnimatedContainer(
-                      duration: Motion.med,
+                      duration: Motion.feedback,
                       decoration: BoxDecoration(
                         color: K.card,
                         borderRadius: BorderRadius.circular(18),
-                        boxShadow: _checked[i] ? K.shadow : const [],
+                        boxShadow: _checked[i] ? K.cardShadow(0.4) : const [],
                       ),
                       padding: const EdgeInsets.only(right: 14),
                       child: Row(
@@ -479,7 +479,7 @@ class _ReviewPageState extends State<ReviewPage> {
             child: Pressable(
               onTap: _count > 0 ? _add : null,
               child: AnimatedContainer(
-                duration: Motion.med,
+                duration: Motion.feedback,
                 height: 56,
                 decoration: BoxDecoration(
                   gradient: _count > 0 ? K.brand : null,
