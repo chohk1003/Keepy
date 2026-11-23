@@ -105,7 +105,70 @@ void main() {
     expect(store.countWithTag('리포트'), 1);
   });
 
-  test('미니게임 계단: 이번 달 할 일 수와 완료 수 (v0.3)', () {
+  test('오늘의 할 일: 끝낸 일은 완료한 날 기준 (지연·기한 없는 일 포함) (v0.7)', () {
+    store.add('오늘 기한', due: DateTime(2026, 11, 15));
+    store.add('기한 없이 오늘 만듦');
+    store.add('다음 주 기한', due: DateTime(2026, 11, 22));
+    final early = store.add('다음 주 기한이지만 오늘 끝냄', due: DateTime(2026, 11, 22))!;
+    store.toggle(early.id);
+
+    clock = DateTime(2026, 11, 14, 9); // 어제 만들어 둔 일들
+    final lateTask = store.add('어제 기한, 오늘 끝냄 (지연)', due: DateTime(2026, 11, 14))!;
+    final undated = store.add('어제 만든 기한 없는 일, 오늘 끝냄')!;
+    store.add('어제 만든 기한 없는 일, 안 끝냄');
+    final doneYesterday = store.add('오늘 기한이지만 어제 끝냄', due: DateTime(2026, 11, 15))!;
+    store.toggle(doneYesterday.id);
+
+    clock = DateTime(2026, 11, 15, 18);
+    store.toggle(lateTask.id);
+    store.toggle(undated.id);
+
+    expect(store.todayTasks.map((t) => t.title).toSet(), <String>{
+      '오늘 기한',
+      '기한 없이 오늘 만듦',
+      '다음 주 기한이지만 오늘 끝냄',
+      '어제 기한, 오늘 끝냄 (지연)',
+      '어제 만든 기한 없는 일, 오늘 끝냄',
+    });
+    expect(store.todayStat.total, 5);
+    expect(store.todayStat.done, 3);
+
+    clock = DateTime(2026, 11, 16, 9); // 다음 날: 어제 끝낸 일·기한 없는 일은 빠진다
+    expect(store.todayStat.total, 0);
+  });
+
+  test('오늘 태그 통계: 많은 순 최대 5개, 사용자 태그·미지정 포함 (v0.7)', () {
+    final today = DateTime(2026, 11, 15);
+    for (final tag in <String>['a', 'b', 'c', 'd', 'e', 'f']) {
+      store.add('할 일 $tag', due: today, tags: <String>[tag]);
+    }
+    final x = store.add('과제 1', due: today, tags: const <String>['과제', '내가 만든 태그'])!;
+    store.add('과제 2', due: today, tags: const <String>['과제']);
+    store.add('과제 3', due: today, tags: const <String>['과제']);
+    final y = store.add('내가 만든 일', due: today, tags: const <String>['내가 만든 태그'])!;
+    store.add('태그 없음 1', due: today);
+    store.add('태그 없음 2');
+    store.toggle(x.id);
+    store.toggle(y.id);
+
+    final s = store.todayTagStats(tagOrder: const <String>['f', 'e']);
+    expect(s.stats.map((e) => e.label).toList(), <String>['#과제', '#내가 만든 태그', '미지정', '#f', '#e']);
+    expect(s.stats[0].total, 3);
+    expect(s.stats[0].done, 1);
+    expect(s.stats[1].done, 2); // 사용자가 만든 태그도 센다
+    expect(s.stats[2].untagged, isTrue); // 태그 없는 일 2개 → '미지정'
+    expect(s.stats[2].total, 2);
+    expect(s.hiddenCount, 4);
+    expect(s.top!.tag, '내가 만든 태그'); // 가장 많이 '끝낸' 태그
+
+    // 개수가 같으면 미지정은 태그들 뒤
+    final one = TaskStore(repository: InMemoryTaskRepository(), clock: () => clock);
+    one.add('태그', due: today, tags: const <String>['z']);
+    one.add('없음', due: today);
+    expect(one.todayTagStats().stats.map((e) => e.label).toList(), <String>['#z', '미지정']);
+  });
+
+  test('이번 달 통계: 이번 달 할 일 수와 완료 수 (v0.3)', () {
     final a = store.add('이번 달 기한', due: DateTime(2026, 11, 28))!;
     store.add('기한 없이 이번 달에 만듦');
     store.add('다음 달 기한', due: DateTime(2026, 12, 2));

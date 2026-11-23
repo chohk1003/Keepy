@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0 — 2026-11-23 · 미니게임 → 오리 수영장 · 오늘 통계
+
+**오리 수영장** (옛 미니게임 자리)
+- 직접 만든 노란 오리 캐릭터 (벡터 그림, 선글라스·안경·학사모·엄지 척 소품)
+- 메인 머리 오른쪽 바로가기 아이콘을 계단 → **오리 얼굴**로 (위치 그대로, 설정에서 켜고 끔)
+- 오늘의 할 일 완료율만큼 텅 빈 수영장에 물이 차오름: 0개·완료 0 → 서 있음 / 50% 미만 → 물 조금 / 50% 이상 → 둥둥 / 100% → 가득 + 선글라스·튜브·칵테일·반짝이
+- 100% 에서 휴대폰을 기울이면(안드로이드·iOS) 그쪽으로 미끄러지고, 웹·PC 는 클릭한 쪽으로 이동
+
+**오늘 통계**
+- 메인 로고 옆 [오늘 통계 ⌄] → 날짜 화면 월 캘린더처럼 그 자리에서 펼침/접힘
+- 안경·학사모·엄지 척 오리, 가장 많이 한 태그, 태그별 막대 (사용자 태그 포함, 많은 순 최대 5개), 나머지·태그 없는 일 수
+
+**코드**
+- 추가: `game/duck_painter.dart`, `ui/game/pool_page.dart`, `ui/pages/today_stats_panel.dart`, `TaskStore.todayTasks · todayStat · todayTagStats`
+- 삭제: `ui/game/stair_game_page.dart`, `game/pixel_art.dart`, `services/character_maker.dart`, `services/person_mask_*.dart`, `test/pixel_art_test.dart`
+- 패키지: `sensors_plus` 추가, `google_mlkit_selfie_segmentation` · `image` 제거 (설정 저장 형식은 그대로 — 예전 데이터 호환)
+- 테스트: 수영장 2개·통계 1개(위젯), 오늘의 할 일·태그 통계 2개(스토어) 추가, 미니게임 테스트 교체 → 총 51개
+- 웹 미리보기·스크린샷(`extra_05_pool`, `extra_11_pool_party`, `extra_12_today_stats`) 갱신
+
 ## 2026-11-18 · 팀 저장소 구조 맞추기 (앱 코드 변경 없음)
 
 - 팀 저장소에서 내 결과물을 `seoyoon/` 폴더로 옮김 (팀장 공지 '깃 관리': 루트에는 개인 폴더만, dev 로 풀 리퀘스트)

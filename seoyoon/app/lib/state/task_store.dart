@@ -8,6 +8,42 @@ import '../models/task.dart';
 import '../models/task_status.dart';
 import '../models/task_status.dart' as rules show isDelayed, statusOf;
 
+/// 태그 하나의 오늘 통계 (v0.7).
+class TagStat {
+  const TagStat({required this.tag, required this.total, required this.done, this.untagged = false});
+
+  /// 화면에 보일 이름 ('미지정' 이면 태그 없는 일).
+  String get label => untagged ? '미지정' : '#$tag';
+
+  /// 태그 없는 할 일 묶음 (통계에 '미지정' 으로 표시, v0.7).
+  final bool untagged;
+  final String tag;
+  final int total;
+  final int done;
+}
+
+/// 오늘 통계 패널에 보여 줄 내용 (v0.7).
+class TodayTagSummary {
+  const TodayTagSummary({
+    required this.stats,
+    required this.hiddenCount,
+    required this.untaggedCount,
+    required this.top,
+  });
+
+  /// 많은 순 최대 5개
+  final List<TagStat> stats;
+
+  /// 5개 밖이라 안 보이는 태그 수
+  final int hiddenCount;
+
+  /// 태그 없는 오늘 할 일 수
+  final int untaggedCount;
+
+  /// '오늘 가장 많이 한 일' — 완료 수가 가장 많은 태그 (완료가 없으면 개수가 가장 많은 태그)
+  final TagStat? top;
+}
+
 /// 하루치 통계 (캘린더 칸 색, 완료율).
 @immutable
 class DayStat {
@@ -86,8 +122,8 @@ class TaskStore extends ChangeNotifier {
   double get _nextOrder =>
       _tasks.isEmpty ? 0 : _tasks.map((t) => t.order).reduce(max) + 1;
 
-  /// 이번 달 계단 (미니게임): 기한이 이번 달이거나, 기한 없이 이번 달에 만든 할 일.
-  /// 계단 수 = 전체(미완료·지연 포함), 오른 칸 = 완료 수.
+  /// 이번 달 통계: 기한이 이번 달이거나, 기한 없이 이번 달에 만든 할 일 (v0.3, 옛 미니게임 계단).
+  /// 전체(미완료·지연 포함)와 완료 수.
   DayStat monthStat(DateTime month) {
     bool inMonth(DateTime d) => d.year == month.year && d.month == month.month;
     final list = _tasks.where((t) => t.due != null ? inMonth(t.due!) : inMonth(t.createdAt));
@@ -106,6 +142,74 @@ class TaskStore extends ChangeNotifier {
   DayStat statOn(DateTime day) {
     final list = _tasks.where((t) => t.due != null && isSameDay(t.due!, day));
     return DayStat(total: list.length, done: list.where((t) => t.done).length);
+  }
+
+  /// 오늘의 할 일 (v0.7 수영장 · 오늘 통계 공통 기준).
+  /// - 완료한 일: **완료한 날** 기준. 어제가 기한이던 일(지연)이나 기한 없는 일도 오늘 끝냈으면 오늘의 일.
+  /// - 아직 안 끝낸 일: 오늘이 기한인 일 + 기한 없이 오늘 만든 일.
+  List<Task> get todayTasks {
+    final day = today;
+    return sorted(_tasks.where((t) {
+      if (t.done) {
+        final completed = t.completedAt;
+        return completed != null && isSameDay(completed, day);
+      }
+      final due = t.due;
+      return due != null ? isSameDay(due, day) : isSameDay(t.createdAt, day);
+    }));
+  }
+
+  /// 오늘의 완료율 (오리 수영장 물 높이).
+  DayStat get todayStat {
+    final list = todayTasks;
+    return DayStat(total: list.length, done: list.where((t) => t.done).length);
+  }
+
+  /// 오늘의 태그별 통계 — 개수 많은 순(같으면 완료 많은 순, 같으면 태그 목록 순)으로 최대 [limit] 개.
+  /// 사용자가 만든 태그를 포함해 할 일에 붙은 모든 태그를 센다.
+  TodayTagSummary todayTagStats({List<String> tagOrder = const <String>[], int limit = 5}) {
+    final byTag = <String, TagStat>{};
+    var untagged = 0;
+    var untaggedDone = 0;
+    for (final t in todayTasks) {
+      if (t.tags.isEmpty) {
+        untagged++;
+        if (t.done) untaggedDone++;
+      }
+      for (final tag in t.tags.toSet()) {
+        final prev = byTag[tag] ?? TagStat(tag: tag, total: 0, done: 0);
+        byTag[tag] = TagStat(tag: tag, total: prev.total + 1, done: prev.done + (t.done ? 1 : 0));
+      }
+    }
+    // 태그 없는 일은 '미지정' 한 묶음으로 함께 순위를 매긴다 (같은 개수면 태그들 뒤).
+    int orderOf(TagStat e) {
+      if (e.untagged) return tagOrder.length + 1;
+      final i = tagOrder.indexOf(e.tag);
+      return i < 0 ? tagOrder.length : i;
+    }
+
+    final all = <TagStat>[
+      ...byTag.values,
+      if (untagged > 0) TagStat(tag: '', total: untagged, done: untaggedDone, untagged: true),
+    ]
+      ..sort((a, b) {
+        final byTotal = b.total.compareTo(a.total);
+        if (byTotal != 0) return byTotal;
+        final byDone = b.done.compareTo(a.done);
+        if (byDone != 0) return byDone;
+        final byOrder = orderOf(a).compareTo(orderOf(b));
+        return byOrder != 0 ? byOrder : a.tag.compareTo(b.tag);
+      });
+    TagStat? top;
+    for (final e in all) {
+      if (top == null || e.done > top.done) top = e;
+    }
+    return TodayTagSummary(
+      stats: all.take(limit).toList(),
+      hiddenCount: all.length > limit ? all.length - limit : 0,
+      untaggedCount: untagged,
+      top: top,
+    );
   }
 
   /// 기한이 지정된 날짜들 (오름차순, 중복 없음).
@@ -394,7 +498,7 @@ class TaskStore extends ChangeNotifier {
     final t = today;
     final samples = <(String, int?, List<String>, bool)>[
       ('모바일 앱 UI 시안 정리', 0, <String>['과제'], false),
-      ('자료구조 3주차 과제 제출', 2, <String>['과제', '수업'], false),
+      ('자료구조 3주차 과제 제출', 2, <String>['과제'], false),
       ('팀 프로젝트 회의 준비', 3, <String>['팀 프로젝트'], false),
       ('알고리즘 강의 복습', 0, <String>['수업'], false),
       ('요구사항 명세서 검토', 0, <String>['팀 프로젝트'], true),

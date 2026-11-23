@@ -153,7 +153,7 @@ class SyncController extends ChangeNotifier {
     if (!isConfigured || _initialized) return;
     _initialized = true;
     _ledger = await _repo!.loadLedger();
-    _session = await _repo!.loadSession();
+    _session = await _repo.loadSession();
     _tasks!.addListener(_onTasksChanged);
     if (_session == null) {
       _ledger.clear();

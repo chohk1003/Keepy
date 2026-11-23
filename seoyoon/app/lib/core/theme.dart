@@ -23,7 +23,8 @@ class KeepyColors {
   static Color get card => _d ? const Color(0xFF18212D) : const Color(0xFFFFFFFF);
   static Color get label => _d ? const Color(0xFFEEF3FA) : const Color(0xFF1A2433);
   static Color get secondaryLabel => _d ? const Color(0xFF8E9AAE) : const Color(0xFF8792A5);
-  static Color get tertiaryLabel => _d ? const Color(0xFF4B576A) : const Color(0xFFC3CCD8);
+  // 다크: 어두운 카드 위에서도 읽히도록 한 단계 밝게 (v0.7)
+  static Color get tertiaryLabel => _d ? const Color(0xFF66748A) : const Color(0xFFC3CCD8);
   static Color get separator => _d ? const Color(0xFF253041) : const Color(0xFFE2E8F0);
   static Color get fill => _d ? const Color(0xFF222C3A) : const Color(0xFFEBF1F8);
   static Color get skyTint => _d ? const Color(0xFF14304D) : const Color(0xFFE6F4FF); // 옅은 하늘 바탕
@@ -98,7 +99,7 @@ class KeepyGradients {
 
   static const dateAction = primary;
 
-  /// 미니게임 하늘 배경 (다크 모드에서는 밤하늘).
+  /// 오리 수영장 하늘 배경 (다크 모드에서는 밤하늘).
   static LinearGradient get sky => LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,

@@ -40,7 +40,8 @@ class _TaskEditor extends StatefulWidget {
 
 class _TaskEditorState extends State<_TaskEditor> {
   late final TextEditingController _title = TextEditingController(text: widget.task.title);
-  late final List<String> _tags = List<String>.of(widget.task.tags);
+  // 태그는 하나만 (v0.7). 예전에 여러 개 붙은 할 일은 첫 태그만 남긴다.
+  late final List<String> _tags = List<String>.of(widget.task.tags.take(1));
   late DateTime? _due = widget.task.due;
   bool _pickingDate = false;
 
@@ -185,8 +186,11 @@ class _TaskEditorState extends State<_TaskEditor> {
                           PressScale(
                             onTap: () {
                               HapticFeedback.selectionClick();
+                              // 태그는 하나만 (v0.7): 다른 태그를 누르면 기존 태그는 자동으로 해제, 같은 태그를 다시 누르면 해제
                               setState(() {
-                                if (!_tags.remove(tag)) _tags.add(tag);
+                                final wasSelected = _tags.contains(tag);
+                                _tags.clear();
+                                if (!wasSelected) _tags.add(tag);
                               });
                             },
                             child: AnimatedContainer(

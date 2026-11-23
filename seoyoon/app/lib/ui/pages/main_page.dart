@@ -8,7 +8,8 @@ import '../../models/task.dart';
 import '../../state/keepy_scope.dart';
 import '../../state/sync_controller.dart';
 import '../../state/task_store.dart';
-import '../game/stair_game_page.dart';
+import '../../game/duck_painter.dart';
+import '../game/pool_page.dart';
 import '../widgets/basics.dart';
 import '../widgets/task_actions.dart';
 import 'account_sheet.dart';
@@ -77,7 +78,7 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
           final header = <Widget>[
             _Header(
               showGame: settings.miniGameEnabled,
-              onGame: () => StairGamePage.open(context),
+              onGame: () => PoolPage.open(context),
               sync: scope.sync,
             ),
             const SizedBox(height: 12),
@@ -269,11 +270,13 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // v0.7: POOL PARTY 바로가기를 3배 크게 → 켰을 때 머리 높이도 그만큼
     return SizedBox(
-      height: 40,
+      height: showGame ? 96 : 40,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const KeepyLogo(),
+          const SizedBox(height: 40, child: Center(child: KeepyLogo())),
           const Spacer(),
           // MP3: 로그인했을 때만 동기화 상태 아이콘 (누르면 계정 · 동기화).
           // 동기화 상태가 바뀌어도 목록 전체가 아니라 이 배지만 다시 그린다.
@@ -282,24 +285,24 @@ class _Header extends StatelessWidget {
             builder: (context, _) => !sync.isSignedIn
                 ? const SizedBox.shrink()
                 : Padding(
-                    padding: EdgeInsets.only(right: showGame ? 8 : 0),
+                    padding: EdgeInsets.only(right: showGame ? 8 : 0, top: 6),
                     child: _SyncBadge(sync: sync),
                   ),
           ),
-          // 미니게임 바로가기 (설정에서 켰을 때만). v0.4: 옆의 계정 'K' 동그라미는 쓰임이 없어 뺐다.
+          // POOL PARTY 바로가기 (설정에서 켰을 때만, 옛 미니게임 자리 그대로). v0.7: 오리 얼굴, 3배 크기 (오늘 통계도 여기서)
           if (showGame)
             PressScale(
-              key: const Key('game-shortcut'),
+              key: const Key('pool-shortcut'),
               onTap: onGame,
-              scale: 0.88,
+              scale: 0.92,
               child: Container(
-                width: 32,
-                height: 32,
+                width: 96,
+                height: 96,
                 decoration: BoxDecoration(
                   color: KeepyColors.skyTint,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(26),
                 ),
-                child: const Center(child: StairsIcon(size: 18)),
+                child: const Center(child: DuckFaceIcon(size: 76)),
               ),
             ),
         ],

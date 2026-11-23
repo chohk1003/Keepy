@@ -9,7 +9,8 @@ import '../../state/keepy_scope.dart';
 import '../../state/settings_store.dart';
 import '../../state/sync_controller.dart';
 import '../../state/task_store.dart';
-import '../game/stair_game_page.dart';
+import '../../game/duck_painter.dart';
+import '../game/pool_page.dart';
 import '../widgets/basics.dart';
 import '../widgets/tag_manager_sheet.dart';
 import '../widgets/undo_toast.dart';
@@ -44,11 +45,8 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
         listenable: Listenable.merge(<Listenable>[store, tasks, sync]),
         builder: (context, _) {
           final s = store.settings;
-          final characterLabel = switch (s.effectiveCharacterStyle) {
-            CharacterStyle.boy => '남자',
-            CharacterStyle.girl => '여자',
-            CharacterStyle.photo => '내 사진',
-          };
+          final today = tasks.todayStat;
+          final todayPercent = today.total == 0 ? 0 : (today.done * 100 / today.total).round();
           void change(AppSettings Function(AppSettings) f) {
             HapticFeedback.selectionClick();
             store.update(f);
@@ -214,15 +212,15 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 ),
               ]),
 
-              // 6. 미니게임 (v0.3) -----------------------------------------------
-              const _GroupTitle('미니게임'),
+              // 6. 오리 수영장 (v0.7, 옛 미니게임 자리) --------------------------
+              const _GroupTitle('POOL PARTY'),
               _Group(children: <Widget>[
                 _Row(
-                  leading: const StairsIcon(size: 19),
-                  title: '계단 오르기',
-                  subtitle: '이번 달 완료한 만큼 내 캐릭터가 계단을 올라요',
+                  leading: const DuckFaceIcon(size: 21),
+                  title: 'POOL PARTY',
+                  subtitle: '오늘 할 일을 끝낼수록 오리의 하루가 바뀌어요',
                   trailing: CupertinoSwitch(
-                    key: const Key('minigame-switch'),
+                    key: const Key('pool-switch'),
                     value: s.miniGameEnabled,
                     activeTrackColor: KeepyColors.blue,
                     onChanged: (v) => change((c) => c.copyWith(miniGameEnabled: v)),
@@ -230,9 +228,9 @@ class _SettingsPageState extends State<SettingsPage> with AutomaticKeepAliveClie
                 ),
                 if (s.miniGameEnabled)
                   _Row(
-                    title: '지금 해 보기',
-                    value: '$characterLabel · 펫 ${s.pet.label}',
-                    onTap: () => StairGamePage.open(context),
+                    title: '지금 보기',
+                    value: '오늘 $todayPercent%',
+                    onTap: () => PoolPage.open(context),
                   ),
               ]),
               const _Footnote('켜면 메인 화면 오른쪽 위에 바로가기 아이콘이 생겨요. 끄면 아이콘도 사라져요.'),

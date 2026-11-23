@@ -97,8 +97,11 @@ class _QuickInputBarState extends State<QuickInputBar> with SingleTickerProvider
 
   void _toggleTag(String tag) {
     HapticFeedback.selectionClick();
+    // 태그는 하나만 (v0.7): 다른 태그를 누르면 기존 태그는 자동으로 해제, 같은 태그를 다시 누르면 해제
     setState(() {
-      if (!_tags.remove(tag)) _tags.add(tag);
+      final wasSelected = _tags.contains(tag);
+      _tags.clear();
+      if (!wasSelected) _tags.add(tag);
     });
   }
 

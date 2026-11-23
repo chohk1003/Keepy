@@ -79,13 +79,13 @@
 
 ### 2단계에서 덧붙인 것 (v0.3 ~ v0.5)
 날짜 화면·한 달 캘린더, ← 당겨 +1/+2/+7일, 편집 모드 순서 바꾸기, 태그 관리, 다크 모드, 카메라 OCR,
-미니게임(계단 오르기), 오늘 요약 카드, 완료한 일 접기·비우기 — [README_KEEPY.md](../README_KEEPY.md) 참고.
+미니게임(계단 오르기 → v0.7 에서 **오리 수영장**으로 교체), 오늘 요약 카드, 완료한 일 접기·비우기, v0.7 **오늘 통계** — [README_KEEPY.md](../README_KEEPY.md) 참고.
 
 ### 저장 구조
 | 키 | 내용 |
 |---|---|
 | `keepy.tasks.v1` | 할 일 JSON 배열 — `id, title, done, createdAt, completedAt, due, tags, completedLate, updatedAt, order` |
-| `keepy.settings.v1` | 설정 JSON — 화면 모드, 알림, 달력, 지연 기준, 태그, 미니게임 |
+| `keepy.settings.v1` | 설정 JSON — 화면 모드, 알림, 달력, 지연 기준, 태그, 오리 수영장 켜기(`miniGameEnabled`) |
 
 ### 검증
 `task_store_test.dart`(추가·수정·삭제·되돌리기·정렬·태그), `task_status_test.dart`(지연 판정·JSON 왕복),
@@ -165,14 +165,13 @@ syncNow()
 
 | 파일 | 개수 | 다루는 것 |
 |---|---:|---|
-| `widget_test.dart` | 10 | 빈 상태, 추가, 필터, 수정 시트, 다크 모드, 꾸미기, 오늘 요약·비우기 |
-| `task_store_test.dart` | 13 | 추가·수정·삭제·되돌리기·정렬·순서·태그·월 통계·오늘 요약 |
+| `widget_test.dart` | 11 | 빈 상태, 추가, 필터, 수정 시트, 다크 모드, 오리 수영장(열기·단계·탭 이동), 오늘 통계 펼치기, 오늘 요약·비우기 |
+| `task_store_test.dart` | 15 | 추가·수정·삭제·되돌리기·정렬·순서·태그·월 통계·오늘 요약·오늘의 할 일·오늘 태그 통계 |
 | `task_status_test.dart` | 10 | 지연·늦은 완료 판정, 제목·태그 규칙, JSON 왕복 |
 | `sync_test.dart` | 11 | 두 기기·오프라인·재시작·충돌·로그인 합치기 (MP3) |
-| `pixel_art_test.dart` | 6 | 미니게임 캐릭터·펫 그림 |
 | `ocr_split_test.dart` | 2 | 메모 사진 글자 → 할 일 나누기 |
 | `motion_safety_test.dart` | 2 | 그림자 애니메이션 안전 |
-| **합계** | **54** | `flutter test` |
+| **합계** | **51** | `flutter test` (v0.7: 미니게임 그림 테스트 6개 삭제, 수영장·통계 5개 추가) |
 
 ## 단계별 산출물
 

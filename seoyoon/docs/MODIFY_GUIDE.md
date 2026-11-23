@@ -23,19 +23,19 @@
 | 글꼴 | `app/pubspec.yaml` fonts + `app/lib/core/theme.dart` | `KeepyText.family` |
 | 다크 모드 색 | `app/lib/core/theme.dart` | `KeepyColors` 의 `_d ? 다크 : 라이트` 값 (강조색은 공통 const) |
 | 빠른 날짜 칩(오늘·내일·모레·다음 주) | `app/lib/ui/widgets/mini_calendar.dart` | `QuickDatePicker.build` 의 `quick` 목록 |
-| 미니게임 캐릭터·펫 그림 | `app/lib/game/pixel_art.dart` | `boySprite`, `girlSprite`, `dogSprite` … (문자 지도) |
-| 펫 종류 추가 | `app/lib/models/app_settings.dart` + `pixel_art.dart` + `stair_game_page.dart` | `PetKind`, `petSpriteOf` |
+| 오리 캐릭터 모양·색·소품 | `app/lib/game/duck_painter.dart` | `paintDuck` (100 단위 좌표), 색 상수 `_yellow` …, `DuckLook` |
+| 메인 오리 얼굴 아이콘 | `app/lib/game/duck_painter.dart`, `app/lib/ui/pages/main_page.dart` | `DuckFaceIcon`, `_Header` |
 | 태그 이름 길이·최대 개수 | `app/lib/models/task.dart` | `TagRule.maxLength`, `maxCount` |
 | 한 달 펼침 최대 높이(62%) | `app/lib/ui/pages/date_page.dart` | `full = …` |
-| 미니게임 계단에 셀 할 일 범위 | `app/lib/state/task_store.dart` | `monthStat` |
-| 칸 최소 폭 (넓히면 캐릭터도 커짐) | `app/lib/ui/game/stair_game_page.dart` | `StairPainter.minStepWithPet`, `minStepAlone` |
-| 캐릭터·펫 크기와 둘 사이 간격 | `app/lib/ui/game/stair_game_page.dart` | `StairPainter.paint` 의 `cs`, `ps`, `gap` |
+| '오늘의 할 일' 범위 (수영장·통계 공통) | `app/lib/state/task_store.dart` | `todayTasks` |
+| 수영장 단계 기준 (50%·100%) | `app/lib/ui/game/pool_page.dart` | `poolStageOf` |
+| 수영장 크기·오리 크기·가득 찼을 때 물 높이 | `app/lib/ui/game/pool_page.dart` | `_PoolGeo` (`ds`, `waterTop`) |
+| 기울기 민감도·미끄러짐·클릭 이동 속도 | `app/lib/ui/game/pool_page.dart` | `defaultTiltSource` (÷6), `_PoolSim.step` (0.9, 0.012, 0.92) |
+| 오늘 통계 표시 개수(5)·정렬 | `app/lib/state/task_store.dart`, `app/lib/ui/pages/today_stats_panel.dart` | `todayTagStats(limit:)`, `TodayStatsPanel` |
 | 오늘 요약 카드 숫자·이동 | `app/lib/state/task_store.dart`, `app/lib/ui/pages/main_page.dart` | `dueTodayOpenCount` 등, `_TodaySummary` |
 | 완료한 일 비우기·되돌리기 | `app/lib/state/task_store.dart`, `app/lib/ui/widgets/task_actions.dart` | `removeDone`, `restoreAll`, `clearDone` |
 | 카드 테두리 농도 | `app/lib/core/theme.dart` | `KeepyColors.hairline` |
-| 미니게임 격려 문구 | `app/lib/ui/game/stair_game_page.dart` | `_MessageCard.encouragement` |
-| 캐릭터 해상도(24×24)·색 수 | `app/lib/models/app_settings.dart`, `app/lib/game/pixel_art.dart` | `characterSize`, `pixelate(colors:)` |
-| 기본 캐릭터 그림 | `app/lib/game/pixel_art.dart` | `defaultSprite` (16줄 문자 지도) |
+| 수영장 안내 문구 | `app/lib/ui/game/pool_page.dart` | `poolMessageOf` |
 | 날짜 이동 임계값(70px) | `app/lib/ui/pages/date_page.dart` | `DatePage.pullThreshold` |
 | 하단 사라짐 영역 높이 | `app/lib/ui/shell/home_shell.dart` | `HomeShell.fadeZone` |
 | 설정 항목 추가 | `app/lib/models/app_settings.dart` + `app/lib/ui/pages/settings_page.dart` | 필드 → `copyWith/toJson/fromJson` → 화면 `_Row` |
