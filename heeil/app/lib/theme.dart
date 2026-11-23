@@ -6,8 +6,8 @@ abstract final class K {
   static const font = 'Pretendard';
 
   // 시스템 컬러
-  static const blue = Color(0xFF0A84FF);
-  static const indigo = Color(0xFF5E5CE6);
+  static const blue = Color(0xFF416B58);
+  static const indigo = Color(0xFF416B58);
   static const purple = Color(0xFFBF5AF2);
   static const pink = Color(0xFFFF375F);
   static const red = Color(0xFFFF3B30);
@@ -16,9 +16,13 @@ abstract final class K {
   static const mint = Color(0xFF00C7BE);
 
   // 배경·라벨
-  static const bg = Color(0xFFF2F2F7); // systemGroupedBackground
+  static const bg = Color(0xFFFFFFFF);
+  static const room = Color(0xFFD6E8DD);
+  static const roomFloor = Color(0xFFB9CDBC);
+  static const ink = Color(0xFF293D34);
+  static const crumb = Color(0xFFD8AF55);
   static const card = Color(0xFFFFFFFF);
-  static const label = Color(0xFF000000);
+  static const label = ink;
   static const label2 = Color(0x993C3C43); // secondaryLabel
   static const label3 = Color(0x4D3C3C43); // tertiaryLabel
   static const separator = Color(0x333C3C43);
@@ -31,41 +35,41 @@ abstract final class K {
   static const brand = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0A84FF), Color(0xFF5E5CE6), Color(0xFFBF5AF2)],
+    colors: [blue, blue],
   );
   static const brand2 = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0A84FF), Color(0xFF5E5CE6)],
+    colors: [blue, blue],
   );
   static const danger = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFF453A), Color(0xFFFF2D55)],
+    colors: [Color(0xFFB75D53), Color(0xFFB75D53)],
   );
   static const late = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFFF9F0A), Color(0xFFFF6B3D)],
+    colors: [Color(0xFFAC8043), Color(0xFFAC8043)],
   );
   static const success = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF30D158), Color(0xFF00C7BE)],
+    colors: [blue, blue],
   );
 
   static const shadow = [
     BoxShadow(color: Color(0x08000000), blurRadius: 2, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x0D000000), blurRadius: 18, offset: Offset(0, 6)),
+    BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 3)),
   ];
 
   static List<BoxShadow> glow(Color c, {double a = 0.35, double blur = 16}) => [
-        BoxShadow(
-          color: c.withValues(alpha: a),
-          blurRadius: blur,
-          offset: const Offset(0, 6),
-        ),
-      ];
+    BoxShadow(
+      color: c.withValues(alpha: a),
+      blurRadius: blur,
+      offset: const Offset(0, 6),
+    ),
+  ];
 }
 
 /// 모션 — 짧고 탄성 있는 스프링

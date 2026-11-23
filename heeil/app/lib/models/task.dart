@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'companion.dart';
+
 /// UI설계서 07: #과제, #수업, #팀 프로젝트, #개인
 enum TaskTag {
-  assignment('과제', [Color(0xFF0A84FF), Color(0xFF5E5CE6)]),
-  lecture('수업', [Color(0xFFBF5AF2), Color(0xFFFF375F)]),
-  team('팀 프로젝트', [Color(0xFFFF9F0A), Color(0xFFFF375F)]),
-  personal('개인', [Color(0xFF30D158), Color(0xFF00C7BE)]);
+  assignment('과제', [Color(0xFF63816F), Color(0xFF63816F)]),
+  lecture('수업', [Color(0xFF897CA3), Color(0xFF897CA3)]),
+  team('팀 프로젝트', [Color(0xFFB68C46), Color(0xFFB68C46)]),
+  personal('개인', [Color(0xFF609697), Color(0xFF609697)]);
 
   const TaskTag(this.label, this.colors);
 
@@ -15,10 +17,10 @@ enum TaskTag {
   Color get color => colors.first;
 
   LinearGradient get gradient => LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: colors,
-      );
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: colors,
+  );
 }
 
 class Task {
@@ -32,9 +34,10 @@ class Task {
     DateTime? createdAt,
     DateTime? updatedAt,
     this.deleted = false,
-  })  : tags = tags ?? <TaskTag>{},
-        createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? createdAt ?? DateTime.now();
+    this.credit,
+  }) : tags = tags ?? <TaskTag>{},
+       createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? createdAt ?? DateTime.now();
 
   final String id;
   String title;
@@ -53,21 +56,23 @@ class Task {
   /// tombstone — 삭제 표식. 오프라인에서 지운 항목을 다른 기기에 전파하려면
   /// 바로 지우지 않고 표식만 남겨야 한다 (docs/firebase.md).
   bool deleted;
+  CompletionCredit? credit;
 
   /// 변경 시점을 찍는다 (LWW 비교용)
   void touch([DateTime? at]) => updatedAt = at ?? DateTime.now();
 
   Map<String, Object?> toJson() => {
-        'id': id,
-        'title': title,
-        'done': done,
-        'due': due?.toIso8601String(),
-        'tags': [for (final t in tags) t.name],
-        'createdAt': createdAt.toIso8601String(),
-        'doneAt': doneAt?.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'deleted': deleted,
-      };
+    'id': id,
+    'title': title,
+    'done': done,
+    'due': due?.toIso8601String(),
+    'tags': [for (final t in tags) t.name],
+    'createdAt': createdAt.toIso8601String(),
+    'doneAt': doneAt?.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'deleted': deleted,
+    if (credit != null) 'credit': credit!.toJson(),
+  };
 
   /// 구버전(v1) JSON 호환 — `updatedAt`이 없으면 `createdAt`으로,
   /// `deleted`가 없으면 false로 채운다.
@@ -86,11 +91,14 @@ class Task {
           if (tagNames.contains(t.name)) t,
       },
       createdAt: created,
-      doneAt: j['doneAt'] == null ? null : DateTime.parse(j['doneAt'] as String),
+      doneAt: j['doneAt'] == null
+          ? null
+          : DateTime.parse(j['doneAt'] as String),
       updatedAt: j['updatedAt'] == null
           ? created
           : DateTime.parse(j['updatedAt'] as String),
       deleted: j['deleted'] as bool? ?? false,
+      credit: CompletionCredit.fromJson(j['credit']),
     );
   }
 }
@@ -103,12 +111,15 @@ class DoneEvent {
   final String title;
   final DateTime at;
 
-  Map<String, Object?> toJson() =>
-      {'taskId': taskId, 'title': title, 'at': at.toIso8601String()};
+  Map<String, Object?> toJson() => {
+    'taskId': taskId,
+    'title': title,
+    'at': at.toIso8601String(),
+  };
 
   factory DoneEvent.fromJson(Map<String, Object?> j) => DoneEvent(
-        j['taskId'] as String,
-        j['title'] as String,
-        DateTime.parse(j['at'] as String),
-      );
+    j['taskId'] as String,
+    j['title'] as String,
+    DateTime.parse(j['at'] as String),
+  );
 }

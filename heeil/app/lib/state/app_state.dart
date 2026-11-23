@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/task_store.dart';
 import '../models/task.dart';
+import '../models/companion.dart';
 import '../util/dates.dart';
 
 enum TaskFilter { all, todo, done }
@@ -20,20 +21,152 @@ enum RateStyle { bar, ring, graph }
 
 class AppState extends ChangeNotifier {
   /// [store]가 없으면 메모리에만 보관 (테스트용)
-  AppState({this.store, bool seed = false}) {
+  AppState({this.store, bool seed = false, DateTime Function()? clock})
+    : _now = clock ?? DateTime.now {
     final s = store;
     if (s != null && s.hasData) {
       _load(s);
     } else if (s != null || seed) {
       _seed();
     }
-    // 시간이 지나 '지연'으로 넘어가는 항목을 반영하려고 1분마다 다시 그림
+    _refreshProgress();
+    // Refresh day boundaries as well as overdue labels.
     if (s != null) {
-      _clock = Timer.periodic(const Duration(minutes: 1), (_) => super.notifyListeners());
+      _clock = Timer.periodic(
+        const Duration(minutes: 1),
+        (_) => notifyListeners(),
+      );
     }
   }
 
   Timer? _clock;
+  final DateTime Function() _now;
+  DateTime get now => _now();
+  CompanionKind companion = CompanionKind.dog;
+  final Map<String, DailyGoal> dayGoals = {};
+  final Set<String> unlockedRewards = {};
+
+  /// Includes archived completed tasks; a completion undo removes the credit
+  /// from statistics without erasing whether it has already been delivered.
+  List<Task> get creditedTasks =>
+      _tasks.where((t) => t.done && t.credit != null).toList();
+  List<Task> get pendingCredits =>
+      creditedTasks.where((t) => t.credit!.deliveredAt == null).toList();
+
+  List<Task> creditsBetween(DateTime start, DateTime end) =>
+      creditedTasks.where((t) {
+        final at = t.credit!.at;
+        return !at.isBefore(start) && at.isBefore(end);
+      }).toList();
+
+  Map<ActivityKind, int> activityCounts([DateTime? start, DateTime? end]) {
+    final source = start == null || end == null
+        ? creditedTasks
+        : creditsBetween(start, end);
+    return {
+      for (final a in ActivityKind.values)
+        a: source.where((t) => t.credit!.activity == a).length,
+    };
+  }
+
+  /// Stored on each task so the existing task sync also carries delivery state.
+  int deliverCredits() {
+    final batch = pendingCredits;
+    if (batch.isEmpty) return 0;
+    final at = now;
+    for (final t in batch) {
+      t.credit = t.credit!.delivered(at);
+      t.touch(at);
+    }
+    notifyListeners();
+    unawaited(flush());
+    return batch.length;
+  }
+
+  void setCompanion(CompanionKind value) {
+    if (companion == value) return;
+    companion = value;
+    notifyListeners();
+  }
+
+  DailyGoal get todayGoal =>
+      dayGoals[dayKey(now)] ?? const DailyGoal(planned: 0, completed: 0);
+
+  int get currentStreak {
+    var count = 0;
+    final today = dayKey(now);
+    final keys = dayGoals.keys.where((k) => k.compareTo(today) <= 0).toList()
+      ..sort();
+    for (final key in keys.reversed) {
+      final goal = dayGoals[key]!;
+      if (goal.planned == 0) {
+        continue; // Rest days neither increase nor break it.
+      }
+      if (!goal.achieved) {
+        if (key == today) continue; // Today is not over yet.
+        break;
+      }
+      count++;
+    }
+    return count;
+  }
+
+  int get longestStreak {
+    var best = 0, run = 0;
+    final keys = dayGoals.keys.toList()..sort();
+    for (final key in keys) {
+      final goal = dayGoals[key]!;
+      if (goal.planned == 0) continue;
+      run = goal.achieved ? run + 1 : 0;
+      if (run > best) best = run;
+    }
+    return best;
+  }
+
+  void _refreshProgress() {
+    final today = dayOf(now);
+    // A pre-upgrade completion is history, not a fresh reward to feed again.
+    for (final t in _tasks) {
+      if (t.done && t.credit == null && t.doneAt != null) {
+        t.credit = CompletionCredit(
+          at: t.doneAt!,
+          activity: activityFor(t.tags.map((t) => t.name)),
+          deliveredAt: t.doneAt,
+        );
+      }
+    }
+    final dates = <String, DateTime>{dayKey(today): today};
+    for (final t in _tasks) {
+      if (t.due != null && !dayOf(t.due!).isAfter(today)) {
+        dates[dayKey(t.due!)] = dayOf(t.due!);
+      }
+    }
+    for (final entry in dates.entries) {
+      if (entry.key != dayKey(today) && dayGoals.containsKey(entry.key)) {
+        continue;
+      }
+      final end = addDays(entry.value, 1);
+      final planned = _tasks
+          .where(
+            (t) =>
+                sameDay(t.due, entry.value) &&
+                (!t.deleted || (t.done && t.credit != null)),
+          )
+          .toList();
+      dayGoals[entry.key] = DailyGoal(
+        planned: planned.length,
+        completed: planned
+            .where((t) => t.done && t.doneAt != null && t.doneAt!.isBefore(end))
+            .length,
+      );
+    }
+    for (final reward in companionRewards) {
+      if ((reward.streak ? longestStreak : creditedTasks.length) >=
+          reward.target) {
+        unlockedRewards.add(reward.id);
+      }
+    }
+  }
 
   /// `LocalStore` 또는 MP3의 `SyncStore` (같은 인터페이스)
   final TaskStore? store;
@@ -158,10 +291,17 @@ class AppState extends ChangeNotifier {
   void setDone(Task t, bool value) {
     if (t.done == value) return;
     t.done = value;
-    t.doneAt = value ? DateTime.now() : null;
-    t.touch();
+    t.doneAt = value ? now : null;
+    t.touch(now);
     if (value) {
-      doneLog.insert(0, DoneEvent(t.id, t.title, DateTime.now()));
+      t.credit = CompletionCredit(
+        at: now,
+        activity: activityFor(t.tags.map((g) => g.name)),
+        deliveredAt: t.credit?.deliveredAt,
+      );
+    }
+    if (value) {
+      doneLog.insert(0, DoneEvent(t.id, t.title, now));
       if (doneLog.length > 100) doneLog.removeLast();
     } else if (doneLog.isNotEmpty && doneLog.first.taskId == t.id) {
       doneLog.removeAt(0);
@@ -268,6 +408,7 @@ class AppState extends ChangeNotifier {
           ..doneAt = r.doneAt
           ..tags = r.tags
           ..deleted = r.deleted
+          ..credit = r.credit
           ..updatedAt = r.updatedAt;
         changed = true;
       }
@@ -410,6 +551,7 @@ class AppState extends ChangeNotifier {
 
   @override
   void notifyListeners() {
+    _refreshProgress();
     super.notifyListeners();
     if (store == null) return;
     _saveTimer?.cancel();
@@ -429,16 +571,19 @@ class AppState extends ChangeNotifier {
   }
 
   Map<String, Object?> _settingsJson() => {
-        'calendarRows': calendarRows,
-        'thisWeekRow': thisWeekRow,
-        'rateStyle': rateStyle.name,
-        'notify': notify,
-        'remindDays': remindDays.toList(),
-        'notifyTime': '${notifyTime.hour}:${notifyTime.minute}',
-        'eclass': eclass,
-        'everytime': everytime,
-        'overdueDays': overdueDays,
-      };
+    'calendarRows': calendarRows,
+    'thisWeekRow': thisWeekRow,
+    'rateStyle': rateStyle.name,
+    'notify': notify,
+    'remindDays': remindDays.toList(),
+    'notifyTime': '${notifyTime.hour}:${notifyTime.minute}',
+    'eclass': eclass,
+    'everytime': everytime,
+    'overdueDays': overdueDays,
+    'companion': companion.name,
+    'dayGoals': {for (final e in dayGoals.entries) e.key: e.value.toJson()},
+    'unlockedRewards': unlockedRewards.toList(),
+  };
 
   void _load(TaskStore s) {
     for (final j in s.readTasks()) {
@@ -454,6 +599,23 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
     }
     final m = s.readSettings();
+    companion = CompanionKind.values.firstWhere(
+      (v) => v.name == m['companion'],
+      orElse: () => CompanionKind.dog,
+    );
+    final goals = m['dayGoals'];
+    if (goals is Map) {
+      for (final e in goals.entries) {
+        final goal = DailyGoal.fromJson(e.value);
+        if (e.key is String &&
+            DateTime.tryParse(e.key as String) != null &&
+            goal != null) {
+          dayGoals[e.key as String] = goal;
+        }
+      }
+    }
+    final rewards = m['unlockedRewards'];
+    if (rewards is List) unlockedRewards.addAll(rewards.whereType<String>());
     calendarRows = (m['calendarRows'] as int? ?? 2).clamp(1, 4);
     thisWeekRow = (m['thisWeekRow'] as int? ?? 1).clamp(1, calendarRows);
     rateStyle = RateStyle.values.firstWhere(
@@ -485,15 +647,19 @@ class AppState extends ChangeNotifier {
     // → 두 기기에서 로그인해도 샘플이 두 벌로 늘지 않고,
     //   다른 기기에서 고치거나 지운 샘플이 되살아나지 않는다 (LWW에서 항상 짐).
     var n = 0;
-    Task mk(String title, int? inDays, Set<TaskTag> tags, {bool done = false}) =>
-        Task(
-          id: 'sample-${++n}',
-          title: title,
-          due: inDays == null ? null : addDays(today, inDays),
-          tags: tags,
-          done: done,
-          updatedAt: DateTime(2000),
-        );
+    Task mk(
+      String title,
+      int? inDays,
+      Set<TaskTag> tags, {
+      bool done = false,
+    }) => Task(
+      id: 'sample-${++n}',
+      title: title,
+      due: inDays == null ? null : addDays(today, inDays),
+      tags: tags,
+      done: done,
+      updatedAt: DateTime(2000),
+    );
     _tasks.addAll([
       mk('운영체제 과제', 0, {TaskTag.assignment}),
       mk('장보기', 0, {TaskTag.personal}),
@@ -515,7 +681,7 @@ class AppState extends ChangeNotifier {
 
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child})
-      : super(notifier: state);
+    : super(notifier: state);
 
   /// 상태 변경 시 다시 그림
   static AppState of(BuildContext context) =>

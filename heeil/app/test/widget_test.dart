@@ -15,7 +15,10 @@ Future<void> settle(WidgetTester tester, [int ms = 900]) async {
   }
 }
 
-Future<AppState> boot(WidgetTester tester, {List<String> titles = const []}) async {
+Future<AppState> boot(
+  WidgetTester tester, {
+  List<String> titles = const [],
+}) async {
   tester.view.physicalSize = const Size(1170, 2532);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
@@ -29,7 +32,10 @@ Future<AppState> boot(WidgetTester tester, {List<String> titles = const []}) asy
 }
 
 Finder get mainInput => find
-    .descendant(of: find.byType(QuickInputBar), matching: find.byType(TextField))
+    .descendant(
+      of: find.byType(QuickInputBar),
+      matching: find.byType(TextField),
+    )
     .first;
 
 void main() {
@@ -84,33 +90,29 @@ void main() {
     expect(s.tasks.first.done, isTrue);
   });
 
-  Future<Rect> openActions(WidgetTester tester, AppState s, [String title = '과제']) async {
-    final tile = find.ancestor(of: find.text(title), matching: find.byType(TaskTile));
-    await tester.drag(tile, const Offset(-240, 0));
-    await settle(tester, 600);
-    final id = s.tasks.firstWhere((t) => t.title == title).id;
-    return tester.getRect(find.byKey(ValueKey('act-$id')));
-  }
-
-  testWidgets('왼쪽 스와이프 → 열린 채 유지 → 날짜 끌기로 +N일', (tester) async {
+  testWidgets('왼쪽 스와이프 → 손을 놓으면 오늘 기준 날짜 변경', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    final area = await openActions(tester, s);
-    expect(area.width, greaterThan(100), reason: '손을 떼도 액션 영역이 열려 있어야 함');
-
-    await tester.dragFrom(area.centerLeft + const Offset(20, 0), const Offset(-80, 0));
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
+    await tester.drag(tile, const Offset(-100, 0));
     await settle(tester, 1400);
-
-    expect(dayDiff(DateTime.now(), s.tasks.single.due!), inInclusiveRange(1, 3));
+    expect(dayDiff(DateTime.now(), s.tasks.single.due!), 1);
+    expect(find.byKey(ValueKey('act-${s.tasks.single.id}')), findsNothing);
   });
 
   testWidgets('날짜 다이얼은 되돌리면 "그대로"(변화 없음)', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    final area = await openActions(tester, s);
-    final g = await tester.startGesture(area.centerLeft + const Offset(20, 0));
-    await g.moveBy(const Offset(-20, 0));
-    await g.moveBy(const Offset(-60, 0));
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
+    final g = await tester.startGesture(tester.getCenter(tile));
+    await g.moveBy(const Offset(-30, 0));
+    await g.moveBy(const Offset(-80, 0));
     await tester.pump();
-    await g.moveBy(const Offset(120, 0)); // 다시 오른쪽으로 → 0단계
+    await g.moveBy(const Offset(75, 0)); // 첫 날짜 임계값 안쪽으로 돌아옴
     await tester.pump();
     expect(find.text('그대로'), findsWidgets);
     await g.up();
@@ -118,13 +120,12 @@ void main() {
     expect(s.tasks.single.due, isNull);
   });
 
-  testWidgets('왼쪽 스와이프 → 태그 끌기로 가장 많이 쓴 태그 지정', (tester) async {
-    final s = await boot(tester, titles: ['과제', '수업']);
-    s.update(s.tasks[1], tags: {TaskTag.team}); // 팀 프로젝트가 가장 많이 쓰임
-    await tester.pump();
-    final area = await openActions(tester, s);
-
-    await tester.dragFrom(area.centerRight - const Offset(20, 0), const Offset(-70, 0));
+  testWidgets('태그 변경은 블록 터치 편집 화면에서 저장', (tester) async {
+    final s = await boot(tester, titles: ['과제']);
+    await tester.tap(find.text('과제'));
+    await settle(tester, 500);
+    await tester.tap(find.byType(TagToggle).at(2));
+    await tester.tap(find.byKey(const Key('task-editor-save')));
     await settle(tester, 1400);
 
     expect(s.tasks.firstWhere((t) => t.title == '과제').tags, {TaskTag.team});
@@ -132,7 +133,10 @@ void main() {
 
   testWidgets('끄는 도중 위·아래로 벗어나면 취소', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    final tile = find.ancestor(of: find.text('과제'), matching: find.byType(TaskTile));
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
     final g = await tester.startGesture(tester.getCenter(tile));
     await g.moveBy(const Offset(-30, 0));
     await g.moveBy(const Offset(-80, 0));
@@ -146,15 +150,24 @@ void main() {
 
   testWidgets('열린 상태에서 카드를 누르면 원래대로', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    await openActions(tester, s);
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
+    await tester.drag(tile, const Offset(150, 0));
+    await settle(tester, 400);
     await tester.tap(find.text('과제'));
     await settle(tester, 600);
-    expect(find.byKey(ValueKey('act-${s.tasks.single.id}')), findsNothing);
+    expect(find.byKey(ValueKey('del-${s.tasks.single.id}')), findsNothing);
+    expect(find.text('할 일 수정'), findsNothing);
   });
 
   test('분류: 기한 지남 → 지연, 지연 후 완료 → 늦은 완료', () {
     final s = AppState(seed: false);
-    final t = s.add('과제', due: DateTime.now().subtract(const Duration(days: 2)));
+    final t = s.add(
+      '과제',
+      due: DateTime.now().subtract(const Duration(days: 2)),
+    );
     expect(s.statusOf(t), TaskStatus.overdue);
     s.setDone(t, true);
     expect(s.statusOf(t), TaskStatus.late);
@@ -175,7 +188,10 @@ void main() {
 
   testWidgets('오른쪽 스와이프 → 삭제 버튼에 스냅, 누르면 삭제', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    final tile = find.ancestor(of: find.text('과제'), matching: find.byType(TaskTile));
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
     await tester.drag(tile, const Offset(150, 0));
     await settle(tester, 600);
     expect(s.tasks, isNotEmpty, reason: '스냅만 되고 아직 삭제 전');
@@ -189,7 +205,10 @@ void main() {
 
   testWidgets('오른쪽으로 더 세게 끌면 바로 삭제', (tester) async {
     final s = await boot(tester, titles: ['과제']);
-    final tile = find.ancestor(of: find.text('과제'), matching: find.byType(TaskTile));
+    final tile = find.ancestor(
+      of: find.text('과제'),
+      matching: find.byType(TaskTile),
+    );
     await tester.drag(tile, const Offset(320, 0));
     await settle(tester, 1400);
     expect(s.tasks, isEmpty);
