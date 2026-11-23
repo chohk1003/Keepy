@@ -17,8 +17,10 @@ ActivityKind activityFor(Iterable<String> tags) {
 String dayKey(DateTime date) =>
     '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-/// One credit per task. Archiving a task retains it; undoing completion makes
-/// it inactive. Delivery is retained across re-checks to prevent repeat rewards.
+/// 할 일 하나당 성취 하나. 완료를 되돌리면 빠지고, 보관해도 남는다.
+///
+/// [deliveredAt] 은 '부스러기 전달' 연출 때 쓰던 자리다. 연출은 없앴지만
+/// 이미 기기·서버에 저장된 기록이 있어 저장 형식만 그대로 둔다 (읽고 다시 쓴다).
 class CompletionCredit {
   const CompletionCredit({
     required this.at,
@@ -28,12 +30,6 @@ class CompletionCredit {
   final DateTime at;
   final ActivityKind activity;
   final DateTime? deliveredAt;
-
-  CompletionCredit delivered(DateTime when) => CompletionCredit(
-    at: at,
-    activity: activity,
-    deliveredAt: deliveredAt ?? when,
-  );
 
   Map<String, Object?> toJson() => {
     'at': at.toIso8601String(),

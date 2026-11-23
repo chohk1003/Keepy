@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/task_store.dart';
 import '../models/task.dart';
 import '../models/companion.dart';
+import '../theme.dart';
 import '../util/dates.dart';
 
 enum TaskFilter { all, todo, done }
@@ -50,11 +51,6 @@ class AppState extends ChangeNotifier {
   List<Task> get creditedTasks =>
       _tasks.where((t) => t.done && t.credit != null).toList();
 
-  /// 부스러기 '전달' 연출을 뺀 뒤로 화면에서는 쓰지 않는다.
-  /// (저장·동기화 형식을 지키려고 모델의 deliveredAt 은 그대로 둔다)
-  List<Task> get pendingCredits =>
-      creditedTasks.where((t) => t.credit!.deliveredAt == null).toList();
-
   List<Task> creditsBetween(DateTime start, DateTime end) =>
       creditedTasks.where((t) {
         final at = t.credit!.at;
@@ -69,20 +65,6 @@ class AppState extends ChangeNotifier {
       for (final a in ActivityKind.values)
         a: source.where((t) => t.credit!.activity == a).length,
     };
-  }
-
-  /// Stored on each task so the existing task sync also carries delivery state.
-  int deliverCredits() {
-    final batch = pendingCredits;
-    if (batch.isEmpty) return 0;
-    final at = now;
-    for (final t in batch) {
-      t.credit = t.credit!.delivered(at);
-      t.touch(at);
-    }
-    notifyListeners();
-    unawaited(flush());
-    return batch.length;
   }
 
   DailyGoal get todayGoal =>
@@ -568,6 +550,8 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------- 설정
+  /// 화이트·다크 — 기본은 기기 설정을 따른다 (테마는 캐릭터 배경까지 바꾼다)
+  AppTheme theme = AppTheme.system;
   int calendarRows = 2;
   int thisWeekRow = 1;
   RateStyle rateStyle = RateStyle.ring;
@@ -585,6 +569,11 @@ class AppState extends ChangeNotifier {
 
   void setThisWeekRow(int r) {
     thisWeekRow = r;
+    notifyListeners();
+  }
+
+  void setTheme(AppTheme t) {
+    theme = t;
     notifyListeners();
   }
 
@@ -643,6 +632,7 @@ class AppState extends ChangeNotifier {
   }
 
   Map<String, Object?> _settingsJson() => {
+    'theme': theme.name,
     'calendarRows': calendarRows,
     'thisWeekRow': thisWeekRow,
     'rateStyle': rateStyle.name,
@@ -684,6 +674,10 @@ class AppState extends ChangeNotifier {
     }
     final rewards = m['unlockedRewards'];
     if (rewards is List) unlockedRewards.addAll(rewards.whereType<String>());
+    theme = AppTheme.values.firstWhere(
+      (e) => e.name == m['theme'],
+      orElse: () => AppTheme.system,
+    );
     calendarRows = (m['calendarRows'] as int? ?? 2).clamp(1, 4);
     thisWeekRow = (m['thisWeekRow'] as int? ?? 1).clamp(1, calendarRows);
     rateStyle = RateStyle.values.firstWhere(

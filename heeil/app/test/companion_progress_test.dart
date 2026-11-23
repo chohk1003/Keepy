@@ -14,36 +14,30 @@ void main() {
   });
   tearDown(() => state.dispose());
 
-  test('완료 하나당 성취 하나, 재전달과 체크 왕복은 중복 지급하지 않음', () {
+  test('완료 하나당 성취 하나, 체크 왕복은 중복 지급하지 않음', () {
     final task = state.add('과제', tags: {TaskTag.assignment});
     state.setDone(task, true);
-    expect(state.pendingCredits.length, 1);
-    expect(state.deliverCredits(), 1);
-    expect(state.deliverCredits(), 0);
+    expect(state.creditedTasks.length, 1);
     state.setDone(task, false);
     expect(state.creditedTasks, isEmpty);
     state.setDone(task, true);
     expect(state.creditedTasks.length, 1);
-    expect(state.pendingCredits, isEmpty);
   });
 
-  test('전달 전 완료 취소는 수집물과 통계를 제거', () {
+  test('완료 취소는 수집물과 통계를 제거', () {
     final task = state.add('할 일');
     state.setDone(task, true);
     state.setDone(task, false);
-    expect(state.pendingCredits, isEmpty);
-    expect(state.deliverCredits(), 0);
     expect(state.creditedTasks, isEmpty);
   });
 
-  test('완료 항목 비우기는 기록과 전달 대기를 보존', () {
+  test('완료 항목 비우기는 성취 기록을 보존', () {
     final task = state.add('할 일', due: now);
     state.setDone(task, true);
     state.clearDone();
     expect(state.tasks, isEmpty);
     expect(state.creditedTasks.length, 1);
     expect(state.todayGoal.achieved, isTrue);
-    expect(state.deliverCredits(), 1);
   });
 
   test('예정된 일을 모두 완료해야 연속 기록, 없는 날은 증가하지 않음', () {
@@ -95,24 +89,23 @@ void main() {
     expect(state.doneLog.length, 100, reason: '기존 최근 내역 UI와 장기 기록은 분리');
   });
 
-  test('재시작 후 대기·전달 상태 복원', () async {
+  test('재시작 후 성취 기록 복원', () async {
     SharedPreferences.setMockInitialValues({});
     final local = await LocalStore.open();
     final app = AppState(store: local, clock: () => now);
     addTearDown(app.dispose);
-    final a = app.add('완료');
+    final a = app.add('하나');
     app.setDone(a, true);
-    app.deliverCredits();
-    final b = app.add('대기');
+    final b = app.add('둘');
     app.setDone(b, true);
     await app.flush();
     final loaded = AppState(store: await LocalStore.open(), clock: () => now);
     addTearDown(loaded.dispose);
-    expect(loaded.pendingCredits.map((t) => t.title), ['대기']);
-    expect(loaded.creditedTasks.length, 2);
+    expect(loaded.creditedTasks.map((t) => t.title).toSet(), {'하나', '둘'});
+    expect(loaded.creditedTasks.every((t) => t.credit != null), isTrue);
   });
 
-  test('동기화된 성취는 집계하고 전달 완료는 다시 지급하지 않음', () {
+  test('동기화된 성취도 집계하고 저장 형식은 그대로 왕복한다', () {
     final remote = Task(
       id: 'remote',
       title: '다른 기기',
@@ -126,7 +119,7 @@ void main() {
     );
     state.applyRemote([remote.toJson()]);
     expect(state.creditedTasks.length, 1);
-    expect(state.pendingCredits, isEmpty);
+    // 연출은 없앴지만 다른 기기가 보낸 deliveredAt 은 깨뜨리지 않고 그대로 둔다
     expect(Task.fromJson(remote.toJson()).credit!.deliveredAt, now);
   });
 }
