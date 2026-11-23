@@ -12,6 +12,7 @@ import '../state/app_state.dart';
 import '../theme.dart';
 import '../util/dates.dart';
 import 'fx.dart';
+import 'pill.dart';
 import 'square_check.dart';
 
 /// Left: direct +1/+2/+7 day selection on release, relative to today.
@@ -159,14 +160,36 @@ class _TaskTileState extends State<TaskTile>
   }
 
   bool _measureQueued = false;
-  int get _step => -_raw < 24
-      ? 0
-      : -_raw < 110
-      ? 1
-      : -_raw < 180
-      ? 2
-      : 7;
+
+  /// 날짜 다이얼 단계 — 끌어온 거리의 경계와 그 단계가 뜻하는 일수.
+  static const _stepEdges = <double>[24, 110, 180];
+  static const _stepDays = <int>[0, 1, 2, 7];
+
+  /// 경계에서 손이 조금 떨려도 단계가 오락가락하지 않도록 둔 여유.
+  /// 올라가는 경계는 그대로 두고, 한 번 들어온 단계는 이만큼 더 돌아와야 풀린다.
+  static const _stepSlack = 14.0;
+
+  int _stepIndex = 0;
+  int get _step => _stepDays[_stepIndex];
+
+  /// [_raw] 에 맞춰 단계를 다시 정한다. 단계가 바뀐 그 순간에만 진동이 울려서
+  /// 화면의 숫자와 손끝의 느낌이 어긋나지 않는다.
+  void _syncStep({bool silent = false}) {
+    final travel = -_raw;
+    var next = _stepIndex;
+    while (next < _stepEdges.length && travel >= _stepEdges[next]) {
+      next++;
+    }
+    while (next > 0 && travel < _stepEdges[next - 1] - _stepSlack) {
+      next--;
+    }
+    if (next == _stepIndex) return;
+    _stepIndex = next;
+    if (!silent) HapticFeedback.selectionClick();
+  }
+
   bool get _done => _pendingDone ?? widget.task.done;
+  bool get _today => sameDay(widget.task.due, DateTime.now());
 
   @override
   void didChangeDependencies() {
@@ -223,6 +246,7 @@ class _TaskTileState extends State<TaskTile>
     if (!mounted) return;
     setState(() {
       _raw = 0;
+      _stepIndex = 0;
       _deleteOpen = false;
       _dragging = false;
     });
@@ -256,12 +280,13 @@ class _TaskTileState extends State<TaskTile>
       _raw = _rawFor(_x);
       _resumeOffset = _x - _shownFor(_raw);
       _resumeTravel = 0;
+      // 다시 잡은 자리의 단계를 조용히 맞춰 둔다 (잡자마자 진동하지 않게)
+      _syncStep(silent: true);
     });
   }
 
   void _update(DragUpdateDetails d) {
     if (_cancelled) return;
-    final before = _step;
     _raw += d.delta.dx;
     _resumeTravel += d.delta.dx.abs();
     final target =
@@ -273,7 +298,7 @@ class _TaskTileState extends State<TaskTile>
       _motion.stop();
       _motion.value = target;
     }
-    if (_step != before) HapticFeedback.selectionClick();
+    _syncStep();
   }
 
   void _end(DragEndDetails d) {
@@ -352,9 +377,7 @@ class _TaskTileState extends State<TaskTile>
                             child: Container(
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: _raw >= 230
-                                    ? K.red
-                                    : const Color(0xFFB75D53),
+                                color: _raw >= 230 ? K.red : K.overdueInk,
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               child: const Icon(
@@ -414,12 +437,17 @@ class _TaskTileState extends State<TaskTile>
                         haptic: false,
                         onTap: _deleteOpen ? _close : widget.onTap,
                         child: Container(
-                          constraints: const BoxConstraints(minHeight: 68),
-                          padding: const EdgeInsets.fromLTRB(4, 7, 12, 7),
+                          constraints: const BoxConstraints(minHeight: 58),
+                          padding: const EdgeInsets.fromLTRB(4, 4, 14, 4),
                           decoration: BoxDecoration(
-                            color: _done ? const Color(0xFFF7F9F6) : K.card,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: const Color(0xFFE4EAE3)),
+                            color: _done ? K.doneCard : K.card,
+                            borderRadius: BorderRadius.circular(K.radiusCard),
+                            border: Border.all(color: K.hairline, width: 0.8),
+                            boxShadow: _done
+                                ? null
+                                : K.cardShadow(
+                                    _deleteOpen || _dragging ? .7 : 0,
+                                  ),
                           ),
                           child: Row(
                             children: [
@@ -443,44 +471,68 @@ class _TaskTileState extends State<TaskTile>
                                     ),
                                     if (widget.task.due != null ||
                                         widget.task.tags.isNotEmpty ||
-                                        widget.status == TaskStatus.overdue)
+                                        widget.status != TaskStatus.pending)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 5),
-                                        child: Text.rich(
-                                          TextSpan(
-                                            children: [
-                                              if (widget.status ==
-                                                  TaskStatus.overdue)
-                                                TextSpan(
-                                                  text: '지연  ',
-                                                  style: T.caption.copyWith(
-                                                    color: K.red,
-                                                  ),
+                                        // 카드가 줄어들어도 높이가 변하지 않게 한 줄로
+                                        // 고정하고 넘치는 부분은 자른다 (목록이 튀지 않게).
+                                        child: SizedBox(
+                                          height:
+                                              MediaQuery.textScalerOf(context)
+                                                  .scale(12) +
+                                              8,
+                                          child: ClipRect(
+                                            child: OverflowBox(
+                                              maxWidth: 1200,
+                                              alignment: Alignment.centerLeft,
+                                              child: Row(
+                                                key: ValueKey(
+                                                  'meta-${widget.task.id}',
                                                 ),
-                                              if (widget.task.due != null)
-                                                TextSpan(
-                                                  text:
-                                                      '${mdw(widget.task.due!)}  ',
-                                                ),
-                                              for (final tag
-                                                  in widget.task.tags)
-                                                TextSpan(
-                                                  text: '#${tag.label}  ',
-                                                  style: T.caption.copyWith(
-                                                    color: _done
-                                                        ? K.label3
-                                                        : tag.color,
-                                                  ),
-                                                ),
-                                            ],
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (widget.status ==
+                                                      TaskStatus.overdue)
+                                                    const _Meta(
+                                                      Pill(
+                                                        '지연',
+                                                        gradient: K.danger,
+                                                      ),
+                                                    ),
+                                                  if (widget.status ==
+                                                      TaskStatus.late)
+                                                    const _Meta(
+                                                      Pill(
+                                                        '늦은 완료',
+                                                        gradient: K.late,
+                                                      ),
+                                                    ),
+                                                  if (widget.task.due != null)
+                                                    _Meta(
+                                                      Pill(
+                                                        mdw(widget.task.due!),
+                                                        color: _today
+                                                            ? K.blue
+                                                            : K.label2,
+                                                      ),
+                                                    ),
+                                                  if (widget.task.due == null &&
+                                                      !_done)
+                                                    const _Meta(Pill('날짜 미지정')),
+                                                  for (final tag
+                                                      in widget.task.tags)
+                                                    _Meta(
+                                                      Pill(
+                                                        '#${tag.label}',
+                                                        color: _done
+                                                            ? K.label3
+                                                            : tag.color,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
-                                          key: ValueKey(
-                                            'meta-${widget.task.id}',
-                                          ),
-                                          style: T.caption,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                   ],
@@ -500,4 +552,13 @@ class _TaskTileState extends State<TaskTile>
       ),
     );
   }
+}
+
+/// 메타 한 칸 — 오른쪽 간격만 둔다 (한 줄 고정이라 Wrap 을 쓰지 않는다)
+class _Meta extends StatelessWidget {
+  const _Meta(this.child);
+  final Widget child;
+  @override
+  Widget build(BuildContext context) =>
+      Padding(padding: const EdgeInsets.only(right: 5), child: child);
 }

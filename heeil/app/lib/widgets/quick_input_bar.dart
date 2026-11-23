@@ -100,17 +100,17 @@ class _QuickInputBarState extends State<QuickInputBar>
           padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF0EDFF),
-              border: Border.all(color: const Color(0xFFB4A4F4), width: 1.5),
-              borderRadius: BorderRadius.circular(22),
+              color: K.inputFill,
+              border: Border.all(color: K.inputLine, width: 1.5),
+              borderRadius: BorderRadius.circular(18),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.all(4),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AnimatedSize(
-                    duration: Motion.med,
+                    duration: Motion.feedback,
                     curve: Motion.spring,
                     alignment: Alignment.bottomCenter,
                     child: open
@@ -254,7 +254,7 @@ class TagToggle extends StatelessWidget {
       onTap: onTap,
       scale: 0.9,
       child: AnimatedContainer(
-        duration: Motion.med,
+        duration: Motion.feedback,
         curve: Motion.out,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
@@ -343,7 +343,7 @@ class _SendButton extends StatelessWidget {
             );
           },
           child: AnimatedContainer(
-            duration: Motion.med,
+            duration: Motion.feedback,
             curve: Motion.out,
             width: 40,
             height: 40,
@@ -357,7 +357,7 @@ class _SendButton extends StatelessWidget {
             ),
             child: AnimatedRotation(
               turns: enabled ? 0 : -0.25,
-              duration: Motion.med,
+              duration: Motion.feedback,
               curve: Motion.spring,
               child: Icon(
                 CupertinoIcons.arrow_up,

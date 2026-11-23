@@ -181,6 +181,7 @@ class _EditorState extends State<_Editor> {
                               style: TextStyle(fontSize: 12, color: tag.color),
                             ),
                             visualDensity: VisualDensity.compact,
+                            materialTapTargetSize: MaterialTapTargetSize.padded,
                             showCheckmark: false,
                             labelPadding: const EdgeInsets.symmetric(
                               horizontal: 3,
@@ -217,6 +218,7 @@ class _EditorState extends State<_Editor> {
                           child: ChoiceChip(
                             key: ValueKey('quick-date-${entry.key}'),
                             visualDensity: VisualDensity.compact,
+                            materialTapTargetSize: MaterialTapTargetSize.padded,
                             showCheckmark: false,
                             labelPadding: const EdgeInsets.symmetric(
                               horizontal: 2,
@@ -236,7 +238,7 @@ class _EditorState extends State<_Editor> {
                   ),
                 ),
                 AnimatedSize(
-                  duration: Motion.med,
+                  duration: Motion.feedback,
                   curve: Curves.easeOutCubic,
                   child: _calendar
                       ? CalendarDatePicker(

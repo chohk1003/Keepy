@@ -69,11 +69,13 @@ void main() {
           await settle(tester);
           expect(tester.getSize(tile).height, height);
         }
-        final metadata = tester.widget<Text>(
-          find.byKey(const ValueKey('meta-height')),
+        // 메타는 배지 한 줄 — 카드가 줄어도 다시 줄바꿈하지 않는다
+        // (높이 불변은 위 반복 구간에서 이미 검사한다)
+        final metadata = find.byKey(const ValueKey('meta-height'));
+        expect(
+          find.descendant(of: metadata, matching: find.text('#팀 프로젝트')),
+          findsOneWidget,
         );
-        expect(metadata.maxLines, 1);
-        expect(metadata.textSpan!.toPlainText(), contains('#팀 프로젝트'));
       });
     }
   }

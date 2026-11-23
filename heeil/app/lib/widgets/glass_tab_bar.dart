@@ -98,11 +98,9 @@ class _Item extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = t > 0.5;
-    final color = spec.label == '설정'
-        ? const Color(0xFF7952D6)
-        : spec.label == '날짜'
-        ? const Color(0xFF007F93)
-        : K.blue;
+    // 탭은 태그 색을 쓰지 않는다 — 같은 색은 어디서나 같은 태그를 뜻해야 하므로.
+    // 고른 탭만 강조색, 나머지는 보조 글자색.
+    final color = Color.lerp(K.label2, K.blue, t)!;
     return Semantics(
       label: spec.label,
       button: true,

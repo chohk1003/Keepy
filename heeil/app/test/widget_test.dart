@@ -41,7 +41,7 @@ Finder get mainInput => find
 void main() {
   testWidgets('빈 상태 → 입력 바로 추가', (tester) async {
     final s = await boot(tester);
-    expect(find.text('할 일 없음'), findsOneWidget);
+    expect(find.text('등록된 할 일이 없어요'), findsOneWidget);
 
     await tester.enterText(mainInput, '테스트');
     await tester.pump();
@@ -201,6 +201,8 @@ void main() {
     await tester.tap(del);
     await settle(tester, 1400);
     expect(s.tasks, isEmpty);
+    // 삭제 취소 토스트는 4초 — 사라질 때까지 기다렸다 끝낸다
+    await settle(tester, 4200);
   });
 
   testWidgets('오른쪽으로 더 세게 끌면 바로 삭제', (tester) async {
@@ -212,6 +214,7 @@ void main() {
     await tester.drag(tile, const Offset(320, 0));
     await settle(tester, 1400);
     expect(s.tasks, isEmpty);
+    await settle(tester, 4200);
   });
 
   testWidgets('JSON 직렬화 왕복', (tester) async {

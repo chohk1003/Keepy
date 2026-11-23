@@ -42,7 +42,6 @@ class AppState extends ChangeNotifier {
   Timer? _clock;
   final DateTime Function() _now;
   DateTime get now => _now();
-  CompanionKind companion = CompanionKind.dog;
   final Map<String, DailyGoal> dayGoals = {};
   final Set<String> unlockedRewards = {};
 
@@ -50,6 +49,9 @@ class AppState extends ChangeNotifier {
   /// from statistics without erasing whether it has already been delivered.
   List<Task> get creditedTasks =>
       _tasks.where((t) => t.done && t.credit != null).toList();
+
+  /// 부스러기 '전달' 연출을 뺀 뒤로 화면에서는 쓰지 않는다.
+  /// (저장·동기화 형식을 지키려고 모델의 deliveredAt 은 그대로 둔다)
   List<Task> get pendingCredits =>
       creditedTasks.where((t) => t.credit!.deliveredAt == null).toList();
 
@@ -81,12 +83,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     unawaited(flush());
     return batch.length;
-  }
-
-  void setCompanion(CompanionKind value) {
-    if (companion == value) return;
-    companion = value;
-    notifyListeners();
   }
 
   DailyGoal get todayGoal =>
@@ -464,6 +460,82 @@ class AppState extends ChangeNotifier {
     return best == null ? null : dayOf(best);
   }
 
+  /// 그 날의 할 일을 활동 4분류로 묶는다.
+  ///
+  /// 포함 기준은 '그 날의 일' — 기한이 그 날이거나, 그 날 완료한 일.
+  /// 분류는 완료한 일이면 완료 기록에 보존된 것을, 남은 일이면 지금 태그로 판정한다.
+  /// (완료 기록이 없는 옛 데이터는 태그로 판정한다)
+  Map<ActivityKind, ({int done, int total})> dayActivityStats(DateTime d) {
+    final counts = <ActivityKind, ({int done, int total})>{
+      for (final a in ActivityKind.values) a: (done: 0, total: 0),
+    };
+    for (final t in _live) {
+      final at = t.credit?.at ?? t.doneAt;
+      final doneOnDay = t.done && sameDay(at, d);
+      if (!doneOnDay && !sameDay(t.due, d)) continue;
+      final activity = t.done && t.credit != null
+          ? t.credit!.activity
+          : activityFor(t.tags.map((tag) => tag.name));
+      final before = counts[activity]!;
+      counts[activity] = (
+        done: before.done + (t.done ? 1 : 0),
+        total: before.total + 1,
+      );
+    }
+    return counts;
+  }
+
+  /// 그 날의 할 일을 '태그 그대로' 묶는다 — 사용자에게 보여 줄 통계용.
+  /// (캐릭터 동작은 통합 분류인 [dayActivityStats] 를 쓴다)
+  ///
+  /// 태그가 여러 개면 각 태그에 모두 센다. 그래서 합이 할 일 수보다 클 수 있다.
+  /// 태그가 없는 일은 null 칸(미지정)에 들어간다.
+  Map<TaskTag?, ({int done, int total})> dayTagStats(DateTime d) {
+    final counts = <TaskTag?, ({int done, int total})>{
+      for (final tag in TaskTag.values) tag: (done: 0, total: 0),
+      null: (done: 0, total: 0),
+    };
+    void bump(TaskTag? key, bool done) {
+      final before = counts[key]!;
+      counts[key] = (
+        done: before.done + (done ? 1 : 0),
+        total: before.total + 1,
+      );
+    }
+
+    for (final t in _live) {
+      final at = t.credit?.at ?? t.doneAt;
+      final doneOnDay = t.done && sameDay(at, d);
+      if (!doneOnDay && !sameDay(t.due, d)) continue;
+      if (t.tags.isEmpty) {
+        bump(null, t.done);
+      } else {
+        for (final tag in t.tags) {
+          bump(tag, t.done);
+        }
+      }
+    }
+    return counts;
+  }
+
+  /// 그 날 끝낸 일을 태그별로 센다 (주간 그래프용).
+  Map<TaskTag?, int> tagCreditsOn(DateTime d) {
+    final counts = <TaskTag?, int>{
+      for (final tag in TaskTag.values) tag: 0,
+      null: 0,
+    };
+    for (final t in creditsBetween(d, addDays(d, 1))) {
+      if (t.tags.isEmpty) {
+        counts[null] = counts[null]! + 1;
+      } else {
+        for (final tag in t.tags) {
+          counts[tag] = counts[tag]! + 1;
+        }
+      }
+    }
+    return counts;
+  }
+
   double dayRate(DateTime d) {
     final list = onDay(d);
     if (list.isEmpty) return 0;
@@ -580,7 +652,6 @@ class AppState extends ChangeNotifier {
     'eclass': eclass,
     'everytime': everytime,
     'overdueDays': overdueDays,
-    'companion': companion.name,
     'dayGoals': {for (final e in dayGoals.entries) e.key: e.value.toJson()},
     'unlockedRewards': unlockedRewards.toList(),
   };
@@ -599,10 +670,7 @@ class AppState extends ChangeNotifier {
       } catch (_) {}
     }
     final m = s.readSettings();
-    companion = CompanionKind.values.firstWhere(
-      (v) => v.name == m['companion'],
-      orElse: () => CompanionKind.dog,
-    );
+    // 'companion'·'companionPicked' 는 캐릭터가 오리 하나가 되면서 더 읽지 않는다.
     final goals = m['dayGoals'];
     if (goals is Map) {
       for (final e in goals.entries) {

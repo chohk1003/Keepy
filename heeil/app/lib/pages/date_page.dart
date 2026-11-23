@@ -145,7 +145,7 @@ class _DatePageState extends State<DatePage>
             // 행 하나당 24px씩 늘리고 키보드가 열려도 선택한 크기를 유지한다.
             AnimatedContainer(
               key: const Key('calendar-area'),
-              duration: mq.disableAnimations ? Duration.zero : Motion.med,
+              duration: mq.disableAnimations ? Duration.zero : Motion.expansion,
               curve: Curves.easeOutCubic,
               height: mq.padding.top + 136 + 24.0 * s.calendarRows,
               child: const WeekCalendar(),
@@ -176,7 +176,7 @@ class _DatePageState extends State<DatePage>
                     onNotification: (n) => _onScroll(n, s),
                     child: ClipRect(
                       child: AnimatedSwitcher(
-                        duration: Motion.slow,
+                        duration: Motion.navigation,
                         switchInCurve: Curves.easeOutCubic,
                         switchOutCurve: Curves.easeInCubic,
                         transitionBuilder: (c, a) {
@@ -207,11 +207,7 @@ class _DatePageState extends State<DatePage>
                               itemBuilder: buildTaskTile,
                             ),
                             SliverToBoxAdapter(
-                              child: SectionHeader(
-                                '완료',
-                                done.length,
-                                gradient: K.success,
-                              ),
+                              child: SectionHeader('완료', done.length),
                             ),
                             DiffSliverList<Task>(
                               items: AppState.sortByDate(done),
@@ -226,7 +222,12 @@ class _DatePageState extends State<DatePage>
                                     bottom: zoneTop / 2,
                                   ),
                                   child: const Center(
-                                    child: EmptyState(title: '일정 없음'),
+                                    child: EmptyState(
+                                      title: '이 날짜에 할 일이 없어요',
+                                      message:
+                                          '아래 입력창에 쓰면 이 날짜로 등록돼요\n'
+                                          '목록을 위·아래로 끌면 일정이 있는 날로 이동해요',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -249,7 +250,7 @@ class _DatePageState extends State<DatePage>
           bottom: bottom + QuickInputBar.height + 12,
           child: AnimatedScale(
             scale: sameDay(day, today) ? 0 : 1,
-            duration: Motion.med,
+            duration: Motion.feedback,
             curve: sameDay(day, today) ? Curves.easeIn : Curves.easeOutBack,
             child: Pressable(
               onTap: () => s.selectDay(today),

@@ -65,7 +65,7 @@ class _DiffSliverListState<E> extends State<DiffSliverList<E>> {
         i,
         (context, a) =>
             _Removing(animation: a, child: widget.itemBuilder(context, item)),
-        duration: Motion.med,
+        duration: Motion.feedback,
       );
     }
 

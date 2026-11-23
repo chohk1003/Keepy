@@ -52,10 +52,10 @@ class _WeekCalendarState extends State<WeekCalendar> {
     final sel = s.selectedDay;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: K.card,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-        boxShadow: K.shadow,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+        boxShadow: K.cardShadow(),
       ),
       padding: EdgeInsets.fromLTRB(10, top + 2, 10, 10),
       child: Column(
@@ -83,8 +83,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                   ],
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 11,
-                      vertical: 7,
+                      horizontal: 12,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
                       color: K.room,
@@ -358,7 +358,7 @@ class RateView extends StatelessWidget {
         if (s.rateStyle == RateStyle.ring) const Spacer(),
         const SizedBox(width: 10),
         AnimatedSwitcher(
-          duration: Motion.fast,
+          duration: Motion.press,
           child: Text(label, key: ValueKey(label), style: T.caption),
         ),
         const SizedBox(width: 8),

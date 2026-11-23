@@ -14,7 +14,7 @@ class SquareCheck extends StatefulWidget {
     super.key,
     required this.value,
     required this.onTap,
-    this.size = 26,
+    this.size = 22,
     this.colors = const [
       Color(0xFF0A84FF),
       Color(0xFF5E5CE6),
@@ -125,7 +125,7 @@ class _CheckPainter extends CustomPainter {
     final c = size.center(Offset.zero);
     final s = side;
     final rect = Rect.fromCenter(center: c, width: s, height: s);
-    final rr = RRect.fromRectAndRadius(rect, Radius.circular(s * 0.3));
+    final rr = RRect.fromRectAndRadius(rect, Radius.circular(s * 0.28));
 
     // 입자 버스트
     if (burst > 0 && burst < 1) {
@@ -156,7 +156,7 @@ class _CheckPainter extends CustomPainter {
         rr.deflate(1),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
+          ..strokeWidth = 1.6
           ..color = Color.lerp(
             K.gray3,
             colors.first,
@@ -174,7 +174,7 @@ class _CheckPainter extends CustomPainter {
         height: s * grow,
       );
       canvas.drawRRect(
-        RRect.fromRectAndRadius(fillRect, Radius.circular(s * 0.3 * grow)),
+        RRect.fromRectAndRadius(fillRect, Radius.circular(s * 0.28 * grow)),
         Paint()
           ..shader = ui.Gradient.linear(
             rect.topLeft,

@@ -6,7 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keepy/main.dart';
-import 'package:keepy/models/companion.dart';
 import 'package:keepy/models/task.dart';
 import 'package:keepy/widgets/companion_art.dart';
 import 'package:keepy/widgets/quick_input_bar.dart';
@@ -81,7 +80,7 @@ void main() {
     await materialIcons.load();
   });
 
-  testWidgets('방은 전체 화면, 전달은 한 번, 입력 초안과 태그는 복귀 시 보존', (tester) async {
+  testWidgets('방은 전체 화면, 입력 초안과 태그는 복귀 시 보존', (tester) async {
     final state = await launch(tester);
     state.setDone(state.tasks.first, true);
     await advance(tester);
@@ -104,12 +103,18 @@ void main() {
     final room = find.byKey(const Key('companion-room'));
     expect(tester.getSize(room), const Size(390, 844));
     expect(find.byType(QuickInputBar), findsNothing);
+    // 방이 통계 영역이 되었다 — 날짜·완료율과 주간 그래프가 글래스 카드로 떠 있다
     expect(
-      find.descendant(of: room, matching: find.byType(Text)),
-      findsNothing,
+      find.descendant(of: room, matching: find.byKey(const Key('room-date'))),
+      findsOneWidget,
     );
-    expect(state.pendingCredits, isEmpty);
-    final delivered = state.creditedTasks.single.credit!.deliveredAt;
+    expect(
+      find.descendant(
+        of: room,
+        matching: find.byKey(const Key('week-activity-graph')),
+      ),
+      findsOneWidget,
+    );
     await capture(tester, '03-room');
     await tester.tap(find.byKey(const Key('room-close')));
     await advance(tester);
@@ -131,14 +136,15 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('companion-header')));
     await advance(tester);
-    expect(state.creditedTasks.single.credit!.deliveredAt, delivered);
+    // 방을 닫았다 다시 열어도 완료 기록은 그대로 (전달 단계가 없어졌다)
+    expect(state.creditedTasks.length, 1);
     await tester.drag(room, const Offset(0, -140));
     await advance(tester);
     expect(room, findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('별도 기록 화면에서 주간·월간 전환과 캐릭터 교체', (tester) async {
+  testWidgets('별도 기록 화면에서 주간·월간 전환', (tester) async {
     final state = await launch(tester);
     state.setDone(state.tasks.first, true);
     await advance(tester);
@@ -152,20 +158,12 @@ void main() {
     await advance(tester);
     expect(find.byType(GridView), findsOneWidget);
     await capture(tester, '05-monthly');
-    await tester.scrollUntilVisible(
-      find.text('고양이'),
-      250,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await tester.tap(find.text('고양이'));
-    await advance(tester);
-    expect(state.companion, CompanionKind.cat);
     await tester.tap(find.byKey(const Key('progress-back')));
     await advance(tester);
-    expect(
-      tester.widget<CompanionArt>(find.byType(CompanionArt)).kind,
-      CompanionKind.cat,
-    );
+    // 캐릭터는 오리 하나 — 헤더로 돌아와도 같은 그림이다
+    await tester.tap(find.byKey(const Key('room-close')));
+    await advance(tester);
+    expect(find.byType(CompanionArt), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

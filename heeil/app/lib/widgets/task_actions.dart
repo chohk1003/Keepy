@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../models/task.dart';
 import '../state/app_state.dart';
@@ -10,6 +9,10 @@ import 'task_editor.dart';
 import 'task_tile.dart';
 import 'toast.dart';
 
+/// 지운 것을 되돌릴 토스트는 4초 — 취소 버튼을 알아보고 누를 시간이 필요하다.
+/// 완료·날짜·태그처럼 다시 누르면 그만인 동작은 기본(0.6초)으로 짧게 둔다.
+const undoToastLife = Duration(seconds: 4);
+
 /// 하단 토스트 (실행 취소 포함) — 0.6초, 다른 동작 시 즉시 사라짐
 void showToast(
   BuildContext context,
@@ -17,7 +20,15 @@ void showToast(
   IconData icon = CupertinoIcons.checkmark_circle_fill,
   List<Color> colors = const [Color(0xFF0A84FF), Color(0xFF5E5CE6)],
   VoidCallback? undo,
-}) => Toast.show(context, text, icon: icon, colors: colors, undo: undo);
+  Duration? life,
+}) => Toast.show(
+  context,
+  text,
+  icon: icon,
+  colors: colors,
+  undo: undo,
+  life: life,
+);
 
 /// 화면 공통: 태스크 블럭 + 조작별 토스트
 Widget buildTaskTile(BuildContext context, Task t) {
@@ -66,7 +77,8 @@ Widget buildTaskTile(BuildContext context, Task t) {
           context,
           '삭제',
           icon: CupertinoIcons.trash_fill,
-          colors: const [Color(0xFFFF453A), Color(0xFFFF2D55)],
+          colors: K.deleteColors,
+          life: undoToastLife,
           undo: () => s.restore(i, t),
         );
       },
@@ -74,49 +86,49 @@ Widget buildTaskTile(BuildContext context, Task t) {
   );
 }
 
-/// 섹션 머리 (항목이 없으면 접힘)
+/// 섹션 머리 (항목이 없으면 접힘) — 서윤님 구현처럼 조용한 캡션 + 개수.
+/// [trailing] 은 '완료' 섹션의 접기·비우기처럼 머리에 붙는 조작.
 class SectionHeader extends StatelessWidget {
   const SectionHeader(
     this.text,
     this.count, {
     super.key,
-    this.gradient = K.brand2,
+    this.color = K.label2,
+    this.trailing,
   });
 
   final String text;
   final int count;
-  final Gradient gradient;
+  final Color color;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: Motion.med,
+      duration: Motion.feedback,
       curve: Motion.out,
       child: count == 0
           ? const SizedBox(width: double.infinity)
           : Padding(
-              padding: const EdgeInsets.fromLTRB(24, 18, 24, 6),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
               child: Row(
                 children: [
-                  Text(text, style: T.title3),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: gradient,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: RollingText(
-                      '$count',
-                      style: T.caption.copyWith(
-                        color: Colors.white,
-                        fontSize: 13,
-                      ),
+                  Text(
+                    text,
+                    style: T.caption.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  const SizedBox(width: 5),
+                  RollingText(
+                    '$count',
+                    style: T.caption.copyWith(
+                      color: color.withValues(alpha: .7),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (trailing != null) ...[const Spacer(), trailing!],
                 ],
               ),
             ),
