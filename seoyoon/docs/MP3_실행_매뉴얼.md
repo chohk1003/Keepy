@@ -94,7 +94,7 @@ flutter test
 - `flutter analyze`: `error` 로 시작하는 줄이 없으면 됩니다 (`info`·`warning` 은 실행에 지장 없음).
 - `flutter test`: 마지막에 `All tests passed!` 가 나오면 됩니다. 동기화 테스트(`sync_test.dart`) 11개는
   실제 서버 없이 같은 규칙의 가짜 서버로 두 기기·오프라인·충돌을 검사합니다.
-- 오류가 나면 출력 전체를 복사해 AI 에게 보내면 됩니다 (`docs/MP3_프롬프트.md` 의 '오류 해결용').
+- 오류가 나면 출력 전체를 복사해 AI 에게 보내면 됩니다.
 
 ## 6. 실행 + 두 기기 열기
 
@@ -215,4 +215,4 @@ git status
 
 ---
 
-관련 문서: [README.md](../README.md) (선택 이유·충돌 처리 방침) · [단계별 정리](단계별_정리_MP1-MP3.md) · [3단계 프롬프트](MP3_프롬프트.md)
+관련 문서: [README.md](../README.md) (기능 전체·선택 이유·충돌 처리 방침·폴더 구조) · [CHANGELOG](CHANGELOG.md)

@@ -40,4 +40,4 @@
 
 ## AI 사용 기록
 
-- AI 결과는 실행 화면·`flutter test`·`flutter analyze` 로 확인한 뒤 반영하고, 고친 경우 이유를 `docs/prompts_log.md` 에 남긴다.
+- AI 결과는 실행 화면·`flutter test`·`flutter analyze` 로 확인한 뒤 반영하고, 고친 경우 이유를 `prompts_log.md` 에 남긴다.

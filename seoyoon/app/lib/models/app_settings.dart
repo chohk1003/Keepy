@@ -57,7 +57,7 @@ class AppSettings {
     this.completionStyle = CompletionStyle.bar,
     this.delayDays = 3,
     this.tags = defaultTags,
-    this.miniGameEnabled = false,
+    this.miniGameEnabled = true, // v0.7: 기본으로 켜 둠 (POOL PARTY)
     this.characterPixels,
     this.appearance = AppearanceMode.system,
     this.characterStyle = CharacterStyle.boy,

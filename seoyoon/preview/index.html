@@ -275,8 +275,8 @@ button,input,textarea{font-family:inherit}
 .stbar .tr b{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--g-primary)}
 .stnote{font-size:11px;color:var(--label2);margin-top:8px}
 .duckbtn svg{display:block}
-.gamebtn.duckbtn{width:96px;height:96px;border-radius:26px}
-.hdr:has(.duckbtn){height:96px;align-items:flex-start}.hdr:has(.duckbtn) .logo{margin-top:8px}
+.gamebtn.duckbtn{width:36px;height:36px;border-radius:11px;scale:1.2} /* 1.2배: 그리기만 키우고 자리는 그대로 */
+.lgw{gap:2px!important}.lgchev{color:var(--label2);transition:transform .25s var(--ease)}.lgchev.on{transform:rotate(180deg)}
 /* 미니게임 */
 .game{position:absolute;inset:0;z-index:55;display:flex;flex-direction:column;background:#D7F0FB;opacity:0;pointer-events:none;transform:scale(.96);transition:all .28s var(--ease)}
 .game.show{opacity:1;pointer-events:auto;transform:none}
@@ -298,7 +298,22 @@ button,input,textarea{font-family:inherit}
 .pst .stbar{grid-template-columns:74px 1fr 30px;gap:6px;font-size:11.5px;margin-bottom:4px}.pst .stbar .tr{height:8px}.pst .stnote{margin-top:0}
 .tchip{display:inline-block;padding:3px 10px;border-radius:12px;background:var(--skytint);border:1px solid rgba(47,123,255,.35);color:var(--blue);font-size:14px;font-weight:800;white-space:nowrap}
 .tchip.un{background:var(--fill);border-color:var(--sep);color:var(--label2)}
-.pscene{flex:1;position:relative;border-radius:22px 22px 0 0;overflow:hidden;min-height:0}
+.mst{display:flex;align-items:center;gap:8px;padding:12px 14px 10px 12px}.mst canvas{width:100px;height:92px;flex:none}
+.mst .hl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--label2)}.mst .rt{font-size:11.5px;color:var(--blue);font-weight:800;margin:3px 0 7px}
+.mst .stbar{grid-template-columns:74px 1fr 30px;gap:6px;font-size:11.5px;margin-bottom:4px}.mst .stbar .tr{height:8px}.mst .stbars{display:none}.mst .stnote{margin-top:0}
+.dchart{height:190px;padding-right:60px;box-sizing:border-box}.dchart .tday{padding:2px 7px;border-radius:9px;background:var(--skytint);color:var(--blue)!important;font-size:10.5px!important}
+.dview{height:124px;margin-top:4px;overflow:hidden;touch-action:pan-y;cursor:grab;position:relative}
+.dtrack{display:flex;height:100%;transition:transform .28s var(--ease);will-change:transform}
+.dslot{flex:none;width:47.14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.dslot .dr{font-size:9.5px;font-weight:800;color:var(--label2)}.dslot.f .dr{font-size:12px;color:var(--blue)}
+.dbar{width:15px;margin:3px 0 4px;border-radius:6px 6px 2px 2px;overflow:hidden;display:flex;flex-direction:column;gap:1px;transition:width .24s var(--ease),height .24s var(--ease)}
+.dbar.z{background:var(--sep)}.dbar i{display:block;min-height:1px}.dslot.f .dbar{width:30px}
+.dslot .dd{font-size:10px;font-weight:600;color:var(--label2)}.dslot.f .dd{font-size:11.5px;font-weight:800;color:var(--label)}
+.dleg{height:20px;margin-top:6px;display:flex;align-items:center;gap:10px;overflow:hidden;white-space:nowrap}
+.dleg .lg{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--label)}.dleg .lg i{width:9px;height:9px;border-radius:3px;display:block}
+.pscene{flex:1;position:relative;overflow:hidden;min-height:0;border-top:1px solid var(--sep)}
+.gclose{position:absolute;right:16px;top:60px;width:43px;height:43px;border:0;border-radius:13px;background:var(--skytint);color:var(--blue);display:grid;place-items:center;cursor:pointer;z-index:3;padding:0}.gclose:active{transform:scale(.9)}
+.ctoday{display:inline-flex;align-items:center;gap:3px;border:0;border-radius:11px;padding:3px 9px 3px 8px;background:var(--g-primary);color:#fff!important;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
 .game canvas#gCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .game .ptop{position:absolute;left:0;right:0;top:54px;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 16px;z-index:2;pointer-events:none}
 .game.show .ptop>*{pointer-events:auto}
@@ -433,7 +448,7 @@ const buzz = (ms = 6) => { try { navigator.vibrate && navigator.vibrate(ms); } c
 const STORE = 'keepy.preview.v3';
 const darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 const isDark = () => S.settings.appearance === 'dark' || (S.settings.appearance === 'system' && !!(darkMQ && darkMQ.matches));
-const S = { tasks: [], settings: { userName:'키피 사용자', appearance:'system', charStyle:'boy', pet:'none', notify:true, remind:1, remindMin:540, eclass:false, everytime:false, rows:2, weekRow:1, style:'bar', delayDays:3, tags:[...DEFAULT_TAGS], game:false, char:null } };
+const S = { tasks: [], settings: { userName:'키피 사용자', appearance:'system', charStyle:'boy', pet:'none', notify:true, remind:1, remindMin:540, eclass:false, everytime:false, rows:2, weekRow:1, style:'bar', delayDays:3, tags:[...DEFAULT_TAGS], game:true, char:null } };
 const UI = { stats:false, page:1, filter:'all', selected:null, weekOffset:0, open:null, focused:false, inputTags:[], editing:false, expanded:false, month:null };
 function load() {
   try { const raw = localStorage.getItem(STORE); if (raw) { const v = JSON.parse(raw); S.tasks = v.tasks || []; Object.assign(S.settings, v.settings || {});
@@ -518,10 +533,11 @@ function clearDone() { const removed = []; S.tasks.forEach((t, i) => { if (t.don
 function renderMain() {
   const all = sorted(S.tasks), delayed = all.filter(t => status(t)==='delayed'), todo = all.filter(t => status(t)==='todo'), done = all.filter(t => t.done);
   const total = S.tasks.length, open = total - done.length; if (!total) UI.editing = false;
-  let h = `<div class="hdr"><div class="logo">keepy<i></i></div><span style="margin-left:auto;display:flex;gap:8px">${SY.email?syncBadge():''}${S.settings.game?`<button class="gamebtn duckbtn" data-act="game" title="POOL PARTY">${duckFaceSvg(76)}</button>`:''}</span></div>
+  let h = `<div class="hdr"><div class="lgw" data-act="stats" id="statBtn" style="cursor:pointer"><div class="logo">keepy<i></i></div><svg class="lgchev ${UI.stats?'on':''}" width="16" height="16" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5 6 7.5 9 4.5"/></svg></div><span style="margin-left:auto;display:flex;gap:8px">${SY.email?syncBadge():''}${S.settings.game?`<button class="gamebtn duckbtn" data-act="game" title="POOL PARTY">${duckFaceSvg(28)}</button>`:''}</span></div>
+    <div class="statwrap ${UI.stats?'open':''}"><div class="statin">${mainStatsHTML()}</div></div>
     <div class="caption" style="margin-top:12px">${full(today())}</div>
     <div style="display:flex;align-items:center;gap:8px;margin-top:2px"><div class="large">모든 할 일</div><span class="badge"><span class="gt">${total}</span></span>${total?`<button class="editbtn ${UI.editing?'on':''}" data-act="edit">${UI.editing?'완료':'편집'}</button>`:''}</div>
-    ${total?`<div class="sum">${[['today','오늘 할 일',S.tasks.filter(t=>!t.done&&t.due&&sameDayAny(t.due,today())).length,'#2F7BFF'],['delayed','지연',delayed.length,'#FF9F2E'],['donetoday','오늘 완료',S.tasks.filter(t=>t.done&&t.completedAt&&sameDayAny(t.completedAt,today())).length,'#34C77B']].map(([k,l,n,c],i)=>`${i?'<span class="dv"></span>':''}<button data-act="sum" data-k="${k}"><small><i style="background:${c}"></i>${l}</small><b class="${n?'':'z'}" style="color:${c}">${n}</b></button>`).join('')}</div>`:''}
+    ${total?`<div class="sum">${[['today','오늘 할 일',S.tasks.filter(t=>!t.done&&t.due&&sameDayAny(t.due,today())).length,'#2F7BFF'],['delayed','지연',delayed.length,'#FF9F2E'],['donetoday','오늘 완료',S.tasks.filter(t=>{const dd=doneDayKey(t);return dd&&dd===keyOf(today());}).length,'#34C77B']].map(([k,l,n,c],i)=>`${i?'<span class="dv"></span>':''}<button data-act="sum" data-k="${k}"><small><i style="background:${c}"></i>${l}</small><b class="${n?'':'z'}" style="color:${c}">${n}</b></button>`).join('')}</div>`:''}
     <div class="tabs">${[['all','전체',total],['open','미완료',open],['done','완료',done.length]].map(([f,l,n]) => `<button class="${UI.filter===f?'on':''}" data-act="filter" data-f="${f}">${UI.filter===f?`<span class="gt">${l} ${n}</span>`:`${l} ${n}`}<u></u></button>`).join('')}</div>
     ${UI.editing?'<div class="foot" style="margin-top:10px">오른쪽 손잡이(≡)를 끌어 순서를 바꿔요</div>':''}`;
   if (!total) h += emptyHTML('등록된 태스크가 없습니다', '기억하고 싶은 할 일이 있나요?<br>아래에서 첫 태스크를 추가해 보세요');
@@ -803,6 +819,7 @@ phone.addEventListener('click', e => {
     case 'cleardone': { const n = S.tasks.filter(t => t.done).length; dialogBox({ title: `완료한 일 ${n}개를 지울까요?`, message: "지운 직후 알림에서 '취소'로 되돌릴 수 있어요.", okLabel: '비우기', red: true, onOk: () => clearDone() }); } return;
     case 'edit': buzz(6); UI.editing = !UI.editing; closeAll(); render(); return;
     case 'game': openGame(); return;
+    case 'stats': buzz(4); UI.stats = !UI.stats; { const w = document.querySelector('.statwrap'), ch = document.querySelector('.lgchev'); if (w) w.classList.toggle('open', UI.stats); if (ch) ch.classList.toggle('on', UI.stats); } return;
     case 'tab': goPage(+el.dataset.i); return;
     case 'day': buzz(4); selectDate(fromKey(el.dataset.k)); return;
     case 'month': { buzz(6); UI.expanded = !UI.expanded; const sd = selected(); UI.month = keyOf(new Date(sd.getFullYear(), sd.getMonth(), 1)); render(); return; }
@@ -1078,8 +1095,7 @@ const gameEl = document.getElementById('game');
 let gameOpen = false, gameRaf = 0, pool = null;
 // 오늘의 할 일 (앱: TaskStore.todayTasks): 끝낸 일은 '완료한 날' 기준(지연·기한 없는 일 포함),
 // 안 끝낸 일은 오늘이 기한인 일 + 기한 없이 오늘 만든 일
-function todayTasks() { const d = today(), dk = keyOf(d);
-  return S.tasks.filter(t => t.done ? !!(t.completedAt && sameDayAny(t.completedAt, d)) : t.due ? t.due === dk : sameDayAny(t.createdAt, d)); }
+function todayTasks() { return tasksOfDay(today()); }
 function todayStat() { const l = todayTasks(); return { total: l.length, done: l.filter(t => t.done).length }; }
 // 태그별 오늘 통계: 개수 많은 순(같으면 완료 많은 순 → 태그 목록 순, 태그 없는 일 '미지정' 은 뒤) 최대 5개 (앱: TaskStore.todayTagStats)
 function todayTagStats() { const m = new Map(), un = { tag: '', total: 0, done: 0, untagged: true };
@@ -1137,7 +1153,7 @@ function drawDuck(c, x, y, s, o = {}) {
   if (o.shades) { c.fillStyle = '#1F2633'; [[-6, -36], [15, -36]].forEach(([gx, gy]) => { c.beginPath(); c.roundRect(gx, gy, 16, 11, 5); c.fill(); });
     c.beginPath(); c.moveTo(10, -32); c.lineTo(15, -32); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.6;
     [[-2, -34], [19, -34]].forEach(([hx, hy]) => { c.beginPath(); c.moveTo(hx, hy + 5); c.lineTo(hx + 5, hy); c.stroke(); }); }
-  if (o.cap) { c.save(); c.translate(14, -48); c.scale(1.5, 1.5); c.translate(-14, 46); c.fillStyle = '#2E3A55'; c.beginPath(); c.moveTo(-14, -50); c.lineTo(14, -60); c.lineTo(42, -50); c.lineTo(14, -40); c.closePath(); c.fill();
+  if (o.cap) { c.save(); c.translate(14, -48); c.scale(1.5, 1.5); c.translate(-14, 46); c.fillStyle = o.capColor || '#2E3A55'; c.beginPath(); c.moveTo(-14, -50); c.lineTo(14, -60); c.lineTo(42, -50); c.lineTo(14, -40); c.closePath(); c.fill();
     c.beginPath(); c.roundRect(2, -50, 24, 8, 3); c.fill(); c.strokeStyle = '#FFC94D'; c.lineWidth = 2; c.beginPath(); c.moveTo(14, -50); c.quadraticCurveTo(36, -46, 34, -34); c.stroke();
     c.fillStyle = '#FFC94D'; c.beginPath(); c.arc(34, -33, 3, 0, 7); c.fill(); c.restore(); }
   c.lineWidth = 2.6;
@@ -1154,29 +1170,74 @@ function drawDuck(c, x, y, s, o = {}) {
 function duckFaceSvg(sz = 20) { return `<svg width="${sz}" height="${sz}" viewBox="0 0 40 40"><circle cx="18" cy="21" r="14.5" fill="#FFD54A" stroke="#C98A1E" stroke-width="2"/><path d="M15 7.5q-1-6 4-5-2 2-1 5.5" fill="#FFD54A" stroke="#C98A1E" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="29" cy="25" rx="8" ry="4.2" fill="#FF9A3C" stroke="#D9741C" stroke-width="1.6"/><circle cx="13" cy="18.5" r="2.6" fill="#2E3A55"/><circle cx="24" cy="18.5" r="2.6" fill="#2E3A55"/><circle cx="14" cy="17.5" r=".9" fill="#fff"/><circle cx="25" cy="17.5" r=".9" fill="#fff"/><ellipse cx="9.5" cy="25" rx="3.2" ry="2.1" fill="#FF808C" opacity=".45"/></svg>`; }
 // 통계 패널의 오리 (안경 + 학사모 + 엄지척)
 function drawStatDucks() { document.querySelectorAll('canvas[data-duck]').forEach(cv => { const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
-  cv.width = w*dpr; cv.height = h*dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h); drawDuck(c, w*0.46, h*0.62, w*0.7, { glasses: true, thumb: true, cap: true, feet: true }); }); }
+  cv.width = w*dpr; cv.height = h*dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h); drawDuck(c, w*0.46, h*0.62, w*0.7, { glasses: true, thumb: true, cap: true, feet: true, capColor: isDark() ? '#9FB4DC' : '#2E3A55' }); }); }
 
 // 장면 (앱: duckSceneOf): 50% 미만 → 아침 방(파자마) · 50% 이상 → 책상(일하는 중) · 100% → 수영장 파티
 function poolState(st) { const r = st.total ? st.done / st.total : 0; return { r, stage: r >= 1 ? 'party' : r >= 0.5 ? 'work' : 'morning' }; }
-// 오늘 통계 (앱: ui/pages/today_stats_panel.dart TodayStatsHeader) — POOL PARTY 화면 위쪽 4분의 1
+// 오늘 통계 (앱: ui/pages/today_stats_panel.dart TodayStatsPanel) — 메인 'keepy' 를 누르면 로고와 날짜 사이에 펼쳐짐
 const tagChip = e => `<span class="tchip ${e.untagged ? 'un' : ''}">${tagLabel(e)}</span>`;
-function poolStatsHTML() {
-  const st = todayStat(), ts = todayTagStats(), d = today(), pct = st.total ? Math.round(st.done/st.total*100) : 0, max = Math.max(1, ...ts.list.map(e => e.total)), top = ts.top;
+function mainStatsHTML() {
+  const st = todayStat(), ts = todayTagStats(), pct = st.total ? Math.round(st.done/st.total*100) : 0, max = Math.max(1, ...ts.list.map(e => e.total)), top = ts.top;
   const lead = !st.total ? '오늘 할 일이 아직 없어요' : top && top.done ? '오늘 가장 많이 한 일' : '오늘 가장 많은 일';
-  const bars = ts.list.length ? ts.list.map(e => `<div class="stbar"><span class="nm">${tagLabel(e)}</span><span class="tr"><i style="width:${e.total/max*100}%"></i><b style="width:${e.done/max*100}%"></b></span><span class="n">${e.done}/${e.total}</span></div>`).join('')
-    : '<div class="sm" style="font-size:12px;color:var(--label2);margin-bottom:4px">할 일을 추가하면 태그별로 정리해 드려요.</div>';
-  return `<div class="pst"><div class="r1"><b>${d.getMonth()+1}월 ${d.getDate()}일</b><span>${st.total ? `${st.done}/${st.total} 완료 · ${pct}%` : '할 일 0개'}</span><button class="pclose" id="gX" aria-label="닫기">✕</button></div>
-    <div class="r2"><canvas data-duck></canvas><div style="flex:1;min-width:0"><div class="hl">${lead}${st.total && top ? tagChip(top) : ''}</div>${bars}<div class="stnote">상위 5개만 출력</div></div></div></div>`;
+  const bars = ts.list.map(e => `<div class="stbar"><span class="nm">${tagLabel(e)}</span><span class="tr"><i style="width:${e.total/max*100}%"></i><b style="width:${e.done/max*100}%"></b></span><span class="n">${e.done}/${e.total}</span></div>`).join('');
+  return `<div class="stc mst"><canvas data-duck></canvas><div style="flex:1;min-width:0"><div class="hl">${lead}${st.total && top ? tagChip(top) : ''}</div>
+    <div class="rt">${st.total ? `오늘 ${st.total}개 중 ${st.done}개 완료 · ${pct}%` : '할 일을 추가하면 태그별로 정리해 드려요.'}</div>${bars}<div class="stnote">상위 5개만 출력</div></div></div>`;
+}
+// ---- 일별 완료 막대 (앱: ui/game/daily_chart.dart) — POOL PARTY 화면 위쪽 4분의 1
+// 그날의 할 일: 끝낸 일은 끝낸 날, 안 끝낸 일은 그날 기한 + 기한 없이 그날 만든 일
+// 끝낸 일을 셀 날 (앱: TaskStore.doneDayOf): 끝낸 날, 단 기한보다 미리 끝냈으면 그 기한 날
+function doneDayKey(t) { if (!t.done || !t.completedAt) return null; const ck = keyOf(new Date(t.completedAt)); return t.due && t.due > ck ? t.due : ck; }
+function tasksOfDay(d) { const dk = keyOf(d); return S.tasks.filter(t => t.done ? doneDayKey(t) === dk : t.due ? t.due === dk : sameDayAny(t.createdAt, d)); }
+function statOfDay(d) { const l = tasksOfDay(d); return { total: l.length, done: l.filter(t => t.done).length }; }
+// 끝낸 일을 첫 태그로 나눔. 많은 순(아래→위), 최대 5조각, 6개 이상·4/5번째 동률은 '기타'
+function doneSegments(d) { const m = new Map(); tasksOfDay(d).forEach(t => { if (!t.done) return; const k = t.tags.length ? t.tags[0] : '\u0000u'; m.set(k, (m.get(k) || 0) + 1); });
+  const tags = S.settings.tags, ord = k => k === '\u0000u' ? tags.length + 1 : (tags.indexOf(k) < 0 ? tags.length : tags.indexOf(k));
+  const list = [...m.entries()].sort((a, b) => b[1] - a[1] || ord(a[0]) - ord(b[0]) || a[0].localeCompare(b[0]));
+  const seg = ([k, n]) => ({ tag: k, count: n, untagged: k === '\u0000u', other: false });
+  if (list.length <= 5) return list.map(seg);
+  let named = list.slice(0, 4); const cut = list[4][1]; if (named[3][1] === cut) named = named.filter(e => e[1] !== cut);
+  const rest = list.slice(named.length).reduce((a, e) => a + e[1], 0);
+  return [...named.map(seg), { tag: '', count: rest, untagged: false, other: true }]; }
+const segLabel = s => s.untagged ? '미지정' : s.other ? '기타' : '#' + esc(s.tag);
+const SEG_COLORS = ['#2F7BFF', '#2FC27A', '#FF9F2E', '#A06BFF', '#4CC3FF', '#FF6F91', '#2EC4B6', '#FFC94D'];
+function segColor(s) { if (s.untagged) return '#B8C2D1'; if (s.other) return '#8E9AAE'; let i = S.settings.tags.indexOf(s.tag); if (i < 0) i = [...s.tag].reduce((a, ch) => a + ch.charCodeAt(0), 0); return SEG_COLORS[i % SEG_COLORS.length]; }
+// 오늘 기준 -7일 ~ +7일 (미리 끝낸 일은 그 기한 날 막대에 미리 쌓임)
+function chartDays() { const t = today(); return Array.from({ length: 15 }, (_, i) => new Date(t.getFullYear(), t.getMonth(), t.getDate() - 7 + i)); }
+const SLOT = 330 / 7, BAR_MAX = 74; // 오른쪽 60 은 닫기 X 자리
+function chartHTML() {
+  const days = chartDays(); if (pool.focus == null || pool.focus >= days.length) pool.focus = 7;
+  const d = days[pool.focus], isT = sameDay(d, today()), st = statOfDay(d), segs = doneSegments(d), maxDone = Math.max(1, ...days.map(x => statOfDay(x).done));
+  const bars = days.map((x, i) => { const s = statOfDay(x), f = i === pool.focus, sg = doneSegments(x), h = s.done ? Math.max(6, s.done / maxDone * BAR_MAX) : 3;
+    const inner = s.done ? [...sg].reverse().map(g => `<i style="flex:${g.count};background:${segColor(g)};opacity:${f ? 1 : 0.6}"></i>`).join('') : '';
+    return `<div class="dslot ${f ? 'f' : ''}" data-i="${i}"><span class="dr">${s.total ? Math.round(s.done/s.total*100) + '%' : '–'}</span><div class="dbar ${s.done ? '' : 'z'}" style="height:${h}px">${inner}</div><span class="dd">${sameDay(x, today()) ? '오늘' : x.getDate() + '일'}</span></div>`; }).join('');
+  const legend = segs.length ? segs.map(g => `<span class="lg"><i style="background:${segColor(g)}"></i>${segLabel(g)} ${g.count}</span>`).join('') : '<span class="stnote" style="margin:0">이날 끝낸 할 일이 없어요</span>';
+  return `<div class="pst dchart"><div class="r1"><b>${d.getMonth()+1}월 ${d.getDate()}일</b>${isT ? '<span class="tday">오늘</span>' : `<button class="ctoday" id="cToday"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>오늘로</button>`}<span>${st.total ? `${st.done}/${st.total} 완료 · ${Math.round(st.done/st.total*100)}%` : '할 일 없음'}</span></div>
+    <div class="dview" id="dView"><div class="dtrack" id="dTrack" style="transform:translateX(${165 - (pool.focus + 0.5) * SLOT}px)">${bars}</div></div><div class="dleg">${legend}</div></div>`;
+}
+function bindChart() {
+  const view = document.getElementById('dView'), track = document.getElementById('dTrack'); if (!view) return; let drag = null;
+  const scale = () => { const r = view.getBoundingClientRect(); return r.width / 330 || 1; };
+  view.addEventListener('pointerdown', e => { drag = { x0: e.clientX, base: 165 - (pool.focus + 0.5) * SLOT, sc: scale(), moved: false }; view.setPointerCapture(e.pointerId); track.style.transition = 'none'; });
+  view.addEventListener('pointermove', e => { if (!drag) return; const dx = (e.clientX - drag.x0) / drag.sc; if (Math.abs(dx) > 4) drag.moved = true; track.style.transform = `translateX(${drag.base + dx}px)`; });
+  const end = e => { if (!drag) return; const dx = (e.clientX - drag.x0) / drag.sc, days = chartDays(); track.style.transition = '';
+    let next = pool.focus; if (drag.moved) next = Math.round(pool.focus - dx / SLOT); else { const slot = e.target.closest('.dslot'); if (slot) next = +slot.dataset.i; }
+    next = Math.max(0, Math.min(days.length - 1, next)); drag = null; if (next !== pool.focus) { pool.focus = next; buzz(4); } drawGameStatic(); };
+  view.addEventListener('pointerup', end); view.addEventListener('pointercancel', end);
 }
 function openGame() {
   closeAll(); blurInput(); hideToast(); gameOpen = true; buzz(6);
   const d = today();
-  gameEl.innerHTML = `<div class="pstats" id="pStats"></div><div class="pscene"><canvas id="gCanvas"></canvas></div>`;
+  gameEl.innerHTML = `<div class="pstats" id="pStats"></div><div class="pscene"><canvas id="gCanvas"></canvas></div><button class="gclose" id="gX" aria-label="닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+  // 닫기 X 를 메인 화면 POOL PARTY 버튼과 똑같은 자리·크기에 (여는 버튼 = 닫는 버튼)
+  { const mb = document.querySelector('.page[data-page="1"] [data-act="game"]'), x = document.getElementById('gX');
+    if (mb) { const ph = document.getElementById('phone').getBoundingClientRect(), r = mb.getBoundingClientRect(), z = ph.width / document.getElementById('phone').offsetWidth || 1;
+      Object.assign(x.style, { left: `${(r.left - ph.left)/z}px`, top: `${(r.top - ph.top)/z}px`, width: `${r.width/z}px`, height: `${r.height/z}px`, right: 'auto' }); } }
+  document.getElementById('gX').onclick = closeGame;
   gameEl.classList.add('show');
-  document.getElementById('pStats').addEventListener('click', e => { if (e.target.closest('#gX')) closeGame(); });
+  document.getElementById('pStats').addEventListener('click', e => { if (e.target.closest('#cToday')) { buzz(4); pool.focus = 7; drawGameStatic(); } });
   const cv = document.getElementById('gCanvas');
   cv.addEventListener('pointerdown', e => { if (!pool || poolState(pool.st).stage !== 'party') return; const b = cv.getBoundingClientRect(); pool.target = { x: e.clientX - b.left, y: e.clientY - b.top }; buzz(4); });
-  pool = { t0: performance.now(), last: performance.now(), st: todayStat(), x: null, y: null, vx: 0, vy: 0, target: null, tiltX: 0, tiltY: 0, base: null, ball: null };
+  pool = { focus: null, t0: performance.now(), last: performance.now(), st: todayStat(), x: null, y: null, vx: 0, vy: 0, target: null, tiltX: 0, tiltY: 0, base: null, ball: null };
   drawGameStatic();
   cancelAnimationFrame(gameRaf); const loop = t => { drawPool(t); gameRaf = requestAnimationFrame(loop); }; gameRaf = requestAnimationFrame(loop);
 }
@@ -1185,7 +1246,7 @@ window.addEventListener('deviceorientation', e => { if (!pool || e.gamma == null
   pool.tiltX = Math.max(-1, Math.min(1, (g - pool.base.g) / 30)); pool.tiltY = Math.max(-1, Math.min(1, (b - pool.base.b) / 30)); });
 function closeGame() { gameOpen = false; cancelAnimationFrame(gameRaf); gameEl.classList.remove('show'); }
 function drawGameStatic() { if (!pool) return; pool.st = todayStat();
-  const box = document.getElementById('pStats'); if (!box) return; box.innerHTML = poolStatsHTML(); drawStatDucks();
+  const box = document.getElementById('pStats'); if (!box) return; box.innerHTML = chartHTML(); bindChart();
   // 위쪽 4분의 1 안에 다 들어가도록 통째로 줄인다 (앱: FittedBox)
   const inner = box.firstElementChild, cs = getComputedStyle(box), aw = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), ah = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   const sc = Math.min(1, aw / inner.offsetWidth, ah / inner.offsetHeight); inner.style.transform = `scale(${sc})`; inner.style.marginLeft = `${Math.max(0, (aw - inner.offsetWidth*sc)/2)}px`; }

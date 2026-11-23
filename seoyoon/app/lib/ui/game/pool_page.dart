@@ -11,7 +11,8 @@ import '../../core/theme.dart';
 import '../../game/duck_painter.dart';
 import '../../state/keepy_scope.dart';
 import '../../state/task_store.dart';
-import '../pages/today_stats_panel.dart';
+import '../widgets/basics.dart';
+import 'daily_chart.dart';
 
 /// POOL PARTY 장면 (v0.7). 오늘의 할 일 완료율로 정한다.
 enum DuckScene {
@@ -131,11 +132,14 @@ class _PoolPageState extends State<PoolPage> with SingleTickerProviderStateMixin
             _sim
               ..scene = scene
               ..night = dark
-              ..insetTop = 0 // 장면 위에 떠 있는 버튼이 없다 (날짜·닫기는 위쪽 통계 영역에)
+              ..insetTop = 0 // 장면 위에 떠 있는 버튼이 없다 (날짜·닫기는 위쪽 막대 영역에)
               ..insetBottom = padding.bottom;
-            return Column(
+            return Stack(
+              fit: StackFit.expand,
               children: <Widget>[
-                // 위쪽 4분의 1: 오늘 통계 (공간이 모자라면 통째로 줄어든다)
+                Column(
+              children: <Widget>[
+                // 위쪽 4분의 1: 일별 완료 막대 (공간이 모자라면 통째로 줄어든다)
                 SizedBox(
                   height: screenH * 0.25,
                   child: SafeArea(
@@ -145,19 +149,19 @@ class _PoolPageState extends State<PoolPage> with SingleTickerProviderStateMixin
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.topCenter,
-                        child: TodayStatsHeader(
+                        child: DailyDoneChart(
                           store: scope.tasks,
                           tagOrder: scope.settings.settings.tags,
-                          onClose: () => Navigator.pop(context),
                         ),
                       ),
                     ),
                   ),
                 ),
                 // 나머지 4분의 3: 오리 장면 (아침 방 · 책상 · 수영장 파티)
+                // 통계와 장면 사이는 곧은 한 줄
+                Container(height: 1, color: KeepyColors.separator),
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                  child: ClipRect(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         _sim.size = constraints.biggest;
@@ -177,6 +181,31 @@ class _PoolPageState extends State<PoolPage> with SingleTickerProviderStateMixin
                           ),
                         );
                       },
+                    ),
+                  ),
+                ),
+              ],
+                ),
+                // 닫기 X: 메인 화면 POOL PARTY 버튼과 같은 자리·같은 크기·같은 모양 (여는 버튼 = 닫는 버튼)
+                // 메인: SafeArea + 목록 여백(위 8, 좌우 16) + 머리 줄 40 안 가운데 36 → 위 10, 오른쪽 16, 1.2배
+                Positioned(
+                  top: padding.top + 10,
+                  right: 16,
+                  child: PressScale(
+                    key: const Key('pool-close'),
+                    onTap: () => Navigator.pop(context),
+                    scale: 0.9,
+                    child: Transform.scale(
+                      scale: 1.2,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: KeepyColors.skyTint,
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: const Icon(Icons.close_rounded, size: 22, color: KeepyColors.blue),
+                      ),
                     ),
                   ),
                 ),

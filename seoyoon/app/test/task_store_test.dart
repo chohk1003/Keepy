@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keepy/data/repositories.dart';
+import 'package:keepy/models/task.dart';
 import 'package:keepy/models/task_status.dart';
 import 'package:keepy/state/task_store.dart';
 
@@ -105,7 +106,7 @@ void main() {
     expect(store.countWithTag('리포트'), 1);
   });
 
-  test('오늘의 할 일: 끝낸 일은 완료한 날 기준 (지연·기한 없는 일 포함) (v0.7)', () {
+  test('오늘의 할 일: 끝낸 일은 완료한 날 기준, 단 기한보다 미리 끝내면 기한 날 (v0.7)', () {
     store.add('오늘 기한', due: DateTime(2026, 11, 15));
     store.add('기한 없이 오늘 만듦');
     store.add('다음 주 기한', due: DateTime(2026, 11, 22));
@@ -126,12 +127,18 @@ void main() {
     expect(store.todayTasks.map((t) => t.title).toSet(), <String>{
       '오늘 기한',
       '기한 없이 오늘 만듦',
-      '다음 주 기한이지만 오늘 끝냄',
-      '어제 기한, 오늘 끝냄 (지연)',
-      '어제 만든 기한 없는 일, 오늘 끝냄',
+      '어제 기한, 오늘 끝냄 (지연)', // 지연된 일 → 끝낸 날(오늘)
+      '어제 만든 기한 없는 일, 오늘 끝냄', // 기한 없는 일 → 끝낸 날(오늘)
+      '오늘 기한이지만 어제 끝냄', // 미리 끝냄 → 기한 날(오늘)
     });
     expect(store.todayStat.total, 5);
     expect(store.todayStat.done, 3);
+    expect(store.doneTodayCount, 3); // 메인 '오늘 완료' 도 같은 기준
+
+    // 다음 주 기한인 일을 오늘 미리 끝내면 오늘이 아니라 그 기한 날(22일)의 완료
+    expect(store.doneDayOf(store.byId(early.id)!), DateTime(2026, 11, 22)); // 완료 후의 할 일로 확인
+    expect(store.statOfDay(DateTime(2026, 11, 22)).total, 2);
+    expect(store.statOfDay(DateTime(2026, 11, 22)).done, 1);
 
     clock = DateTime(2026, 11, 16, 9); // 다음 날: 어제 끝낸 일·기한 없는 일은 빠진다
     expect(store.todayStat.total, 0);
@@ -166,6 +173,49 @@ void main() {
     one.add('태그', due: today, tags: const <String>['z']);
     one.add('없음', due: today);
     expect(one.todayTagStats().stats.map((e) => e.label).toList(), <String>['#z', '미지정']);
+  });
+
+  test('일별 완료 막대: 끝낸 일만, 많은 순, 6개 이상·동률은 기타 (v0.7)', () {
+    final today = DateTime(2026, 11, 15);
+    Task done(String title, List<String> tags) {
+      final t = store.add(title, due: today, tags: tags)!;
+      store.toggle(t.id);
+      return t;
+    }
+
+    for (var i = 0; i < 3; i++) {
+      done('a$i', const <String>['a']);
+    }
+    done('b1', const <String>['b']);
+    done('b2', const <String>['b']);
+    done('c1', const <String>['c']);
+    done('c2', const <String>['c']);
+    done('d', const <String>['d']);
+    done('e', const <String>['e']);
+    done('f', const <String>['f']);
+    done('없음', const <String>[]);
+    store.add('안 끝낸 일', due: today, tags: const <String>['a']); // 막대에 안 들어감
+
+    final segs = store.doneSegmentsOn(today, tagOrder: const <String>['a', 'b', 'c', 'd', 'e', 'f']);
+    // a3 b2 c2 다음 1개짜리 d·e·f·미지정은 5번째 자리가 동률 → 모두 '기타'
+    expect(segs.map((s) => s.label).toList(), <String>['#a', '#b', '#c', '기타']);
+    expect(segs.map((s) => s.count).toList(), <int>[3, 2, 2, 4]);
+    expect(store.statOfDay(today).total, 12);
+    expect(store.statOfDay(today).done, 11);
+
+    // 5개 이하면 전부 이름으로
+    final five = TaskStore(repository: InMemoryTaskRepository(), clock: () => clock);
+    for (final tag in <String>['p', 'q', 'r', 's', 't']) {
+      final t = five.add(tag, due: today, tags: <String>[tag])!;
+      five.toggle(t.id);
+    }
+    expect(five.doneSegmentsOn(today).length, 5);
+
+    // 막대 날짜는 오늘 기준 -7일 ~ +7일
+    expect(store.chartDays.length, 15);
+    expect(store.chartDays.first, DateTime(2026, 11, 8));
+    expect(store.chartDays[7], today);
+    expect(store.chartDays.last, DateTime(2026, 11, 22));
   });
 
   test('이번 달 통계: 이번 달 할 일 수와 완료 수 (v0.3)', () {

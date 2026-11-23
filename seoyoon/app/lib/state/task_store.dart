@@ -46,6 +46,23 @@ class TodayTagSummary {
 
 /// 하루치 통계 (캘린더 칸 색, 완료율).
 @immutable
+/// 일별 완료 막대의 한 조각 (v0.7).
+class DoneSegment {
+  const DoneSegment({required this.tag, required this.count});
+
+  static const untaggedKey = '\u0000미지정';
+  static const otherKey = '\u0000기타';
+
+  final String tag;
+  final int count;
+
+  bool get untagged => tag == untaggedKey;
+  bool get other => tag == otherKey;
+
+  /// 화면에 보일 이름
+  String get label => untagged ? '미지정' : other ? '기타' : '#$tag';
+}
+
 class DayStat {
   const DayStat({required this.total, required this.done});
   final int total;
@@ -144,20 +161,40 @@ class TaskStore extends ChangeNotifier {
     return DayStat(total: list.length, done: list.where((t) => t.done).length);
   }
 
-  /// 오늘의 할 일 (v0.7 수영장 · 오늘 통계 공통 기준).
-  /// - 완료한 일: **완료한 날** 기준. 어제가 기한이던 일(지연)이나 기한 없는 일도 오늘 끝냈으면 오늘의 일.
-  /// - 아직 안 끝낸 일: 오늘이 기한인 일 + 기한 없이 오늘 만든 일.
-  List<Task> get todayTasks {
-    final day = today;
+  /// 어느 하루의 할 일 (v0.7 수영장 · 통계 공통 기준).
+  /// - 완료한 일: **완료한 날** 기준. 전날이 기한이던 일(지연)이나 기한 없는 일도 그날 끝냈으면 그날의 일.
+  /// - 아직 안 끝낸 일: 그날이 기한인 일 + 기한 없이 그날 만든 일.
+  List<Task> tasksOfDay(DateTime day) {
     return sorted(_tasks.where((t) {
       if (t.done) {
-        final completed = t.completedAt;
-        return completed != null && isSameDay(completed, day);
+        final counted = doneDayOf(t);
+        return counted != null && isSameDay(counted, day);
       }
       final due = t.due;
       return due != null ? isSameDay(due, day) : isSameDay(t.createdAt, day);
     }));
   }
+
+  /// 끝낸 할 일을 어느 날의 '완료'로 셀지 (v0.7).
+  /// - 기본은 **끝낸 날** (지연된 일·기한 없는 일도 끝낸 날로).
+  /// - 단, 기한보다 **미리** 끝냈으면 그 **기한 날**로 센다. 예: 24일까지인 일을 23일에 끝내면 24일의 완료.
+  DateTime? doneDayOf(Task t) {
+    final completed = t.completedAt;
+    if (!t.done || completed == null) return null;
+    final day = dateOnly(completed);
+    final due = t.due;
+    if (due != null && dateOnly(due).isAfter(day)) return dateOnly(due);
+    return day;
+  }
+
+  /// 어느 하루의 완료율.
+  DayStat statOfDay(DateTime day) {
+    final list = tasksOfDay(day);
+    return DayStat(total: list.length, done: list.where((t) => t.done).length);
+  }
+
+  /// 오늘의 할 일 = [tasksOfDay] (오늘).
+  List<Task> get todayTasks => tasksOfDay(today);
 
   /// 오늘의 완료율 (오리 수영장 물 높이).
   DayStat get todayStat {
@@ -212,6 +249,47 @@ class TaskStore extends ChangeNotifier {
     );
   }
 
+  /// 일별 완료 막대 (v0.7 POOL PARTY 통계): 그날 **끝낸** 할 일을 태그별로 나눈 조각들 (아래 → 위 순서, 많은 순).
+  /// 할 일의 첫 태그로 나누고 태그 없는 일은 '미지정'. 조각은 최대 5개:
+  /// 태그가 6개 이상이면 위의 4개만 이름으로 보이고 나머지는 '기타' 한 조각.
+  /// 4번째와 5번째가 같은 개수라 무엇을 보일지 정할 수 없으면, 그 개수인 태그들도 모두 '기타'로 보낸다.
+  List<DoneSegment> doneSegmentsOn(DateTime day, {List<String> tagOrder = const <String>[]}) {
+    final counts = <String, int>{};
+    for (final t in tasksOfDay(day)) {
+      if (!t.done) continue;
+      final key = t.tags.isEmpty ? DoneSegment.untaggedKey : t.tags.first;
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    int orderOf(String tag) {
+      if (tag == DoneSegment.untaggedKey) return tagOrder.length + 1;
+      final i = tagOrder.indexOf(tag);
+      return i < 0 ? tagOrder.length : i;
+    }
+
+    final list = counts.entries.toList()
+      ..sort((a, b) {
+        final byCount = b.value.compareTo(a.value);
+        if (byCount != 0) return byCount;
+        final byOrder = orderOf(a.key).compareTo(orderOf(b.key));
+        return byOrder != 0 ? byOrder : a.key.compareTo(b.key);
+      });
+    DoneSegment seg(MapEntry<String, int> e) => DoneSegment(tag: e.key, count: e.value);
+    if (list.length <= 5) return list.map(seg).toList();
+    var named = list.take(4).toList();
+    final cut = list[4].value;
+    if (named.last.value == cut) named = named.where((e) => e.value != cut).toList();
+    final rest = list.skip(named.length).fold<int>(0, (sum, e) => sum + e.value);
+    return <DoneSegment>[...named.map(seg), DoneSegment(tag: DoneSegment.otherKey, count: rest)];
+  }
+
+  /// 통계 막대에 보일 날들: 오늘 기준 7일 전 ~ 7일 뒤 (15일, 가운데 = 오늘).
+  /// 미리 끝낸 일은 그 기한 날 막대에 미리 쌓인다.
+  static const chartRange = 7;
+  List<DateTime> get chartDays {
+    final t = today;
+    return <DateTime>[for (var i = -chartRange; i <= chartRange; i++) DateTime(t.year, t.month, t.day + i)];
+  }
+
   /// 기한이 지정된 날짜들 (오름차순, 중복 없음).
   List<DateTime> get datesWithTasks {
     final keys = <String, DateTime>{};
@@ -242,8 +320,11 @@ class TaskStore extends ChangeNotifier {
   int get dueTodayOpenCount =>
       _tasks.where((t) => !t.done && t.due != null && isSameDay(t.due!, today)).length;
   int get delayedCount => _tasks.where((t) => statusOf(t) == TaskStatus.delayed).length;
-  int get doneTodayCount =>
-      _tasks.where((t) => t.done && t.completedAt != null && isSameDay(t.completedAt!, today)).length;
+  /// 오늘 완료: [doneDayOf] 기준 (기한보다 미리 끝낸 일은 그 기한 날의 완료로 센다, v0.7).
+  int get doneTodayCount => _tasks.where((t) {
+        final d = doneDayOf(t);
+        return d != null && isSameDay(d, today);
+      }).length;
 
   /// 최근 완료 기록 (설정 화면의 완료 이벤트 내역).
   List<Task> recentCompletions({int limit = 8}) {

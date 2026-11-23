@@ -13,6 +13,7 @@ import '../game/pool_page.dart';
 import '../widgets/basics.dart';
 import '../widgets/task_actions.dart';
 import 'account_sheet.dart';
+import 'today_stats_panel.dart';
 
 enum TaskFilter { all, open, done }
 
@@ -49,6 +50,7 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
   TaskFilter _filter = TaskFilter.all;
   bool _editing = false;
   bool _doneCollapsed = false; // 완료한 일 접기 (v0.5)
+  bool _statsOpen = false; // 'keepy' 로고를 누르면 오늘 통계 펼침 (v0.7)
 
   @override
   bool get wantKeepAlive => true;
@@ -80,6 +82,23 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
               showGame: settings.miniGameEnabled,
               onGame: () => PoolPage.open(context),
               sync: scope.sync,
+              statsOpen: _statsOpen,
+              onLogo: () {
+                HapticFeedback.selectionClick();
+                setState(() => _statsOpen = !_statsOpen);
+              },
+            ),
+            // 오늘 통계: 날짜 화면의 한 달 캘린더처럼 로고와 날짜 사이에 펼쳐진다 (v0.7).
+            AnimatedSize(
+              duration: KeepyMotion.page,
+              curve: KeepyMotion.settle,
+              alignment: Alignment.topCenter,
+              child: _statsOpen
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TodayStatsPanel(store: store, tagOrder: settings.tags),
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
             const SizedBox(height: 12),
             Text(formatFull(store.today), style: KeepyText.caption),
@@ -263,20 +282,44 @@ class _MainPageState extends State<MainPage> with AutomaticKeepAliveClientMixin 
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.showGame, required this.onGame, required this.sync});
+  const _Header({
+    required this.showGame,
+    required this.onGame,
+    required this.sync,
+    required this.statsOpen,
+    required this.onLogo,
+  });
   final bool showGame;
   final VoidCallback onGame;
   final SyncController sync;
+  final bool statsOpen;
+  final VoidCallback onLogo;
 
   @override
   Widget build(BuildContext context) {
-    // v0.7: POOL PARTY 바로가기를 3배 크게 → 켰을 때 머리 높이도 그만큼
     return SizedBox(
-      height: showGame ? 96 : 40,
+      height: 40,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const SizedBox(height: 40, child: Center(child: KeepyLogo())),
+          // 'keepy' 를 누르면 오늘 통계가 펼쳐진다 (작은 ⌄ 가 펼침 상태를 알려 줌)
+          PressScale(
+            key: const Key('stats-toggle'),
+            onTap: onLogo,
+            scale: 0.94,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const KeepyLogo(),
+                const SizedBox(width: 2),
+                AnimatedRotation(
+                  turns: statsOpen ? 0.5 : 0,
+                  duration: KeepyMotion.normal,
+                  curve: KeepyMotion.settle,
+                  child: Icon(Icons.expand_more_rounded, size: 20, color: KeepyColors.secondaryLabel),
+                ),
+              ],
+            ),
+          ),
           const Spacer(),
           // MP3: 로그인했을 때만 동기화 상태 아이콘 (누르면 계정 · 동기화).
           // 동기화 상태가 바뀌어도 목록 전체가 아니라 이 배지만 다시 그린다.
@@ -285,24 +328,28 @@ class _Header extends StatelessWidget {
             builder: (context, _) => !sync.isSignedIn
                 ? const SizedBox.shrink()
                 : Padding(
-                    padding: EdgeInsets.only(right: showGame ? 8 : 0, top: 6),
+                    padding: EdgeInsets.only(right: showGame ? 8 : 0),
                     child: _SyncBadge(sync: sync),
                   ),
           ),
-          // POOL PARTY 바로가기 (설정에서 켰을 때만, 옛 미니게임 자리 그대로). v0.7: 오리 얼굴, 3배 크기 (오늘 통계도 여기서)
+          // POOL PARTY 바로가기 (설정에서 켰을 때만, 옛 미니게임 자리 그대로). v0.7: 오리 얼굴, '모든 할 일' 글자만 한 크기
           if (showGame)
             PressScale(
               key: const Key('pool-shortcut'),
               onTap: onGame,
-              scale: 0.92,
-              child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: KeepyColors.skyTint,
-                  borderRadius: BorderRadius.circular(26),
+              scale: 0.9,
+              // 1.2배: 그리기만 키우고 자리(레이아웃)는 그대로 → 머리 높이·다른 요소 위치는 변하지 않음
+              child: Transform.scale(
+                scale: 1.2,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: KeepyColors.skyTint,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Center(child: DuckFaceIcon(size: 28)),
                 ),
-                child: const Center(child: DuckFaceIcon(size: 76)),
               ),
             ),
         ],

@@ -102,18 +102,21 @@ void main() {
     expect(find.text('오른쪽 손잡이(≡)를 끌어 순서를 바꿔요'), findsOneWidget);
   });
 
-  testWidgets('POOL PARTY: 설정에서 켜야 오리 아이콘이 보이고, X 로 나간다 (v0.7)', (tester) async {
+  testWidgets('POOL PARTY: 기본으로 켜져 있고, 끄면 아이콘이 사라지며, X 로 나간다 (v0.7)', (tester) async {
     await pumpKeepy(tester);
+    expect(find.byKey(const Key('pool-shortcut')), findsOneWidget); // 기본 켜짐
+
+    lastSettings.update((s) => s.copyWith(miniGameEnabled: false));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('pool-shortcut')), findsNothing);
 
     lastSettings.update((s) => s.copyWith(miniGameEnabled: true));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('pool-shortcut')), findsOneWidget);
-
     await tester.tap(find.byKey(const Key('pool-shortcut')));
     await pumpFrames(tester, 6);
     expect(find.byKey(const Key('pool-canvas')), findsOneWidget);
-    expect(find.text('11월 15일'), findsWidgets); // 날짜만
+    expect(find.byKey(const Key('daily-chart')), findsOneWidget); // 위쪽 일별 완료 막대
+    expect(find.text('11월 15일'), findsWidgets);
     expect(find.byKey(const ValueKey<String>('pool-scene-morning')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('pool-close')));
@@ -147,19 +150,18 @@ void main() {
     await pumpFrames(tester, 4);
   });
 
-  testWidgets('오늘 통계: POOL PARTY 화면 위쪽에 태그별로, 미지정 포함 (v0.7)', (tester) async {
+  testWidgets('오늘 통계: keepy 로고를 누르면 펼쳐지고 다시 누르면 접힌다, 미지정 포함 (v0.7)', (tester) async {
     final store = await pumpKeepy(tester);
     final today = DateTime(2026, 11, 15);
     final t = store.add('과제 하기', due: today, tags: const <String>['과제'])!;
     store.add('운동', due: today, tags: const <String>['운동']);
     store.add('태그 없는 일');
     store.toggle(t.id);
-    lastSettings.update((s) => s.copyWith(miniGameEnabled: true));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('today-stats')), findsNothing); // 메인에는 통계가 없다
+    expect(find.byKey(const Key('today-stats')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('pool-shortcut')));
-    await pumpFrames(tester, 6);
+    await tester.tap(find.byKey(const Key('stats-toggle')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('today-stats')), findsOneWidget);
     expect(find.text('오늘 가장 많이 한 일'), findsOneWidget); // 안내 문구와
     expect(
@@ -169,6 +171,34 @@ void main() {
     expect(find.text('#운동'), findsWidgets);
     expect(find.text('미지정'), findsOneWidget);
     expect(find.text('상위 5개만 출력'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('stats-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('today-stats')), findsNothing);
+  });
+
+  testWidgets('POOL PARTY 일별 완료 막대: 오늘 완료율, 막대를 눌러 다른 날로, 오늘로 돌아오기 (v0.7)', (tester) async {
+    final store = await pumpKeepy(tester);
+    final today = DateTime(2026, 11, 15);
+    final a = store.add('수업 복습', due: today, tags: const <String>['수업'])!;
+    store.add('과제', due: today, tags: const <String>['과제']);
+    store.toggle(a.id);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('pool-shortcut')));
+    await pumpFrames(tester, 6);
+    expect(find.text('1/2 완료 · 50%'), findsOneWidget);
+    expect(find.text('#수업 1'), findsOneWidget); // 끝낸 일만 막대에
+
+    await tester.tap(find.byKey(const ValueKey<String>('bar-2026-11-14')));
+    await pumpFrames(tester, 6);
+    expect(find.text('11월 14일'), findsOneWidget);
+    expect(find.text('이날 끝낸 할 일이 없어요'), findsOneWidget);
+
+    // '오늘로' 를 누르면 오늘 막대로 돌아온다
+    await tester.tap(find.byKey(const Key('chart-today')));
+    await pumpFrames(tester, 6);
+    expect(find.text('1/2 완료 · 50%'), findsOneWidget);
+    expect(find.byKey(const Key('chart-today')), findsNothing);
 
     await tester.tap(find.byKey(const Key('pool-close')));
     await pumpFrames(tester, 4);

@@ -38,7 +38,11 @@ class DuckLook {
     this.sleepy = false,
     this.pillow = false,
     this.tie = false,
+    this.capColor = _ink,
   });
+
+  /// 학사모 색. 다크 모드처럼 어두운 바탕에서는 연한 색을 넘긴다 (v0.7).
+  final Color capColor;
 
   /// 날개 자세
   final DuckWing wing;
@@ -344,12 +348,12 @@ void paintDuck(
         ..lineTo(42, -50)
         ..lineTo(14, -40)
         ..close(),
-      _ink,
+      look.capColor,
       stroke: null,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(const Rect.fromLTWH(2, -50, 24, 8), const Radius.circular(3)),
-      fill..color = _ink,
+      fill..color = look.capColor,
     );
     final tassel = Paint()
       ..style = PaintingStyle.stroke
