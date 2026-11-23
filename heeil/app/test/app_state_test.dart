@@ -18,16 +18,15 @@ Task task(
   bool done = false,
   DateTime? doneAt,
   Set<TaskTag>? tags,
-}) =>
-    Task(
-      id: title,
-      title: title,
-      due: due,
-      createdAt: createdAt ?? DateTime(2026, 1, 1),
-      done: done,
-      doneAt: doneAt,
-      tags: tags,
-    );
+}) => Task(
+  id: title,
+  title: title,
+  due: due,
+  createdAt: createdAt ?? DateTime(2026, 1, 1),
+  done: done,
+  doneAt: doneAt,
+  tags: tags,
+);
 
 List<String> titles(Iterable<Task> list) => [for (final t in list) t.title];
 
@@ -87,8 +86,14 @@ void main() {
         reason: '경계 시점 자체는 늦은 완료가 아님',
       );
       expect(
-        s.statusOf(task('하루 늦게',
-            due: due, done: true, doneAt: deadline.add(const Duration(days: 1)))),
+        s.statusOf(
+          task(
+            '하루 늦게',
+            due: due,
+            done: true,
+            doneAt: deadline.add(const Duration(days: 1)),
+          ),
+        ),
         TaskStatus.late,
       );
     });
@@ -98,17 +103,25 @@ void main() {
       final created = DateTime(2026, 11, 1, 10);
 
       expect(
-        s.statusOf(task('느긋',
+        s.statusOf(
+          task(
+            '느긋',
             createdAt: created,
             done: true,
-            doneAt: created.add(const Duration(days: 2)))),
+            doneAt: created.add(const Duration(days: 2)),
+          ),
+        ),
         TaskStatus.done,
       );
       expect(
-        s.statusOf(task('더 느긋',
+        s.statusOf(
+          task(
+            '더 느긋',
             createdAt: created,
             done: true,
-            doneAt: created.add(const Duration(days: 4)))),
+            doneAt: created.add(const Duration(days: 4)),
+          ),
+        ),
         TaskStatus.late,
       );
     });
@@ -123,7 +136,10 @@ void main() {
 
     test('지연 → 늦은 완료 → 완료 해제로 상태가 되돌아온다', () {
       final s = mem();
-      final t = s.add('과제', due: DateTime.now().subtract(const Duration(days: 2)));
+      final t = s.add(
+        '과제',
+        due: DateTime.now().subtract(const Duration(days: 2)),
+      );
 
       expect(s.statusOf(t), TaskStatus.overdue);
       s.setDone(t, true);
@@ -149,11 +165,21 @@ void main() {
 
   group('정렬 sortByDate', () {
     test('기한 빠른 순 → 기한 없음은 뒤 → 같은 기한은 만든 순', () {
-      final a = task('3일 늦게 만듦',
-          due: DateTime(2026, 11, 3), createdAt: DateTime(2026, 10, 2));
-      final b = task('3일 먼저 만듦',
-          due: DateTime(2026, 11, 3), createdAt: DateTime(2026, 10, 1));
-      final c = task('1일', due: DateTime(2026, 11, 1), createdAt: DateTime(2026, 10, 9));
+      final a = task(
+        '3일 늦게 만듦',
+        due: DateTime(2026, 11, 3),
+        createdAt: DateTime(2026, 10, 2),
+      );
+      final b = task(
+        '3일 먼저 만듦',
+        due: DateTime(2026, 11, 3),
+        createdAt: DateTime(2026, 10, 1),
+      );
+      final c = task(
+        '1일',
+        due: DateTime(2026, 11, 1),
+        createdAt: DateTime(2026, 10, 9),
+      );
       final d = task('기한 없음 먼저 만듦', createdAt: DateTime(2026, 10, 5));
       final e = task('기한 없음 나중 만듦', createdAt: DateTime(2026, 10, 6));
 
@@ -366,10 +392,12 @@ void main() {
       final s = mem();
       final t = s.add('원래', tags: {TaskTag.personal});
 
-      s.update(t,
-          title: '  바뀜 ',
-          tags: {TaskTag.team, TaskTag.lecture},
-          due: DateTime(2026, 11, 3, 8, 1));
+      s.update(
+        t,
+        title: '  바뀜 ',
+        tags: {TaskTag.team, TaskTag.lecture},
+        due: DateTime(2026, 11, 3, 8, 1),
+      );
 
       expect(t.title, '바뀜');
       expect(t.tags, {TaskTag.team, TaskTag.lecture});
@@ -466,8 +494,11 @@ void main() {
       s.add('미래 먼', due: DateTime(2026, 11, 20));
       s.add('기한 없음');
 
-      expect(s.neighborTaskDay(base, 1), DateTime(2026, 11, 12),
-          reason: '기준 날짜는 건너뛴다');
+      expect(
+        s.neighborTaskDay(base, 1),
+        DateTime(2026, 11, 12),
+        reason: '기준 날짜는 건너뛴다',
+      );
       expect(s.neighborTaskDay(base, -1), DateTime(2026, 11, 8));
       expect(s.neighborTaskDay(DateTime(2026, 11, 20), 1), isNull);
       expect(s.neighborTaskDay(DateTime(2026, 11, 1), -1), isNull);
@@ -476,7 +507,10 @@ void main() {
     test('neighborTaskDay — 같은 날 여러 개여도 날짜는 0시로 준다', () {
       final s = mem();
       s.addAll(['a', 'b'], due: DateTime(2026, 11, 12, 13, 40));
-      expect(s.neighborTaskDay(DateTime(2026, 11, 10, 22), 1), DateTime(2026, 11, 12));
+      expect(
+        s.neighborTaskDay(DateTime(2026, 11, 10, 22), 1),
+        DateTime(2026, 11, 12),
+      );
     });
 
     test('할 일이 없으면 양쪽 모두 null', () {

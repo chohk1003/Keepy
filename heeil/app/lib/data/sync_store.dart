@@ -108,9 +108,11 @@ class SyncStore implements TaskStore {
   void start() {
     if (_subs.isNotEmpty) return;
     _subs.add(backend.watchTasks().listen(_onRemote));
-    _subs.add(backend.uidChanges.listen((uid) {
-      if (uid != null) unawaited(resync());
-    }));
+    _subs.add(
+      backend.uidChanges.listen((uid) {
+        if (uid != null) unawaited(resync());
+      }),
+    );
     if (backend.canSync) unawaited(resync());
   }
 
@@ -183,8 +185,11 @@ class SyncStore implements TaskStore {
       return;
     }
     // 연결된 화면 상태가 없으면 로컬 저장소에 직접 병합
-    final merged =
-        mergeTasks(local: readTasks(), remote: remote, pending: _pending);
+    final merged = mergeTasks(
+      local: readTasks(),
+      remote: remote,
+      pending: _pending,
+    );
     unawaited(
       local.write(tasks: merged, log: readLog(), settings: readSettings()),
     );

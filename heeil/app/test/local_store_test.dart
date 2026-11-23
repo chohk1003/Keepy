@@ -62,8 +62,11 @@ void main() {
       final store = await openEmptyStore();
       final a = boot(store);
 
-      final t = a.add('운영체제 과제',
-          due: DateTime(2026, 11, 3), tags: {TaskTag.assignment, TaskTag.team});
+      final t = a.add(
+        '운영체제 과제',
+        due: DateTime(2026, 11, 3),
+        tags: {TaskTag.assignment, TaskTag.team},
+      );
       a.setDone(t, true);
       a.add('장보기');
       a
@@ -118,8 +121,11 @@ void main() {
     });
 
     test('손상된 항목 하나는 그 항목만 건너뛴다', () async {
-      final good =
-          Task(id: 'ok', title: '정상', createdAt: DateTime(2026, 11, 2)).toJson();
+      final good = Task(
+        id: 'ok',
+        title: '정상',
+        createdAt: DateTime(2026, 11, 2),
+      ).toJson();
       final store = await openStore({
         'keepy.tasks.v1': jsonEncode([
           good,

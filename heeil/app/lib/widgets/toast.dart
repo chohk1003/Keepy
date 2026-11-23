@@ -98,7 +98,8 @@ class _ToastView extends StatefulWidget {
   State<_ToastView> createState() => _ToastViewState();
 }
 
-class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMixin {
+class _ToastViewState extends State<_ToastView>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 160),
@@ -121,7 +122,10 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
       child: FadeTransition(
         opacity: a,
         child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(a),
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.4),
+            end: Offset.zero,
+          ).animate(a),
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.92, end: 1).animate(a),
             child: Material(
@@ -134,14 +138,18 @@ class _ToastViewState extends State<_ToastView> with SingleTickerProviderStateMi
                     ShaderMask(
                       blendMode: BlendMode.srcIn,
                       shaderCallback: (r) =>
-                          LinearGradient(colors: widget.colors).createShader(Offset.zero & r.size),
+                          LinearGradient(colors: widget.colors)
+                              .createShader(Offset.zero & r.size),
                       child: Icon(widget.icon, size: 22, color: Colors.white),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         widget.text,
-                        style: T.subhead.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                        style: T.subhead.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     if (widget.onUndo != null)

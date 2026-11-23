@@ -88,14 +88,13 @@ class _AppleScroll extends MaterialScrollBehavior {
     BuildContext context,
     Widget child,
     ScrollableDetails details,
-  ) =>
-      child;
+  ) => child;
 
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }

@@ -31,7 +31,9 @@ class _MemStore implements TaskStore {
     required List<Map<String, Object?>> log,
     required Map<String, Object?> settings,
   }) async {
-    this.tasks = [for (final t in tasks) {...t}];
+    this.tasks = [
+      for (final t in tasks) {...t},
+    ];
     this.log = log;
     this.settings = settings;
   }
@@ -102,15 +104,18 @@ class _FakeBackend implements SyncBackend {
   }
 }
 
-Map<String, Object?> _json(String id, String title, DateTime at,
-        {bool deleted = false}) =>
-    Task(
-      id: id,
-      title: title,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: at,
-      deleted: deleted,
-    ).toJson();
+Map<String, Object?> _json(
+  String id,
+  String title,
+  DateTime at, {
+  bool deleted = false,
+}) => Task(
+  id: id,
+  title: title,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: at,
+  deleted: deleted,
+).toJson();
 
 List<String> _titles(Iterable<Task> list) => [for (final t in list) t.title];
 
@@ -198,7 +203,8 @@ void main() {
     test('로그인 직후 병합: 서버의 최신 값이 이 기기의 옛 값을 이긴다 (덮어쓰지 않음)', () async {
       final backend = _FakeBackend()
         ..server['x'] = _json('x', '서버 최신', DateTime(2030));
-      final local = _MemStore()..tasks = [_json('x', '이 기기 옛것', DateTime(2001))];
+      final local = _MemStore()
+        ..tasks = [_json('x', '이 기기 옛것', DateTime(2001))];
       final sync = SyncStore(local: local, backend: backend);
       final s = AppState(store: sync);
       sync.onRemoteTasks = s.applyRemote;

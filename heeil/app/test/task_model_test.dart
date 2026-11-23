@@ -38,8 +38,8 @@ void main() {
         createdAt: DateTime(2026, 11, 2, 21, 40, 12, 345),
       );
 
-      final decoded =
-          (jsonDecode(jsonEncode(t.toJson())) as Map).cast<String, Object?>();
+      final decoded = (jsonDecode(jsonEncode(t.toJson())) as Map)
+          .cast<String, Object?>();
       final back = Task.fromJson(decoded);
 
       expect(decoded['due'], '2026-11-03T00:00:00.000');
@@ -88,8 +88,14 @@ void main() {
     });
 
     test('필수 항목이 깨지면 예외를 던진다 (AppState 가 그 항목만 건너뜀)', () {
-      expect(() => Task.fromJson({'title': 'id 없음'}), throwsA(isA<TypeError>()));
-      expect(() => Task.fromJson({'id': 'title 없음'}), throwsA(isA<TypeError>()));
+      expect(
+        () => Task.fromJson({'title': 'id 없음'}),
+        throwsA(isA<TypeError>()),
+      );
+      expect(
+        () => Task.fromJson({'id': 'title 없음'}),
+        throwsA(isA<TypeError>()),
+      );
       expect(
         () => Task.fromJson({'id': 'x', 'title': 'y', 'due': '날짜 아님'}),
         throwsFormatException,
@@ -101,15 +107,21 @@ void main() {
       final t = Task(id: 'x6', title: '과제', tags: tags);
       tags.add(TaskTag.personal);
 
-      expect(t.tags, {TaskTag.team, TaskTag.personal},
-          reason: '지금은 같은 집합을 참조한다 — add/update 쪽에서 복사해 막는다');
+      expect(t.tags, {
+        TaskTag.team,
+        TaskTag.personal,
+      }, reason: '지금은 같은 집합을 참조한다 — add/update 쪽에서 복사해 막는다');
     });
   });
 
   group('TaskTag', () {
     test('라벨과 저장 이름 (TEAM_NOTES 5장)', () {
-      expect(TaskTag.values.map((t) => t.name),
-          ['assignment', 'lecture', 'team', 'personal']);
+      expect(TaskTag.values.map((t) => t.name), [
+        'assignment',
+        'lecture',
+        'team',
+        'personal',
+      ]);
       expect(TaskTag.values.map((t) => t.label), ['과제', '수업', '팀 프로젝트', '개인']);
     });
 

@@ -18,8 +18,8 @@ import 'sync_store.dart';
 /// 기기 안에 쌓아 두었다가 온라인이 되면 보낸다.
 class FirestoreBackend implements SyncBackend {
   FirestoreBackend({FirebaseFirestore? db, FirebaseAuth? auth})
-      : _db = db ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance {
+    : _db = db ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance {
     _authSub = _auth.authStateChanges().listen(_onUser);
   }
 
@@ -56,14 +56,11 @@ class FirestoreBackend implements SyncBackend {
     _snapSub?.cancel();
     _snapSub = null;
     if (next != null) {
-      _snapSub = _tasksOf(next).snapshots().listen(
-        (snap) {
-          final list = [for (final d in snap.docs) _fromDoc(d)];
-          _remember(list);
-          _remote.add(list);
-        },
-        onError: (Object e) => debugPrint('[sync] 실시간 수신 오류: $e'),
-      );
+      _snapSub = _tasksOf(next).snapshots().listen((snap) {
+        final list = [for (final d in snap.docs) _fromDoc(d)];
+        _remember(list);
+        _remote.add(list);
+      }, onError: (Object e) => debugPrint('[sync] 실시간 수신 오류: $e'));
     }
     _uidChanges.add(next);
   }

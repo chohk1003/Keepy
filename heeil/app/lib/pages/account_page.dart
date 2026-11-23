@@ -156,10 +156,7 @@ class _AccountPageState extends State<AccountPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
       children: [
-        Text(
-          _signUp ? '새 계정 만들기' : '로그인',
-          style: T.title2,
-        ),
+        Text(_signUp ? '새 계정 만들기' : '로그인', style: T.title2),
         const SizedBox(height: 6),
         Text(
           '로그인하면 여러 기기에서 같은 할 일 목록을 볼 수 있어요.\n'
@@ -220,9 +217,9 @@ class _AccountPageState extends State<AccountPage> {
           onPressed: _busy
               ? null
               : () => setState(() {
-                    _signUp = !_signUp;
-                    _error = null;
-                  }),
+                  _signUp = !_signUp;
+                  _error = null;
+                }),
           child: Text(_signUp ? '이미 계정이 있어요 → 로그인' : '계정이 없어요 → 회원가입'),
         ),
       ],
@@ -232,15 +229,14 @@ class _AccountPageState extends State<AccountPage> {
   Widget _card({
     required Widget child,
     EdgeInsets padding = const EdgeInsets.all(16),
-  }) =>
-      Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: child,
-      );
+  }) => Container(
+    padding: padding,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: child,
+  );
 
   Widget _field({
     required TextEditingController controller,
@@ -249,21 +245,19 @@ class _AccountPageState extends State<AccountPage> {
     TextInputAction? action,
     bool obscure = false,
     ValueChanged<String>? onSubmit,
-  }) =>
-      TextField(
-        controller: controller,
-        keyboardType: keyboard,
-        textInputAction: action,
-        obscureText: obscure,
-        autocorrect: false,
-        enableSuggestions: !obscure,
-        onSubmitted: onSubmit,
-        style: T.body,
-        decoration: InputDecoration(
-          hintText: hint,
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        ),
-      );
+  }) => TextField(
+    controller: controller,
+    keyboardType: keyboard,
+    textInputAction: action,
+    obscureText: obscure,
+    autocorrect: false,
+    enableSuggestions: !obscure,
+    onSubmitted: onSubmit,
+    style: T.body,
+    decoration: InputDecoration(
+      hintText: hint,
+      border: InputBorder.none,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    ),
+  );
 }

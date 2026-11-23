@@ -51,7 +51,8 @@ class LocalStore implements TaskStore {
     if (s == null) return const [];
     try {
       return [
-        for (final e in jsonDecode(s) as List) (e as Map).cast<String, Object?>(),
+        for (final e in jsonDecode(s) as List)
+          (e as Map).cast<String, Object?>(),
       ];
     } catch (_) {
       return const [];
@@ -99,8 +100,8 @@ class LocalStore implements TaskStore {
   /// 쓰지만(하위호환), 저장된 JSON 자체를 v2 형태로 맞춰 두려고 여기서도 채운다.
   /// 모델을 모르는 계층이므로 맵 수준에서만 손댄다.
   static Map<String, Object?> _upgradeTask(Map<String, Object?> t) => {
-        ...t,
-        'updatedAt': t['updatedAt'] ?? t['createdAt'],
-        'deleted': t['deleted'] ?? false,
-      };
+    ...t,
+    'updatedAt': t['updatedAt'] ?? t['createdAt'],
+    'deleted': t['deleted'] ?? false,
+  };
 }

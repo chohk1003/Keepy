@@ -26,7 +26,8 @@ String md(DateTime d) => '${d.month}/${d.day}';
 
 String mdw(DateTime d) => '${d.month}/${d.day} ${weekdayKo[d.weekday - 1]}';
 
-String longKo(DateTime d) => '${d.month}월 ${d.day}일 ${weekdayLongKo[d.weekday - 1]}';
+String longKo(DateTime d) =>
+    '${d.month}월 ${d.day}일 ${weekdayLongKo[d.weekday - 1]}';
 
 String hm(DateTime t) => '${two(t.hour)}:${two(t.minute)}';
 

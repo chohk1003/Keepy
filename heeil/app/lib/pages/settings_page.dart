@@ -32,11 +32,7 @@ class SettingsPage extends StatelessWidget {
         ),
         SliverList.list(
           children: [
-            _Section(
-              children: [
-                const _AccountRow(),
-              ],
-            ),
+            _Section(children: [const _AccountRow()]),
             _Section(
               header: '알림',
               children: [
@@ -240,8 +236,13 @@ class SettingsPage extends StatelessWidget {
                   mode: CupertinoDatePickerMode.time,
                   use24hFormat: true,
                   minuteInterval: 5,
-                  initialDateTime: DateTime(2000, 1, 1, s.notifyTime.hour,
-                      s.notifyTime.minute - s.notifyTime.minute % 5),
+                  initialDateTime: DateTime(
+                    2000,
+                    1,
+                    1,
+                    s.notifyTime.hour,
+                    s.notifyTime.minute - s.notifyTime.minute % 5,
+                  ),
                   onDateTimeChanged: (d) {
                     HapticFeedback.selectionClick();
                     picked = TimeOfDay(hour: d.hour, minute: d.minute);
@@ -321,7 +322,11 @@ class _Section extends StatelessWidget {
                   if (i > 0)
                     const Padding(
                       padding: EdgeInsets.only(left: 58),
-                      child: Divider(height: 0.5, thickness: 0.5, color: K.separator),
+                      child: Divider(
+                        height: 0.5,
+                        thickness: 0.5,
+                        color: K.separator,
+                      ),
                     ),
                   children[i],
                 ],
@@ -390,12 +395,17 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lead = leading ?? (icon == null ? null : _IconBox(icon: icon!, colors: colors));
+    final lead =
+        leading ??
+        (icon == null ? null : _IconBox(icon: icon!, colors: colors));
     final content = AnimatedOpacity(
       duration: Motion.fast,
       opacity: enabled ? 1 : 0.4,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 14, vertical: leading != null ? 12 : 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: leading != null ? 12 : 10,
+        ),
         child: Row(
           children: [
             if (lead != null) ...[lead, const SizedBox(width: 14)],
@@ -417,7 +427,9 @@ class _Row extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: leading != null
                               ? T.title3
-                              : T.body.copyWith(color: muted ? K.label3 : K.label),
+                              : T.body.copyWith(
+                                  color: muted ? K.label3 : K.label,
+                                ),
                         ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
@@ -435,7 +447,11 @@ class _Row extends StatelessWidget {
             if (chevron)
               const Padding(
                 padding: EdgeInsets.only(left: 6),
-                child: Icon(CupertinoIcons.chevron_right, size: 16, color: K.gray3),
+                child: Icon(
+                  CupertinoIcons.chevron_right,
+                  size: 16,
+                  color: K.gray3,
+                ),
               ),
           ],
         ),
@@ -492,7 +508,11 @@ class _Block extends StatelessWidget {
 }
 
 class _Segmented<V extends Object> extends StatelessWidget {
-  const _Segmented({required this.value, required this.items, required this.onChanged});
+  const _Segmented({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
 
   final V value;
   final Map<V, String> items;
@@ -565,21 +585,24 @@ class _Toggle extends StatelessWidget {
   }
 }
 
-
 /// 계정 행 (MP3) — 로그인 상태에 따라 문구가 바뀌고, 누르면 계정 화면
 class _AccountRow extends StatelessWidget {
   const _AccountRow();
 
   static Widget _avatar() => Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          gradient: K.brand,
-          shape: BoxShape.circle,
-          boxShadow: K.glow(K.indigo, a: 0.3, blur: 12),
-        ),
-        child: const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 26),
-      );
+    width: 52,
+    height: 52,
+    decoration: BoxDecoration(
+      gradient: K.brand,
+      shape: BoxShape.circle,
+      boxShadow: K.glow(K.indigo, a: 0.3, blur: 12),
+    ),
+    child: const Icon(
+      CupertinoIcons.person_fill,
+      color: Colors.white,
+      size: 26,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {

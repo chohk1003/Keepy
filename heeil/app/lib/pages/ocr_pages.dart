@@ -27,9 +27,10 @@ void openCapture(BuildContext context) {
       transitionsBuilder: (_, a, _, child) => FadeTransition(
         opacity: a,
         child: ScaleTransition(
-          scale: Tween<double>(begin: 1.06, end: 1).animate(
-            CurvedAnimation(parent: a, curve: Motion.out),
-          ),
+          scale: Tween<double>(
+            begin: 1.06,
+            end: 1,
+          ).animate(CurvedAnimation(parent: a, curve: Motion.out)),
           child: child,
         ),
       ),
@@ -44,7 +45,8 @@ class CapturePage extends StatefulWidget {
   State<CapturePage> createState() => _CapturePageState();
 }
 
-class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin {
+class _CapturePageState extends State<CapturePage>
+    with TickerProviderStateMixin {
   late final AnimationController _scan = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1800),
@@ -86,11 +88,8 @@ class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin
     HapticFeedback.mediumImpact();
     Navigator.of(context).pushReplacement(
       CupertinoPageRoute<void>(
-        builder: (_) => ReviewPage(
-          lines: r.lines,
-          elapsed: r.elapsed,
-          sample: r.sample,
-        ),
+        builder: (_) =>
+            ReviewPage(lines: r.lines, elapsed: r.elapsed, sample: r.sample),
       ),
     );
   }
@@ -133,7 +132,10 @@ class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin
                         Curves.easeInOut.transform(_scan.value),
                         _busy,
                       ),
-                      child: SizedBox(width: box.maxWidth, height: box.maxHeight),
+                      child: SizedBox(
+                        width: box.maxWidth,
+                        height: box.maxHeight,
+                      ),
                     ),
                   ),
                 ),
@@ -157,7 +159,10 @@ class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin
                 duration: Motion.med,
                 child: Container(
                   key: ValueKey(_busy),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(16),
@@ -182,7 +187,9 @@ class _CapturePageState extends State<CapturePage> with TickerProviderStateMixin
                 onTap: _shoot,
                 child: AnimatedScale(
                   scale: _pressed ? 0.86 : 1,
-                  duration: _pressed ? const Duration(milliseconds: 90) : Motion.slow,
+                  duration: _pressed
+                      ? const Duration(milliseconds: 90)
+                      : Motion.slow,
                   curve: _pressed ? Curves.easeOut : Motion.spring,
                   child: Container(
                     width: 78,
@@ -279,7 +286,9 @@ class _FramePainter extends CustomPainter {
       Offset(r.right - 10, y),
       Paint()
         ..strokeWidth = 2
-        ..shader = K.brand.createShader(Rect.fromLTWH(r.left, y - 1, r.width, 2)),
+        ..shader = K.brand.createShader(
+          Rect.fromLTWH(r.left, y - 1, r.width, 2),
+        ),
     );
   }
 
@@ -365,9 +374,14 @@ class _ReviewPageState extends State<ReviewPage> {
                   padding: EdgeInsets.zero,
                   onPressed: () {
                     HapticFeedback.selectionClick();
-                    setState(() => _checked.fillRange(0, _checked.length, !all));
+                    setState(
+                      () => _checked.fillRange(0, _checked.length, !all),
+                    );
                   },
-                  child: Text(all ? '전체 해제' : '전체 선택', style: T.body.copyWith(color: K.blue)),
+                  child: Text(
+                    all ? '전체 해제' : '전체 선택',
+                    style: T.body.copyWith(color: K.blue),
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -378,12 +392,18 @@ class _ReviewPageState extends State<ReviewPage> {
                       // 실제 인식 결과에는 배지를 붙이지 않는다 (웹·데스크톱 폴백만)
                       if (widget.sample) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: K.orange.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text('샘플', style: T.caption.copyWith(color: K.orange)),
+                          child: Text(
+                            '샘플',
+                            style: T.caption.copyWith(color: K.orange),
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
@@ -403,10 +423,16 @@ class _ReviewPageState extends State<ReviewPage> {
                   curve: Motion.spring,
                   builder: (context, v, child) => Opacity(
                     opacity: v.clamp(0.0, 1.0),
-                    child: Transform.translate(offset: Offset(0, 24 * (1 - v)), child: child),
+                    child: Transform.translate(
+                      offset: Offset(0, 24 * (1 - v)),
+                      child: child,
+                    ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 5,
+                    ),
                     child: AnimatedContainer(
                       duration: Motion.med,
                       decoration: BoxDecoration(
@@ -419,7 +445,8 @@ class _ReviewPageState extends State<ReviewPage> {
                         children: [
                           SquareCheck(
                             value: _checked[i],
-                            onTap: () => setState(() => _checked[i] = !_checked[i]),
+                            onTap: () =>
+                                setState(() => _checked[i] = !_checked[i]),
                           ),
                           Expanded(
                             child: TextField(
@@ -428,8 +455,12 @@ class _ReviewPageState extends State<ReviewPage> {
                               style: T.headline.copyWith(
                                 color: _checked[i] ? K.label : K.label3,
                               ),
-                              inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                              decoration: const InputDecoration(border: InputBorder.none),
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(100),
+                              ],
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
                             ),
                           ),
                         ],
@@ -454,7 +485,9 @@ class _ReviewPageState extends State<ReviewPage> {
                   gradient: _count > 0 ? K.brand : null,
                   color: _count > 0 ? null : K.gray5,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: _count > 0 ? K.glow(K.indigo, a: 0.4, blur: 20) : const [],
+                  boxShadow: _count > 0
+                      ? K.glow(K.indigo, a: 0.4, blur: 20)
+                      : const [],
                 ),
                 alignment: Alignment.center,
                 child: Row(
@@ -462,7 +495,10 @@ class _ReviewPageState extends State<ReviewPage> {
                   children: [
                     RollingText(
                       '$_count',
-                      style: T.headline.copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+                      style: T.headline.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     Text(
                       '개 추가',
