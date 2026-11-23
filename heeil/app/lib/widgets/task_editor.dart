@@ -9,7 +9,7 @@ import '../models/companion.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../util/dates.dart';
-import 'quick_input_bar.dart';
+
 import 'task_actions.dart';
 
 Future<void> showTaskEditor(BuildContext context, Task task) {
@@ -21,6 +21,10 @@ Future<void> showTaskEditor(BuildContext context, Task task) {
     useSafeArea: true,
     backgroundColor: Colors.white,
     showDragHandle: true,
+    sheetAnimationStyle: const AnimationStyle(
+      duration: Motion.sheet,
+      reverseDuration: Motion.dismiss,
+    ),
     builder: (_) => _Editor(task: task, state: state, hostContext: context),
   );
 }
@@ -100,14 +104,14 @@ class _EditorState extends State<_Editor> {
             ),
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Text('할 일 수정', style: T.title3),
+                    Text('할 일 수정', style: T.headline.copyWith(fontSize: 16)),
                     const Spacer(),
                     IconButton(
                       tooltip: '삭제',
@@ -121,17 +125,22 @@ class _EditorState extends State<_Editor> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 4),
                 TextField(
                   key: const Key('task-title-editor'),
                   controller: _title,
                   minLines: 1,
-                  maxLines: 3,
+                  maxLines: 1,
                   onChanged: (_) => setState(() {}),
-                  style: T.body,
+                  style: T.body.copyWith(fontSize: 15),
                   inputFormatters: [LengthLimitingTextInputFormatter(100)],
                   decoration: InputDecoration(
                     hintText: '할 일 제목',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     filled: true,
                     fillColor: K.fill,
                     border: OutlineInputBorder(
@@ -155,24 +164,37 @@ class _EditorState extends State<_Editor> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 Text('태그', style: T.footnote),
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final tag in TaskTag.values)
-                      TagToggle(
-                        tag: tag,
-                        selected: _tags.contains(tag),
-                        onTap: () => setState(() {
-                          if (!_tags.remove(tag)) _tags.add(tag);
-                        }),
-                      ),
-                  ],
+                const SizedBox(height: 2),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final tag in TaskTag.values)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: ChoiceChip(
+                            key: ValueKey('editor-tag-${tag.name}'),
+                            label: Text(
+                              tag.label,
+                              style: TextStyle(fontSize: 12, color: tag.color),
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            showCheckmark: false,
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 3,
+                            ),
+                            selected: _tags.contains(tag),
+                            onSelected: (_) => setState(() {
+                              if (!_tags.remove(tag)) _tags.add(tag);
+                            }),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Text('날짜', style: T.footnote),
@@ -185,20 +207,33 @@ class _EditorState extends State<_Editor> {
                     ),
                   ],
                 ),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final entry in dates.entries)
-                      ChoiceChip(
-                        key: ValueKey('quick-date-${entry.key}'),
-                        label: Text(entry.key),
-                        selected: entry.value == null
-                            ? _due == null
-                            : sameDay(_due, entry.value!),
-                        onSelected: (_) => setState(() => _due = entry.value),
-                      ),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final entry in dates.entries)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: ChoiceChip(
+                            key: ValueKey('quick-date-${entry.key}'),
+                            visualDensity: VisualDensity.compact,
+                            showCheckmark: false,
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 2,
+                            ),
+                            label: Text(
+                              entry.key,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            selected: entry.value == null
+                                ? _due == null
+                                : sameDay(_due, entry.value!),
+                            onSelected: (_) =>
+                                setState(() => _due = entry.value),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 AnimatedSize(
                   duration: Motion.med,
@@ -218,12 +253,12 @@ class _EditorState extends State<_Editor> {
                         )
                       : const SizedBox.shrink(),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 12),
                 FilledButton(
                   key: const Key('task-editor-save'),
                   onPressed: _valid ? _save : null,
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
+                    minimumSize: const Size.fromHeight(42),
                     backgroundColor: K.blue,
                   ),
                   child: const Text('저장'),

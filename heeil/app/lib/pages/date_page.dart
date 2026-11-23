@@ -25,7 +25,8 @@ class DatePage extends StatefulWidget {
   State<DatePage> createState() => _DatePageState();
 }
 
-class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin {
+class _DatePageState extends State<DatePage>
+    with SingleTickerProviderStateMixin {
   /// 목록 끝을 넘어 끌린 거리가 이 값을 넘어야 이동
   static const _threshold = 72.0;
 
@@ -44,7 +45,7 @@ class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin
 
   late final AnimationController _t = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: Motion.navigation,
   )..addListener(() => setState(() => _peek = _t.value));
 
   @override
@@ -89,7 +90,9 @@ class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin
       _peekDay = target;
       _peekDir = dir;
       // 손가락을 따라 제목이 넘어감 (놓기 전에는 85%까지만)
-      _peek = target == null ? 0 : (over.abs() / _threshold).clamp(0.0, 1.0) * 0.85;
+      _peek = target == null
+          ? 0
+          : (over.abs() / _threshold).clamp(0.0, 1.0) * 0.85;
     });
     return false;
   }
@@ -139,8 +142,14 @@ class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin
       children: [
         Column(
           children: [
-            // 뷰포트 높이의 1/4 고정 (키보드가 올라와도 유지)
-            SizedBox(height: mq.size.height / 4, child: const WeekCalendar()),
+            // 행 하나당 24px씩 늘리고 키보드가 열려도 선택한 크기를 유지한다.
+            AnimatedContainer(
+              key: const Key('calendar-area'),
+              duration: mq.disableAnimations ? Duration.zero : Motion.med,
+              curve: Curves.easeOutCubic,
+              height: mq.padding.top + 136 + 24.0 * s.calendarRows,
+              child: const WeekCalendar(),
+            ),
             SizedBox(
               height: 52,
               child: ClipRect(
@@ -158,63 +167,78 @@ class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin
               child: Padding(
                 padding: EdgeInsets.only(bottom: bottom + QuickInputBar.height),
                 child: Listener(
-                onPointerDown: (_) => _pointerDown = true,
-                onPointerUp: (_) => _onRelease(s),
-                onPointerCancel: (_) => _onRelease(s),
-                onPointerPanZoomStart: (_) => _pointerDown = true,
-                onPointerPanZoomEnd: (_) => _onRelease(s),
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (n) => _onScroll(n, s),
-                  child: ClipRect(
-                    child: AnimatedSwitcher(
-                      duration: Motion.slow,
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (c, a) {
-                        final incoming = c.key == ValueKey(day);
-                        return FadeTransition(
-                          opacity: a,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: Offset(0, (incoming ? 0.3 : -0.3) * _dir),
-                              end: Offset.zero,
-                            ).animate(a),
-                            child: c,
-                          ),
-                        );
-                      },
-                      child: CustomScrollView(
-                        key: ValueKey(day),
-                        slivers: [
-                          SliverToBoxAdapter(child: SectionHeader('할 일', pending.length)),
-                          DiffSliverList<Task>(
-                            items: AppState.sortByDate(pending),
-                            idOf: (t) => t.id,
-                            itemBuilder: buildTaskTile,
-                          ),
-                          SliverToBoxAdapter(
-                            child: SectionHeader('완료', done.length, gradient: K.success),
-                          ),
-                          DiffSliverList<Task>(
-                            items: AppState.sortByDate(done),
-                            idOf: (t) => t.id,
-                            itemBuilder: buildTaskTile,
-                          ),
-                          if (list.isEmpty)
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: zoneTop / 2),
-                                child: const Center(child: EmptyState(title: '일정 없음')),
+                  onPointerDown: (_) => _pointerDown = true,
+                  onPointerUp: (_) => _onRelease(s),
+                  onPointerCancel: (_) => _onRelease(s),
+                  onPointerPanZoomStart: (_) => _pointerDown = true,
+                  onPointerPanZoomEnd: (_) => _onRelease(s),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (n) => _onScroll(n, s),
+                    child: ClipRect(
+                      child: AnimatedSwitcher(
+                        duration: Motion.slow,
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (c, a) {
+                          final incoming = c.key == ValueKey(day);
+                          return FadeTransition(
+                            opacity: a,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: Offset(
+                                  0,
+                                  (incoming ? 0.3 : -0.3) * _dir,
+                                ),
+                                end: Offset.zero,
+                              ).animate(a),
+                              child: c,
+                            ),
+                          );
+                        },
+                        child: CustomScrollView(
+                          key: ValueKey(day),
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: SectionHeader('할 일', pending.length),
+                            ),
+                            DiffSliverList<Task>(
+                              items: AppState.sortByDate(pending),
+                              idOf: (t) => t.id,
+                              itemBuilder: buildTaskTile,
+                            ),
+                            SliverToBoxAdapter(
+                              child: SectionHeader(
+                                '완료',
+                                done.length,
+                                gradient: K.success,
                               ),
                             ),
-                          const SliverToBoxAdapter(child: SizedBox(height: EdgeFade.zone + 8)),
-                        ],
+                            DiffSliverList<Task>(
+                              items: AppState.sortByDate(done),
+                              idOf: (t) => t.id,
+                              itemBuilder: buildTaskTile,
+                            ),
+                            if (list.isEmpty)
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: zoneTop / 2,
+                                  ),
+                                  child: const Center(
+                                    child: EmptyState(title: '일정 없음'),
+                                  ),
+                                ),
+                              ),
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: EdgeFade.zone + 8),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
               ),
             ),
           ],
@@ -239,9 +263,19 @@ class _DatePageState extends State<DatePage> with SingleTickerProviderStateMixin
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(CupertinoIcons.arrow_uturn_left, size: 15, color: Colors.white),
+                    const Icon(
+                      CupertinoIcons.arrow_uturn_left,
+                      size: 15,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 6),
-                    Text('오늘', style: T.subhead.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
+                    Text(
+                      '오늘',
+                      style: T.subhead.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -286,12 +320,18 @@ class _DayTitle extends StatelessWidget {
     return Stack(
       children: [
         _line(day, -dir * p * _travel, 1 - p),
-        if (peekDay != null) _line(peekDay!, dir * (1 - p) * _travel, p, highlight: armed),
+        if (peekDay != null)
+          _line(peekDay!, dir * (1 - p) * _travel, p, highlight: armed),
       ],
     );
   }
 
-  Widget _line(DateTime d, double dy, double opacity, {bool highlight = false}) {
+  Widget _line(
+    DateTime d,
+    double dy,
+    double opacity, {
+    bool highlight = false,
+  }) {
     final isToday = sameDay(d, DateTime.now());
     return Positioned.fill(
       child: Transform.translate(
@@ -305,17 +345,27 @@ class _DayTitle extends StatelessWidget {
                 Flexible(
                   child: highlight
                       ? GradientText(longKo(d), style: T.title2)
-                      : Text(longKo(d), style: T.title2, overflow: TextOverflow.ellipsis),
+                      : Text(
+                          longKo(d),
+                          style: T.title2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                 ),
                 if (isToday)
                   Container(
                     margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       gradient: K.brand2,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('오늘', style: T.caption.copyWith(color: Colors.white)),
+                    child: Text(
+                      '오늘',
+                      style: T.caption.copyWith(color: Colors.white),
+                    ),
                   ),
               ],
             ),

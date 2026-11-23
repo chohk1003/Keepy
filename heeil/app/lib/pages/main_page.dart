@@ -39,6 +39,7 @@ class MainPage extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(bottom: bottom + QuickInputBar.height),
           child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
             slivers: [
               const SliverToBoxAdapter(child: CompanionHeader()),
               SliverToBoxAdapter(

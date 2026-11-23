@@ -27,7 +27,7 @@ class GlassTabBar extends StatelessWidget {
   final List<TabSpec> tabs;
   final ValueChanged<int> onTap;
 
-  static const height = 62.0;
+  static const height = 48.0;
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +47,21 @@ class GlassTabBar extends StatelessWidget {
             return AnimatedBuilder(
               animation: controller,
               builder: (context, _) {
-                final page = controller.hasClients && controller.position.haveDimensions
+                final page =
+                    controller.hasClients && controller.position.haveDimensions
                     ? controller.page ?? index.toDouble()
                     : index.toDouble();
                 return Stack(
                   children: [
                     Positioned(
                       left: page * w + (w - 58) / 2,
-                      top: 7,
+                      top: 9,
                       width: 58,
                       height: 30,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: K.brand,
+                          color: K.room,
                           borderRadius: BorderRadius.circular(15),
-                          boxShadow: K.glow(K.indigo, a: 0.35, blur: 12),
                         ),
                       ),
                     ),
@@ -98,33 +98,31 @@ class _Item extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = t > 0.5;
-    return Pressable(
-      onTap: onTap,
-      scale: 0.88,
-      child: Column(
-        children: [
-          SizedBox(
-            height: 44,
+    final color = spec.label == '설정'
+        ? const Color(0xFF7952D6)
+        : spec.label == '날짜'
+        ? const Color(0xFF007F93)
+        : K.blue;
+    return Semantics(
+      label: spec.label,
+      button: true,
+      selected: active,
+      child: Tooltip(
+        message: spec.label,
+        child: Pressable(
+          onTap: onTap,
+          scale: .88,
+          child: SizedBox(
+            height: 48,
             child: Center(
-              child: Transform.scale(
-                scale: 1 + 0.1 * t,
-                child: Icon(
-                  active ? spec.activeIcon : spec.icon,
-                  size: 21,
-                  color: Color.lerp(K.label2, Colors.white, t),
-                ),
+              child: Icon(
+                active ? spec.activeIcon : spec.icon,
+                size: active ? 25 : 23,
+                color: color,
               ),
             ),
           ),
-          Text(
-            spec.label,
-            style: T.caption.copyWith(
-              fontSize: 11,
-              color: Color.lerp(K.label2, K.indigo, t),
-              fontWeight: active ? FontWeight.w700 : FontWeight.w600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -133,6 +131,10 @@ class _Item extends StatelessWidget {
 /// 탭 아이콘 모음
 const keepyTabs = [
   TabSpec(CupertinoIcons.gear_alt, CupertinoIcons.gear_alt_fill, '설정'),
-  TabSpec(CupertinoIcons.checkmark_square, CupertinoIcons.checkmark_square_fill, '메인'),
+  TabSpec(
+    CupertinoIcons.checkmark_square,
+    CupertinoIcons.checkmark_square_fill,
+    '메인',
+  ),
   TabSpec(CupertinoIcons.calendar, CupertinoIcons.calendar_today, '날짜'),
 ];

@@ -57,7 +57,7 @@ class _PressableState extends State<Pressable> {
             },
       child: AnimatedScale(
         scale: _down ? widget.scale : 1,
-        duration: _down ? const Duration(milliseconds: 90) : Motion.med,
+        duration: _down ? Motion.press : Motion.med,
         curve: _down ? Curves.easeOut : Motion.spring,
         child: widget.child,
       ),
@@ -67,7 +67,12 @@ class _PressableState extends State<Pressable> {
 
 /// 그라데이션 글자
 class GradientText extends StatelessWidget {
-  const GradientText(this.text, {super.key, required this.style, this.gradient = K.brand});
+  const GradientText(
+    this.text, {
+    super.key,
+    required this.style,
+    this.gradient = K.brand,
+  });
 
   final String text;
   final TextStyle style;
@@ -112,7 +117,10 @@ class Glass extends StatelessWidget {
             color: Colors.white.withValues(alpha: opacity),
             borderRadius: r,
             border: border
-                ? Border.all(color: Colors.white.withValues(alpha: 0.7), width: 0.8)
+                ? Border.all(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    width: 0.8,
+                  )
                 : null,
           ),
           child: child,
@@ -143,8 +151,10 @@ class LivingGradient extends StatefulWidget {
 
 class _LivingGradientState extends State<LivingGradient>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: widget.period)..repeat(reverse: true);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: widget.period,
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -167,7 +177,11 @@ class _LivingGradientState extends State<LivingGradient>
               end: Alignment(1, 1 - t * 0.8),
               colors: widget.colors,
             ),
-            boxShadow: K.glow(widget.colors[1 % widget.colors.length], a: 0.32, blur: 24),
+            boxShadow: K.glow(
+              widget.colors[1 % widget.colors.length],
+              a: 0.32,
+              blur: 24,
+            ),
           ),
           child: Stack(
             children: [
@@ -205,7 +219,11 @@ class ProgressRing extends StatelessWidget {
     required this.value,
     this.size = 64,
     this.stroke = 8,
-    this.colors = const [Color(0xFF0A84FF), Color(0xFF5E5CE6), Color(0xFFBF5AF2)],
+    this.colors = const [
+      Color(0xFF0A84FF),
+      Color(0xFF5E5CE6),
+      Color(0xFFBF5AF2),
+    ],
     this.track = K.fill2,
     this.child,
   });
@@ -221,7 +239,7 @@ class ProgressRing extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: value.clamp(0, 1).toDouble()),
-      duration: const Duration(milliseconds: 750),
+      duration: Motion.chart,
       curve: Motion.spring,
       builder: (context, v, child) => SizedBox(
         width: size,
@@ -277,7 +295,10 @@ class _RingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RingPainter old) =>
-      old.v != v || old.stroke != stroke || old.track != track || old.colors != colors;
+      old.v != v ||
+      old.stroke != stroke ||
+      old.track != track ||
+      old.colors != colors;
 }
 
 /// 위아래로 천천히 떠다니는 효과
@@ -291,7 +312,8 @@ class Floating extends StatefulWidget {
   State<Floating> createState() => _FloatingState();
 }
 
-class _FloatingState extends State<Floating> with SingleTickerProviderStateMixin {
+class _FloatingState extends State<Floating>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
@@ -309,7 +331,10 @@ class _FloatingState extends State<Floating> with SingleTickerProviderStateMixin
       animation: _c,
       child: widget.child,
       builder: (context, child) => Transform.translate(
-        offset: Offset(0, (Curves.easeInOut.transform(_c.value) - 0.5) * 2 * widget.amplitude),
+        offset: Offset(
+          0,
+          (Curves.easeInOut.transform(_c.value) - 0.5) * 2 * widget.amplitude,
+        ),
         child: child,
       ),
     );
@@ -407,7 +432,12 @@ class _EdgeFadeState extends State<EdgeFade> {
   void _measure() {
     final box = context.findRenderObject();
     final vp = Scrollable.maybeOf(context)?.context.findRenderObject();
-    if (box is! RenderBox || vp is! RenderBox || !box.attached || !box.hasSize) return;
+    if (box is! RenderBox ||
+        vp is! RenderBox ||
+        !box.attached ||
+        !box.hasSize) {
+      return;
+    }
     final top = box.localToGlobal(Offset.zero, ancestor: vp).dy;
     final center = top + box.size.height / 2;
     final zoneTop = vp.size.height - EdgeFade.zone;

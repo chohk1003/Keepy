@@ -102,7 +102,7 @@ void main() {
     expect(find.byKey(ValueKey('act-${s.tasks.single.id}')), findsNothing);
   });
 
-  testWidgets('날짜 다이얼은 되돌리면 "그대로"(변화 없음)', (tester) async {
+  testWidgets('날짜 다이얼을 되돌리면 문구 없이 취소', (tester) async {
     final s = await boot(tester, titles: ['과제']);
     final tile = find.ancestor(
       of: find.text('과제'),
@@ -114,7 +114,7 @@ void main() {
     await tester.pump();
     await g.moveBy(const Offset(75, 0)); // 첫 날짜 임계값 안쪽으로 돌아옴
     await tester.pump();
-    expect(find.text('그대로'), findsWidgets);
+    expect(find.text('그대로'), findsNothing);
     await g.up();
     await settle(tester, 1400);
     expect(s.tasks.single.due, isNull);
@@ -124,7 +124,7 @@ void main() {
     final s = await boot(tester, titles: ['과제']);
     await tester.tap(find.text('과제'));
     await settle(tester, 500);
-    await tester.tap(find.byType(TagToggle).at(2));
+    await tester.tap(find.byKey(const ValueKey('editor-tag-team')));
     await tester.tap(find.byKey(const Key('task-editor-save')));
     await settle(tester, 1400);
 

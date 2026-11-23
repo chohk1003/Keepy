@@ -6,8 +6,8 @@ abstract final class K {
   static const font = 'Pretendard';
 
   // 시스템 컬러
-  static const blue = Color(0xFF416B58);
-  static const indigo = Color(0xFF416B58);
+  static const blue = Color(0xFF6549C9);
+  static const indigo = Color(0xFF6549C9);
   static const purple = Color(0xFFBF5AF2);
   static const pink = Color(0xFFFF375F);
   static const red = Color(0xFFFF3B30);
@@ -17,10 +17,10 @@ abstract final class K {
 
   // 배경·라벨
   static const bg = Color(0xFFFFFFFF);
-  static const room = Color(0xFFD6E8DD);
-  static const roomFloor = Color(0xFFB9CDBC);
-  static const ink = Color(0xFF293D34);
-  static const crumb = Color(0xFFD8AF55);
+  static const room = Color(0xFFFFD957);
+  static const roomFloor = Color(0xFFFFB85B);
+  static const ink = Color(0xFF302547);
+  static const crumb = Color(0xFFFF7354);
   static const card = Color(0xFFFFFFFF);
   static const label = ink;
   static const label2 = Color(0x993C3C43); // secondaryLabel
@@ -78,9 +78,19 @@ abstract final class K {
 abstract final class Motion {
   static const spring = Cubic(0.2, 0.9, 0.25, 1.12);
   static const out = Curves.easeOutCubic;
-  static const fast = Duration(milliseconds: 160);
-  static const med = Duration(milliseconds: 280);
-  static const slow = Duration(milliseconds: 420);
+  // Direct manipulation remains spring driven; these timings cover UI responses.
+  static const press = Duration(milliseconds: 90);
+  static const feedback = Duration(milliseconds: 200);
+  static const navigation = Duration(milliseconds: 220);
+  static const expansion = Duration(milliseconds: 280);
+  static const sheet = feedback;
+  static const dismiss = Duration(milliseconds: 160);
+  static const chart = Duration(milliseconds: 300);
+  static const celebration = Duration(milliseconds: 550);
+  static const delivery = Duration(milliseconds: 1250);
+  static const fast = Duration(milliseconds: 120);
+  static const med = feedback;
+  static const slow = chart;
 }
 
 /// 타이포그래피 — iOS 텍스트 스타일 크기

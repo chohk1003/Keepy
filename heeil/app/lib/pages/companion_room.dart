@@ -10,26 +10,47 @@ import '../theme.dart';
 import '../util/dates.dart';
 import '../widgets/companion_art.dart';
 import 'progress_page.dart';
+import 'activity_stats_sheet.dart';
 
-Future<void> openCompanionRoom(BuildContext context, AppState state) =>
-    Navigator.of(context, rootNavigator: true).push<void>(
-      PageRouteBuilder<void>(
-        settings: const RouteSettings(name: '/companion'),
-        transitionDuration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 440),
-        reverseTransitionDuration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 300),
-        pageBuilder: (_, _, _) => CompanionRoom(state: state),
-        transitionsBuilder: (_, animation, _, child) => SlideTransition(
-          position: Tween(begin: const Offset(0, -1), end: Offset.zero).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-          ),
-          child: child,
+Future<void> openCompanionRoom(
+  BuildContext context,
+  AppState state, {
+  required Rect origin,
+}) => Navigator.of(context, rootNavigator: true).push<void>(
+  PageRouteBuilder<void>(
+    opaque: true,
+    settings: const RouteSettings(name: '/companion'),
+    transitionDuration: MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : Motion.expansion,
+    reverseTransitionDuration: MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : Motion.navigation,
+    pageBuilder: (_, _, _) => CompanionRoom(state: state),
+    transitionsBuilder: (context, animation, _, child) => AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) => ClipPath(
+        clipper: _RoomExpansion(
+          Rect.lerp(
+            origin,
+            Offset.zero & MediaQuery.sizeOf(context),
+            Curves.easeOutCubic.transform(animation.value),
+          )!,
         ),
+        child: child,
       ),
-    );
+    ),
+  ),
+);
+
+class _RoomExpansion extends CustomClipper<Path> {
+  const _RoomExpansion(this.rect);
+  final Rect rect;
+  @override
+  Path getClip(Size size) => Path()..addRect(rect);
+  @override
+  bool shouldReclip(_RoomExpansion old) => old.rect != rect;
+}
 
 class CompanionRoom extends StatefulWidget {
   const CompanionRoom({super.key, required this.state});
@@ -42,7 +63,7 @@ class _CompanionRoomState extends State<CompanionRoom>
     with SingleTickerProviderStateMixin {
   late final AnimationController _delivery = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1250),
+    duration: Motion.delivery,
   );
   late final int _batch = widget.state.pendingCredits.length;
   bool _started = false;
@@ -115,26 +136,32 @@ class _CompanionRoomState extends State<CompanionRoom>
                     ),
                   ),
                   Positioned(
-                    top: top + 62,
+                    bottom: MediaQuery.paddingOf(context).bottom + 38,
                     left: 24,
                     right: 24,
-                    child: _ActivityBars(counts: counts),
+                    child: _ActivityBars(
+                      counts: counts,
+                      onSelected: (a) => showActivityStats(context, state, a),
+                    ),
                   ),
                   Positioned(
                     left: (size.width - animalSize) / 2,
-                    top: size.height * .40,
+                    top: size.height * .32,
                     width: animalSize,
                     height: animalSize,
-                    child: CompanionArt(
-                      kind: state.companion,
-                      activity: activity,
-                      joy: joy,
+                    child: Hero(
+                      tag: 'keepy-companion',
+                      child: CompanionArt(
+                        kind: state.companion,
+                        activity: activity,
+                        joy: joy,
+                      ),
                     ),
                   ),
                   Positioned(
                     left: 0,
                     right: 0,
-                    top: size.height * .40 + animalSize - 5,
+                    top: size.height * .32 + animalSize - 5,
                     child: Center(
                       child: _Bowl(
                         count: state.creditedTasks
@@ -150,7 +177,7 @@ class _CompanionRoomState extends State<CompanionRoom>
                           size.width / 2 +
                           math.sin(p * math.pi) *
                               ((i % 2 == 0 ? -1 : 1) * (28 + i * 4));
-                      final end = size.height * .40 + animalSize;
+                      final end = size.height * .32 + animalSize;
                       final y =
                           size.height -
                           60 +
@@ -173,18 +200,22 @@ class _CompanionRoomState extends State<CompanionRoom>
                       );
                     }),
                   Positioned(
-                    top: top + 7,
-                    left: 8,
+                    top: top + 4,
+                    right: 8,
                     child: IconButton(
                       key: const Key('room-close'),
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
                       tooltip: '할 일로 돌아가기',
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(CupertinoIcons.chevron_up, color: K.ink),
                     ),
                   ),
                   Positioned(
-                    top: top + 7,
-                    right: 8,
+                    top: top + 4,
+                    left: 8,
                     child: IconButton(
                       key: const Key('room-reports'),
                       tooltip: '기록과 보상',
@@ -223,35 +254,56 @@ class _CompanionRoomState extends State<CompanionRoom>
 }
 
 class _ActivityBars extends StatelessWidget {
-  const _ActivityBars({required this.counts});
+  const _ActivityBars({required this.counts, required this.onSelected});
   final Map<ActivityKind, int> counts;
+  final ValueChanged<ActivityKind> onSelected;
   @override
   Widget build(BuildContext context) {
-    final max = counts.values.fold(1, (a, b) => math.max(a, b));
+    final maximum = counts.values.fold(1, (a, b) => math.max(a, b));
     return Row(
       children: [
         for (final a in ActivityKind.values)
           Expanded(
             child: Semantics(
-              label: '최근 7일 ${activityLabel(a)} ${counts[a] ?? 0}개',
+              label: '${activityLabel(a)} 최근 7일 ${counts[a]}개 통계',
+              button: true,
               child: Tooltip(
-                message: '${activityLabel(a)} ${counts[a] ?? 0}',
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 7),
-                  child: Column(
-                    children: [
-                      Icon(activityIcon(a), size: 18, color: activityColor(a)),
-                      const SizedBox(height: 9),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: (counts[a] ?? 0) / max,
-                          minHeight: 7,
-                          backgroundColor: K.blue.withValues(alpha: .08),
+                message: activityLabel(a),
+                child: InkWell(
+                  key: ValueKey('activity-indicator-${a.name}'),
+                  onTap: () => onSelected(a),
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 64),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .88),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 13,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          activityIcon(a),
+                          size: 23,
                           color: activityColor(a),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (counts[a] ?? 0) / maximum,
+                            minHeight: 6,
+                            color: activityColor(a),
+                            backgroundColor: K.blue.withValues(alpha: .1),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -330,7 +382,7 @@ class _RoomPainter extends CustomPainter {
     );
     c.drawRRect(
       RRect.fromRectAndRadius(window, const Radius.circular(30)),
-      Paint()..color = const Color(0xFFEAF4EE),
+      Paint()..color = const Color(0xFF91DFF1),
     );
     c.drawLine(
       Offset(window.center.dx, window.top),
@@ -354,7 +406,7 @@ class _RoomPainter extends CustomPainter {
     );
     c.drawRRect(
       RRect.fromRectAndRadius(shelf, const Radius.circular(3)),
-      Paint()..color = const Color(0xFF9BB69F),
+      Paint()..color = const Color(0xFF9B70D9),
     );
     if (rewards.contains('plant')) {
       c.drawRRect(

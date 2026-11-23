@@ -34,7 +34,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
     if (p == null || !p.hasClients) return;
     final target = _origin + offset;
     if ((p.page ?? target.toDouble()).round() != target) {
-      p.animateToPage(target, duration: Motion.med, curve: Motion.out);
+      p.animateToPage(target, duration: Motion.navigation, curve: Motion.out);
     }
   }
 
@@ -72,6 +72,34 @@ class _WeekCalendarState extends State<WeekCalendar> {
                   child: Text('${anchor.year}', style: T.footnote),
                 ),
                 const Spacer(),
+                PopupMenuButton<int>(
+                  key: const Key('calendar-rows'),
+                  tooltip: '달력 표시 행 선택',
+                  initialValue: s.calendarRows,
+                  onSelected: s.setCalendarRows,
+                  itemBuilder: (_) => [
+                    for (var n = 1; n <= 4; n++)
+                      PopupMenuItem(value: n, child: Text('$n행')),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: K.room,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${s.calendarRows}행',
+                      style: T.footnote.copyWith(
+                        color: K.blue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
                 _Chevron(
                   icon: CupertinoIcons.chevron_left,
                   onTap: () => s.setWeekOffset(s.weekOffset - 1),
@@ -95,8 +123,8 @@ class _WeekCalendarState extends State<WeekCalendar> {
                         color: i == 0
                             ? K.red
                             : i == 6
-                                ? K.blue
-                                : K.label3,
+                            ? K.blue
+                            : K.label3,
                       ),
                     ),
                   ),
@@ -106,6 +134,9 @@ class _WeekCalendarState extends State<WeekCalendar> {
           const SizedBox(height: 2),
           Expanded(
             child: PageView.builder(
+              physics: const _CalendarSnapPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
               controller: _pages,
               onPageChanged: (p) {
                 HapticFeedback.selectionClick();
@@ -125,7 +156,12 @@ class _WeekCalendarState extends State<WeekCalendar> {
                           children: [
                             for (var i = 0; i < 7; i++)
                               Expanded(
-                                child: _cell(s, addDays(first, r * 7 + i), sel, today),
+                                child: _cell(
+                                  s,
+                                  addDays(first, r * 7 + i),
+                                  sel,
+                                  today,
+                                ),
                               ),
                           ],
                         ),
@@ -223,10 +259,10 @@ class _DayCell extends StatelessWidget {
     final fg = selected || darkFill
         ? Colors.white
         : wd == 0
-            ? K.red
-            : wd == 6
-                ? K.blue
-                : K.label;
+        ? K.red
+        : wd == 6
+        ? K.blue
+        : K.label;
 
     return Pressable(
       onTap: onTap,
@@ -234,11 +270,12 @@ class _DayCell extends StatelessWidget {
       scale: 0.85,
       child: LayoutBuilder(
         builder: (context, box) {
-          final size =
-              (math.min(box.maxWidth, box.maxHeight) - 4).clamp(18.0, 46.0).toDouble();
+          final size = (math.min(box.maxWidth, box.maxHeight) - 4)
+              .clamp(18.0, 46.0)
+              .toDouble();
           return Center(
             child: AnimatedContainer(
-              duration: Motion.med,
+              duration: Motion.navigation,
               curve: Motion.out,
               width: size,
               height: size,
@@ -247,7 +284,9 @@ class _DayCell extends StatelessWidget {
                 borderRadius: BorderRadius.circular(size * 0.3),
                 gradient: selected ? K.brand : null,
                 color: selected ? null : (fill ?? Colors.transparent),
-                boxShadow: selected ? K.glow(K.indigo, a: 0.4, blur: 12) : const [],
+                boxShadow: selected
+                    ? K.glow(K.indigo, a: 0.4, blur: 12)
+                    : const [],
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -256,7 +295,10 @@ class _DayCell extends StatelessWidget {
                   if (today && !selected && !darkFill)
                     GradientText('${date.day}', style: _numStyle(size, true))
                   else
-                    Text('${date.day}', style: _numStyle(size, today).copyWith(color: fg)),
+                    Text(
+                      '${date.day}',
+                      style: _numStyle(size, today).copyWith(color: fg),
+                    ),
                   if (today)
                     Positioned(
                       bottom: size * 0.13,
@@ -281,11 +323,11 @@ class _DayCell extends StatelessWidget {
 }
 
 TextStyle _numStyle(double size, bool bold) => TextStyle(
-      fontFamily: K.font,
-      fontSize: size * 0.38,
-      height: 1,
-      fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-    );
+  fontFamily: K.font,
+  fontSize: size * 0.38,
+  height: 1,
+  fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+);
 
 /// 선택 날짜 완료율: 바 / 원형 / 그래프(이번 주 7일)
 class RateView extends StatelessWidget {
@@ -299,7 +341,9 @@ class RateView extends StatelessWidget {
     final list = s.onDay(s.selectedDay);
     final done = list.where((t) => t.done).length;
     final r = list.isEmpty ? 0.0 : done / list.length;
-    final label = list.isEmpty ? '일정 없음' : '$done/${list.length} · ${(r * 100).round()}%';
+    final label = list.isEmpty
+        ? '일정 없음'
+        : '$done/${list.length} · ${(r * 100).round()}%';
 
     final Widget visual = switch (s.rateStyle) {
       RateStyle.bar => Expanded(child: _Bar(value: r)),
@@ -332,11 +376,14 @@ class _Bar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 8,
-      decoration: BoxDecoration(color: K.fill2, borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(
+        color: K.fill2,
+        borderRadius: BorderRadius.circular(4),
+      ),
       alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         tween: Tween<double>(end: value),
-        duration: const Duration(milliseconds: 650),
+        duration: Motion.chart,
         curve: Motion.spring,
         builder: (context, v, _) => FractionallySizedBox(
           widthFactor: v.clamp(0.0, 1.0),
@@ -365,29 +412,41 @@ class _WeekGraph extends StatelessWidget {
       children: [
         for (var i = 0; i < 7; i++)
           Expanded(
-            child: Builder(builder: (context) {
-              final d = addDays(start, i);
-              final v = state.dayRate(d);
-              final on = sameDay(d, state.selectedDay);
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(end: v),
-                  duration: const Duration(milliseconds: 600),
-                  curve: Motion.spring,
-                  builder: (context, x, _) => Container(
-                    height: 4 + 16 * x.clamp(0.0, 1.0),
-                    decoration: BoxDecoration(
-                      gradient: on ? K.brand : null,
-                      color: on ? null : K.indigo.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(3),
+            child: Builder(
+              builder: (context) {
+                final d = addDays(start, i);
+                final v = state.dayRate(d);
+                final on = sameDay(d, state.selectedDay);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween<double>(end: v),
+                    duration: Motion.chart,
+                    curve: Motion.spring,
+                    builder: (context, x, _) => Container(
+                      height: 4 + 16 * x.clamp(0.0, 1.0),
+                      decoration: BoxDecoration(
+                        gradient: on ? K.brand : null,
+                        color: on ? null : K.indigo.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                   ),
-                ),
-              );
-            }),
+                );
+              },
+            ),
           ),
       ],
     );
   }
+}
+
+class _CalendarSnapPhysics extends PageScrollPhysics {
+  const _CalendarSnapPhysics({super.parent});
+  @override
+  _CalendarSnapPhysics applyTo(ScrollPhysics? ancestor) =>
+      _CalendarSnapPhysics(parent: buildParent(ancestor));
+  @override
+  SpringDescription get spring =>
+      const SpringDescription(mass: 1, stiffness: 650, damping: 38);
 }

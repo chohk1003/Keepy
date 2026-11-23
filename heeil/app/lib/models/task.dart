@@ -4,10 +4,10 @@ import 'companion.dart';
 
 /// UI설계서 07: #과제, #수업, #팀 프로젝트, #개인
 enum TaskTag {
-  assignment('과제', [Color(0xFF63816F), Color(0xFF63816F)]),
-  lecture('수업', [Color(0xFF897CA3), Color(0xFF897CA3)]),
-  team('팀 프로젝트', [Color(0xFFB68C46), Color(0xFFB68C46)]),
-  personal('개인', [Color(0xFF609697), Color(0xFF609697)]);
+  assignment('과제', [Color(0xFF4568C4), Color(0xFF4568C4)]),
+  lecture('수업', [Color(0xFF7952D6), Color(0xFF7952D6)]),
+  team('팀 프로젝트', [Color(0xFFCE572B), Color(0xFFCE572B)]),
+  personal('개인', [Color(0xFF007F93), Color(0xFF007F93)]);
 
   const TaskTag(this.label, this.colors);
 

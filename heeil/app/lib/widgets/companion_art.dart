@@ -7,9 +7,9 @@ import '../models/companion.dart';
 import '../theme.dart';
 
 Color activityColor(ActivityKind activity) => switch (activity) {
-  ActivityKind.study => const Color(0xFF897CA3),
-  ActivityKind.teamwork => const Color(0xFFB68C46),
-  ActivityKind.life => const Color(0xFF609697),
+  ActivityKind.study => const Color(0xFF7952D6),
+  ActivityKind.teamwork => const Color(0xFFCE572B),
+  ActivityKind.life => const Color(0xFF007F93),
   ActivityKind.other => K.blue,
 };
 

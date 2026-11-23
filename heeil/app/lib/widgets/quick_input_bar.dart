@@ -27,13 +27,14 @@ class QuickInputBar extends StatefulWidget {
   final String? dueLabel;
 
   /// 칩이 접혀 있을 때 높이 (배치 계산용)
-  static const height = 66.0;
+  static const height = 54.0;
 
   @override
   State<QuickInputBar> createState() => _QuickInputBarState();
 }
 
-class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateMixin {
+class _QuickInputBarState extends State<QuickInputBar>
+    with TickerProviderStateMixin {
   static const maxLen = 100;
 
   final _ctrl = TextEditingController();
@@ -42,11 +43,11 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
 
   late final AnimationController _shake = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: Motion.feedback,
   );
   late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 380),
+    duration: Motion.feedback,
   );
 
   @override
@@ -96,12 +97,15 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
           return Transform.translate(offset: Offset(dx, 0), child: child);
         },
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: Glass(
-            radius: 28,
-            opacity: 0.82,
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0EDFF),
+              border: Border.all(color: const Color(0xFFB4A4F4), width: 1.5),
+              borderRadius: BorderRadius.circular(22),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(3),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -109,7 +113,9 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
                     duration: Motion.med,
                     curve: Motion.spring,
                     alignment: Alignment.bottomCenter,
-                    child: open ? _chips() : const SizedBox(width: double.infinity),
+                    child: open
+                        ? _chips()
+                        : const SizedBox(width: double.infinity),
                   ),
                   Row(
                     children: [
@@ -128,27 +134,29 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
                           child: IgnorePointer(
                             ignoring: !open,
                             child: TextField(
-                          controller: _ctrl,
-                          focusNode: _focus,
-                          style: T.body,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _submit(),
-                          onEditingComplete: () {}, // 전송 후 키보드 유지
-                          onTapOutside: (_) => _focus.unfocus(),
-                          inputFormatters: [LengthLimitingTextInputFormatter(maxLen)],
-                          decoration: InputDecoration(
-                            hintText: widget.dueLabel == null
-                                ? '새로운 할 일'
-                                : '${widget.dueLabel} 할 일',
-                            hintStyle: T.body.copyWith(color: K.label3),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 12,
+                              controller: _ctrl,
+                              focusNode: _focus,
+                              style: T.body,
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) => _submit(),
+                              onEditingComplete: () {}, // 전송 후 키보드 유지
+                              onTapOutside: (_) => _focus.unfocus(),
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(maxLen),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: widget.dueLabel == null
+                                    ? '새로운 할 일'
+                                    : '${widget.dueLabel} 할 일',
+                                hintStyle: T.body.copyWith(color: K.label2),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
                           ),
                         ),
                       ),
@@ -179,16 +187,26 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
             if (widget.dueLabel != null)
               Container(
                 margin: const EdgeInsets.only(right: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   gradient: K.brand2,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
-                    const Icon(CupertinoIcons.calendar, size: 14, color: Colors.white),
+                    const Icon(
+                      CupertinoIcons.calendar,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 4),
-                    Text(widget.dueLabel!, style: T.caption.copyWith(color: Colors.white)),
+                    Text(
+                      widget.dueLabel!,
+                      style: T.caption.copyWith(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
@@ -207,7 +225,7 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Text(
                 '${_ctrl.text.characters.length}/$maxLen',
-                style: T.caption.copyWith(color: K.label3),
+                style: T.caption.copyWith(color: K.label2),
               ),
             ),
           ],
@@ -219,7 +237,12 @@ class _QuickInputBarState extends State<QuickInputBar> with TickerProviderStateM
 
 /// 선택형 태그 칩
 class TagToggle extends StatelessWidget {
-  const TagToggle({super.key, required this.tag, required this.selected, required this.onTap});
+  const TagToggle({
+    super.key,
+    required this.tag,
+    required this.selected,
+    required this.onTap,
+  });
 
   final TaskTag tag;
   final bool selected;
@@ -328,7 +351,9 @@ class _SendButton extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: enabled ? K.brand : null,
               color: enabled ? null : K.fill2,
-              boxShadow: enabled ? K.glow(K.indigo, a: 0.4, blur: 12) : const [],
+              boxShadow: enabled
+                  ? K.glow(K.indigo, a: 0.4, blur: 12)
+                  : const [],
             ),
             child: AnimatedRotation(
               turns: enabled ? 0 : -0.25,
@@ -337,7 +362,7 @@ class _SendButton extends StatelessWidget {
               child: Icon(
                 CupertinoIcons.arrow_up,
                 size: 20,
-                color: enabled ? Colors.white : K.label3,
+                color: enabled ? Colors.white : K.label2,
               ),
             ),
           ),

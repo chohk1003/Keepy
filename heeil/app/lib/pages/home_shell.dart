@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../state/app_state.dart';
+import '../theme.dart';
 import '../widgets/glass_tab_bar.dart';
 import 'date_page.dart';
 import 'main_page.dart';
@@ -35,7 +36,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       AppScope.read(context).flush();
     }
   }
@@ -44,7 +46,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (i == _index) return;
     _pages.animateToPage(
       i,
-      duration: const Duration(milliseconds: 380),
+      duration: Motion.navigation,
       curve: Curves.easeOutCubic,
     );
   }
@@ -56,7 +58,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       extendBody: true,
       body: PageView(
         controller: _pages,
-        physics: const PageScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const _QuickSnapPhysics(parent: ClampingScrollPhysics()),
         onPageChanged: (i) {
           HapticFeedback.selectionClick();
           FocusScope.of(context).unfocus();
@@ -74,4 +76,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             ),
     );
   }
+}
+
+class _QuickSnapPhysics extends PageScrollPhysics {
+  const _QuickSnapPhysics({super.parent});
+  @override
+  _QuickSnapPhysics applyTo(ScrollPhysics? ancestor) =>
+      _QuickSnapPhysics(parent: buildParent(ancestor));
+  @override
+  SpringDescription get spring =>
+      const SpringDescription(mass: 1, stiffness: 650, damping: 38);
 }

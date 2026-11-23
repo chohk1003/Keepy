@@ -18,10 +18,11 @@ class _CompanionHeaderState extends State<CompanionHeader>
     with SingleTickerProviderStateMixin {
   double _pull = 0;
   bool _opening = false;
+  bool _canPull = false;
   int? _lastPending;
   late final AnimationController _reaction = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 550),
+    duration: Motion.celebration,
   );
   @override
   void dispose() {
@@ -35,7 +36,12 @@ class _CompanionHeaderState extends State<CompanionHeader>
     setState(() => _pull = 0);
     final state = AppScope.read(context);
     FocusScope.of(context).unfocus();
-    await openCompanionRoom(context, state);
+    final box = context.findRenderObject();
+    // 레이아웃 전이면 화면 위 가장자리(높이 0)에서 펼친다.
+    final origin = box is RenderBox && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : Offset.zero & Size(MediaQuery.sizeOf(context).width, 0);
+    await openCompanionRoom(context, state, origin: origin);
     _opening = false;
   }
 
@@ -59,10 +65,18 @@ class _CompanionHeaderState extends State<CompanionHeader>
         key: const Key('companion-header'),
         behavior: HitTestBehavior.opaque,
         onTap: _open,
-        onVerticalDragUpdate: (d) =>
-            setState(() => _pull = (_pull + d.delta.dy).clamp(0, 90)),
+        onVerticalDragDown: (_) {
+          final position = Scrollable.maybeOf(context)?.position;
+          _canPull =
+              position == null ||
+              (!position.isScrollingNotifier.value &&
+                  position.pixels <= position.minScrollExtent + .5);
+        },
+        onVerticalDragUpdate: (d) => setState(
+          () => _pull = _canPull ? (_pull + d.delta.dy).clamp(0, 110) : 0,
+        ),
         onVerticalDragEnd: (d) {
-          if (_pull > 36 || (d.primaryVelocity ?? 0) > 500) {
+          if (_canPull && _pull >= 72) {
             _open();
           } else {
             setState(() => _pull = 0);
@@ -70,7 +84,7 @@ class _CompanionHeaderState extends State<CompanionHeader>
         },
         onVerticalDragCancel: () => setState(() => _pull = 0),
         child: Container(
-          height: 224 + MediaQuery.paddingOf(context).top,
+          height: 188 + MediaQuery.paddingOf(context).top + _pull * .2,
           color: K.room,
           child: Stack(
             children: [
@@ -80,13 +94,20 @@ class _CompanionHeaderState extends State<CompanionHeader>
                 child: Text('Keepy', style: T.title3.copyWith(color: K.blue)),
               ),
               Positioned(
-                top: MediaQuery.paddingOf(context).top + 12,
-                right: 15,
-                child: ExcludeSemantics(
-                  child: Icon(
+                top: MediaQuery.paddingOf(context).top + 4,
+                right: 8,
+                child: IconButton(
+                  key: const Key('room-open'),
+                  tooltip: '캐릭터 방 열기',
+                  onPressed: _open,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 48,
+                    height: 48,
+                  ),
+                  icon: const Icon(
                     CupertinoIcons.chevron_down,
-                    size: 19,
-                    color: K.blue.withValues(alpha: .55),
+                    size: 24,
+                    color: K.ink,
                   ),
                 ),
               ),
@@ -99,10 +120,13 @@ class _CompanionHeaderState extends State<CompanionHeader>
                   offset: Offset(0, _pull * .16),
                   child: AnimatedBuilder(
                     animation: _reaction,
-                    builder: (_, _) => CompanionArt(
-                      kind: state.companion,
-                      faceOnly: true,
-                      joy: _reaction.isAnimating ? 1 - _reaction.value : 0,
+                    builder: (_, _) => Hero(
+                      tag: 'keepy-companion',
+                      child: CompanionArt(
+                        kind: state.companion,
+                        faceOnly: true,
+                        joy: _reaction.isAnimating ? 1 - _reaction.value : 0,
+                      ),
                     ),
                   ),
                 ),
@@ -113,12 +137,7 @@ class _CompanionHeaderState extends State<CompanionHeader>
                 bottom: 0,
                 height: 28,
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.elliptical(170, 28),
-                    ),
-                  ),
+                  decoration: const BoxDecoration(color: Colors.white),
                 ),
               ),
               Positioned(

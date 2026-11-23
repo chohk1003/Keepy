@@ -23,7 +23,8 @@ class DiffSliverList<E> extends StatefulWidget {
 }
 
 class _DiffSliverListState<E> extends State<DiffSliverList<E>> {
-  GlobalKey<SliverAnimatedListState> _listKey = GlobalKey<SliverAnimatedListState>();
+  GlobalKey<SliverAnimatedListState> _listKey =
+      GlobalKey<SliverAnimatedListState>();
   late List<E> _items = List.of(widget.items);
 
   @override
@@ -41,8 +42,14 @@ class _DiffSliverListState<E> extends State<DiffSliverList<E>> {
     final prevIds = _items.map(idOf).toSet();
 
     // 남는 항목의 상대 순서가 바뀌었으면 애니메이션 없이 새로 그림
-    final keptPrev = [for (final e in _items) if (nextIds.contains(idOf(e))) idOf(e)];
-    final keptNext = [for (final e in next) if (prevIds.contains(idOf(e))) idOf(e)];
+    final keptPrev = [
+      for (final e in _items)
+        if (nextIds.contains(idOf(e))) idOf(e),
+    ];
+    final keptNext = [
+      for (final e in next)
+        if (prevIds.contains(idOf(e))) idOf(e),
+    ];
     if (!listEquals(keptPrev, keptNext)) {
       _items = List.of(next);
       _listKey = GlobalKey<SliverAnimatedListState>();
@@ -56,10 +63,8 @@ class _DiffSliverListState<E> extends State<DiffSliverList<E>> {
       _items.removeAt(i);
       list.removeItem(
         i,
-        (context, a) => _Removing(
-          animation: a,
-          child: widget.itemBuilder(context, item),
-        ),
+        (context, a) =>
+            _Removing(animation: a, child: widget.itemBuilder(context, item)),
         duration: Motion.med,
       );
     }
@@ -69,7 +74,7 @@ class _DiffSliverListState<E> extends State<DiffSliverList<E>> {
       final id = idOf(next[i]);
       if (prevIds.contains(id)) continue;
       _items.insert(i, next[i]);
-      list.insertItem(i, duration: Motion.slow);
+      list.insertItem(i, duration: Motion.feedback);
     }
 
     // 3) 최신 객체로 교체 (id·순서 동일)
@@ -109,11 +114,15 @@ class _Inserting extends StatelessWidget {
       child: FadeTransition(
         opacity: curved,
         child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, -0.25), end: Offset.zero)
-              .animate(CurvedAnimation(parent: animation, curve: Motion.spring)),
+          position: Tween<Offset>(
+            begin: const Offset(0, -0.25),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: animation, curve: Motion.spring)),
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.94, end: 1)
-                .animate(CurvedAnimation(parent: animation, curve: Motion.spring)),
+            scale: Tween<double>(
+              begin: 0.94,
+              end: 1,
+            ).animate(CurvedAnimation(parent: animation, curve: Motion.spring)),
             child: child,
           ),
         ),
@@ -130,7 +139,10 @@ class _Removing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final curved = CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeInOutCubic,
+    );
     return IgnorePointer(
       child: SizeTransition(
         sizeFactor: curved,

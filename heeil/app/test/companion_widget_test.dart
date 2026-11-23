@@ -187,9 +187,7 @@ void main() {
       find.byKey(const Key('task-title-editor')),
       '수정한 공부',
     );
-    await tester.tap(
-      find.byWidgetPredicate((w) => w is TagToggle && w.tag == TaskTag.team),
-    );
+    await tester.tap(find.byKey(const ValueKey('editor-tag-team')));
     await tester.ensureVisible(find.byKey(const Key('editor-calendar-toggle')));
     await tester.tap(find.byKey(const Key('editor-calendar-toggle')));
     await advance(tester);

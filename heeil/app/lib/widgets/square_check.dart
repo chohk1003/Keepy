@@ -15,7 +15,11 @@ class SquareCheck extends StatefulWidget {
     required this.value,
     required this.onTap,
     this.size = 26,
-    this.colors = const [Color(0xFF0A84FF), Color(0xFF5E5CE6), Color(0xFFBF5AF2)],
+    this.colors = const [
+      Color(0xFF0A84FF),
+      Color(0xFF5E5CE6),
+      Color(0xFFBF5AF2),
+    ],
   });
 
   final bool value;
@@ -27,15 +31,16 @@ class SquareCheck extends StatefulWidget {
   State<SquareCheck> createState() => _SquareCheckState();
 }
 
-class _SquareCheckState extends State<SquareCheck> with TickerProviderStateMixin {
+class _SquareCheckState extends State<SquareCheck>
+    with TickerProviderStateMixin {
   late final AnimationController _check = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 380),
+    duration: Motion.feedback,
     value: widget.value ? 1 : 0,
   );
   late final AnimationController _burst = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 560),
+    duration: Motion.chart,
   );
   bool _pressed = false;
 
@@ -82,7 +87,7 @@ class _SquareCheckState extends State<SquareCheck> with TickerProviderStateMixin
           height: 48,
           child: AnimatedScale(
             scale: _pressed ? 0.78 : 1,
-            duration: _pressed ? const Duration(milliseconds: 90) : Motion.slow,
+            duration: _pressed ? Motion.press : Motion.feedback,
             curve: _pressed ? Curves.easeOut : Motion.spring,
             child: AnimatedBuilder(
               animation: Listenable.merge([_check, _burst]),
@@ -152,14 +157,22 @@ class _CheckPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2
-          ..color = Color.lerp(K.gray3, colors.first, t)!.withValues(alpha: 1 - t * 0.9),
+          ..color = Color.lerp(
+            K.gray3,
+            colors.first,
+            t,
+          )!.withValues(alpha: 1 - t * 0.9),
       );
     }
 
     // 그라데이션 채움 (가운데서 튀어나옴)
     if (t > 0) {
       final grow = Curves.easeOutBack.transform(math.min(1, t * 1.6));
-      final fillRect = Rect.fromCenter(center: c, width: s * grow, height: s * grow);
+      final fillRect = Rect.fromCenter(
+        center: c,
+        width: s * grow,
+        height: s * grow,
+      );
       canvas.drawRRect(
         RRect.fromRectAndRadius(fillRect, Radius.circular(s * 0.3 * grow)),
         Paint()
@@ -181,7 +194,10 @@ class _CheckPainter extends CustomPainter {
         ..lineTo(rect.left + s * 0.74, rect.top + s * 0.34);
       final out = Path();
       for (final m in path.computeMetrics()) {
-        out.addPath(m.extractPath(0, m.length * Curves.easeOut.transform(draw)), Offset.zero);
+        out.addPath(
+          m.extractPath(0, m.length * Curves.easeOut.transform(draw)),
+          Offset.zero,
+        );
       }
       canvas.drawPath(
         out,
@@ -195,12 +211,16 @@ class _CheckPainter extends CustomPainter {
     }
   }
 
-  static List<double> _stops(int n) =>
-      [for (var i = 0; i < n; i++) n == 1 ? 0 : i / (n - 1)];
+  static List<double> _stops(int n) => [
+    for (var i = 0; i < n; i++) n == 1 ? 0 : i / (n - 1),
+  ];
 
   @override
   bool shouldRepaint(_CheckPainter old) =>
-      old.t != t || old.burst != burst || old.side != side || old.colors != colors;
+      old.t != t ||
+      old.burst != burst ||
+      old.side != side ||
+      old.colors != colors;
 }
 
 /// 제목 위로 취소선이 왼쪽부터 그어지는 텍스트
@@ -222,7 +242,7 @@ class StrikeText extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: struck ? 1 : 0),
-      duration: const Duration(milliseconds: 360),
+      duration: Motion.feedback,
       curve: Curves.easeOutCubic,
       builder: (context, p, _) {
         final s = style.copyWith(
