@@ -40,12 +40,12 @@ class EmptyState extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       K.blue.withValues(alpha: .14),
-                      K.room.withValues(alpha: .5),
+                      K.duck.withValues(alpha: .5),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(
+                child: Icon(
                   CupertinoIcons.checkmark_alt,
                   size: 28,
                   color: K.blue,

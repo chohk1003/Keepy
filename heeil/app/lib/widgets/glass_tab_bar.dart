@@ -36,7 +36,7 @@ class GlassTabBar extends StatelessWidget {
       opacity: 0.8,
       border: false,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(top: BorderSide(color: K.separator, width: 0.5)),
         ),
         padding: EdgeInsets.only(bottom: bottom),
@@ -60,7 +60,7 @@ class GlassTabBar extends StatelessWidget {
                       height: 30,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: K.room,
+                          color: K.duck,
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),

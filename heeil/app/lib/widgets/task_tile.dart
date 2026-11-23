@@ -455,7 +455,7 @@ class _TaskTileState extends State<TaskTile>
                                 key: ValueKey('check-${widget.task.id}'),
                                 value: _done,
                                 onTap: _check,
-                                colors: const [K.blue, K.blue],
+                                colors: [K.blue, K.blue],
                               ),
                               Expanded(
                                 child: Column(
@@ -493,7 +493,7 @@ class _TaskTileState extends State<TaskTile>
                                                 children: [
                                                   if (widget.status ==
                                                       TaskStatus.overdue)
-                                                    const _Meta(
+                                                    _Meta(
                                                       Pill(
                                                         '지연',
                                                         gradient: K.danger,
@@ -501,7 +501,7 @@ class _TaskTileState extends State<TaskTile>
                                                     ),
                                                   if (widget.status ==
                                                       TaskStatus.late)
-                                                    const _Meta(
+                                                    _Meta(
                                                       Pill(
                                                         '늦은 완료',
                                                         gradient: K.late,

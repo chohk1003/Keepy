@@ -95,17 +95,27 @@ class _KeepyBootState extends State<KeepyBoot> {
             children: [
               const SizedBox(width: 132, height: 132, child: CompanionArt()),
               const SizedBox(height: 10),
-              Text('Keepy', style: T.title2.copyWith(color: K.blue)),
+              Text('Keepy', style: T.title2.copyWith(color: K.onRoom)),
               const SizedBox(height: 10),
               if (_error == null)
-                Text('할 일을 불러오는 중', style: T.caption)
+                Text(
+                  '할 일을 불러오는 중',
+                  style: T.caption.copyWith(color: K.onRoomDim),
+                )
               else ...[
-                Text(_error!, style: T.caption, textAlign: TextAlign.center),
+                Text(
+                  _error!,
+                  style: T.caption.copyWith(color: K.onRoom),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 12),
                 FilledButton(
                   key: const Key('boot-retry'),
                   onPressed: _start,
-                  style: FilledButton.styleFrom(backgroundColor: K.blue),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: K.onRoomAccent,
+                    foregroundColor: K.room,
+                  ),
                   child: const Text('다시 시도'),
                 ),
               ],
@@ -133,13 +143,74 @@ Future<SyncStore?> _startFirebase(LocalStore local) async {
   }
 }
 
-class KeepyApp extends StatelessWidget {
+class KeepyApp extends StatefulWidget {
   const KeepyApp({super.key, required this.state});
 
   final AppState state;
 
   @override
+  State<KeepyApp> createState() => _KeepyAppState();
+}
+
+class _KeepyAppState extends State<KeepyApp> with WidgetsBindingObserver {
+  late bool _dark = _resolve();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.state.addListener(_sync);
+  }
+
+  @override
+  void dispose() {
+    widget.state.removeListener(_sync);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// MaterialApp 위에는 MediaQuery 가 없으므로 기기 설정을 직접 읽는다.
+  bool _resolve() => switch (widget.state.theme) {
+    AppTheme.system =>
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark,
+    AppTheme.light => false,
+    AppTheme.dark => true,
+  };
+
+  /// 설정이 바뀔 때마다 여기로 오지만, 팔레트가 실제로 뒤집힐 때만 다시 그린다
+  /// (할 일 하나 바뀔 때 앱 전체를 다시 세우지 않는다).
+  void _sync() {
+    if (_resolve() == _dark) return;
+    setState(() => _dark = _resolve());
+    // const 로 둔 위젯은 부모가 다시 그려도 건너뛰므로 옛 색이 남는다.
+    // 팔레트가 뒤집히는 순간에만 트리 전체를 한 번 더럽혀 색을 다시 읽게 한다
+    // (Element 를 버리지 않으므로 화면·입력 상태는 그대로다).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final root = WidgetsBinding.instance.rootElement;
+      if (root != null) _repaintAll(root);
+    });
+  }
+
+  static void _repaintAll(Element e) {
+    e.markNeedsBuild();
+    e.visitChildren(_repaintAll);
+  }
+
+  /// 기기의 라이트·다크가 바뀌면 (시스템을 따를 때) 다시 칠한다
+  @override
+  void didChangePlatformBrightness() => _sync();
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    // 팔레트는 뿌리에서 한 번 정한다 — 아래 화면들은 K·T 이름만 쓴다.
+    applyTone(_dark = _resolve());
+    SystemChrome.setSystemUIOverlayStyle(
+      (_dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+    );
     return AppScope(
       state: state,
       child: MaterialApp(

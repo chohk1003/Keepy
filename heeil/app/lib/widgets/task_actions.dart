@@ -93,13 +93,13 @@ class SectionHeader extends StatelessWidget {
     this.text,
     this.count, {
     super.key,
-    this.color = K.label2,
+    this.color,
     this.trailing,
   });
 
   final String text;
   final int count;
-  final Color color;
+  final Color? color;
   final Widget? trailing;
 
   @override
@@ -116,7 +116,7 @@ class SectionHeader extends StatelessWidget {
                   Text(
                     text,
                     style: T.caption.copyWith(
-                      color: color,
+                      color: color ?? K.label2,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -124,7 +124,7 @@ class SectionHeader extends StatelessWidget {
                   RollingText(
                     '$count',
                     style: T.caption.copyWith(
-                      color: color.withValues(alpha: .7),
+                      color: (color ?? K.label2).withValues(alpha: .7),
                       fontWeight: FontWeight.w700,
                     ),
                   ),

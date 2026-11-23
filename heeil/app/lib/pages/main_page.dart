@@ -124,7 +124,7 @@ class _MainPageState extends State<MainPage> {
                           child: AnimatedRotation(
                             turns: _doneOpen ? 0 : -0.25,
                             duration: Motion.feedback,
-                            child: const Icon(
+                            child: Icon(
                               CupertinoIcons.chevron_down,
                               size: 13,
                               color: K.label2,
@@ -335,7 +335,7 @@ class _FilterTabs extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 14),
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: K.separator, width: 0.8)),
       ),
       child: Row(

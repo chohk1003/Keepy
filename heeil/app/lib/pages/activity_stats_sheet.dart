@@ -22,7 +22,7 @@ Future<void> showActivityStats(
     duration: Motion.sheet,
     reverseDuration: Motion.dismiss,
   ),
-  backgroundColor: Colors.white,
+  backgroundColor: K.bg,
   builder: (_) => ActivityStatsSheet(state: state, initial: initial),
 );
 

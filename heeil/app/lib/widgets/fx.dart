@@ -71,18 +71,19 @@ class GradientText extends StatelessWidget {
     this.text, {
     super.key,
     required this.style,
-    this.gradient = K.brand,
+    this.gradient,
   });
 
   final String text;
   final TextStyle style;
-  final Gradient gradient;
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
     return ShaderMask(
       blendMode: BlendMode.srcIn,
-      shaderCallback: (r) => gradient.createShader(Offset.zero & r.size),
+      shaderCallback: (r) =>
+          (gradient ?? K.brand).createShader(Offset.zero & r.size),
       child: Text(text, style: style.copyWith(color: Colors.white)),
     );
   }
@@ -113,12 +114,17 @@ class Glass extends StatelessWidget {
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: DecoratedBox(
+          // 다크에서는 흐린 유리도 어두워진다 (바탕색을 그대로 쓴다)
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
+            color: (isDarkTone ? K.card : Colors.white).withValues(
+              alpha: opacity,
+            ),
             borderRadius: r,
             border: border
                 ? Border.all(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withValues(
+                      alpha: isDarkTone ? 0.14 : 0.7,
+                    ),
                     width: 0.8,
                   )
                 : null,
@@ -224,7 +230,7 @@ class ProgressRing extends StatelessWidget {
       Color(0xFF5E5CE6),
       Color(0xFFBF5AF2),
     ],
-    this.track = K.fill2,
+    this.track,
     this.child,
   });
 
@@ -232,7 +238,7 @@ class ProgressRing extends StatelessWidget {
   final double size;
   final double stroke;
   final List<Color> colors;
-  final Color track;
+  final Color? track;
   final Widget? child;
 
   @override
@@ -245,7 +251,7 @@ class ProgressRing extends StatelessWidget {
         width: size,
         height: size,
         child: CustomPaint(
-          painter: _RingPainter(v, stroke, colors, track),
+          painter: _RingPainter(v, stroke, colors, track ?? K.fill2),
           child: Center(child: child),
         ),
       ),

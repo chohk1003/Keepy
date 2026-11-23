@@ -500,7 +500,7 @@ void paintDuck(
 
 /// 오리 소품 색 — 넥타이는 우리 강조색(보라)으로 바꿔 맞춤.
 class DuckColors {
-  static const tie = K.blue;
+  static Color get tie => K.blue;
 }
 
 /// 오리 그림 위젯 (오늘 통계: 안경 + 학사모 + 엄지 척).

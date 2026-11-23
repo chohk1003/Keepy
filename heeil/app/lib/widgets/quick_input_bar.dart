@@ -289,7 +289,7 @@ class _RoundButton extends StatelessWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: const BoxDecoration(color: K.fill, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: K.fill, shape: BoxShape.circle),
         child: Icon(icon, size: 19, color: K.label2),
       ),
     );

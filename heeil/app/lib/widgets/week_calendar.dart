@@ -87,7 +87,7 @@ class _WeekCalendarState extends State<WeekCalendar> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: K.room,
+                      color: K.duck,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(

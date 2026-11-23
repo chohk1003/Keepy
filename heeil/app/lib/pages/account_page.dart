@@ -106,7 +106,7 @@ class _AccountPageState extends State<AccountPage> {
               Container(
                 width: 52,
                 height: 52,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: K.brand,
                   shape: BoxShape.circle,
                 ),

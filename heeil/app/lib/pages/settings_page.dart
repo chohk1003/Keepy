@@ -112,6 +112,28 @@ class SettingsPage extends StatelessWidget {
               ],
             ),
             _Section(
+              header: '화면',
+              children: [
+                _Block(
+                  icon: CupertinoIcons.circle_righthalf_fill,
+                  colors: const [Color(0xFF5E5CE6), Color(0xFF302547)],
+                  title: '테마',
+                  child: _Segmented<AppTheme>(
+                    key: const Key('setting-theme'),
+                    value: s.theme,
+                    items: {for (final t in AppTheme.values) t: themeLabel(t)},
+                    onChanged: s.setTheme,
+                  ),
+                ),
+                const _Row(
+                  icon: CupertinoIcons.paintbrush_fill,
+                  colors: [Color(0xFF8E8E93), Color(0xFF636366)],
+                  title: '다크에서는 캐릭터 방도 밤이 됩니다',
+                  muted: true,
+                ),
+              ],
+            ),
+            _Section(
               header: '분류',
               children: [
                 _Block(
@@ -211,7 +233,7 @@ class SettingsPage extends StatelessWidget {
       builder: (ctx) => Container(
         height: 300,
         padding: const EdgeInsets.only(top: 6),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: K.card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -321,7 +343,7 @@ class _Section extends StatelessWidget {
               children: [
                 for (var i = 0; i < children.length; i++) ...[
                   if (i > 0)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(left: 58),
                       child: Divider(
                         height: 0.5,
@@ -446,7 +468,7 @@ class _Row extends StatelessWidget {
               ),
             ?trailing,
             if (chevron)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(left: 6),
                 child: Icon(
                   CupertinoIcons.chevron_right,
@@ -510,6 +532,7 @@ class _Block extends StatelessWidget {
 
 class _Segmented<V extends Object> extends StatelessWidget {
   const _Segmented({
+    super.key,
     required this.value,
     required this.items,
     required this.onChanged,
@@ -538,6 +561,8 @@ class _Segmented<V extends Object> extends StatelessWidget {
       );
     }
     return CupertinoSlidingSegmentedControl<V>(
+      thumbColor: K.card,
+      backgroundColor: K.fill,
       groupValue: value,
       onValueChanged: (v) {
         if (v == null) return;
