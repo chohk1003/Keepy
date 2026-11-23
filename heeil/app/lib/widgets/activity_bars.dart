@@ -21,6 +21,20 @@ class StatRow {
   final int total;
 }
 
+/// 헤더 오른쪽의 태그 막대가 방 아래로 **이동하며 넓어지는** 전환.
+///
+/// 두 자리의 폭이 달라 나는 중간 크기에서는 막대가 들어가지 않으므로,
+/// 날아가는 동안에는 도착할 모습을 한 장으로 그려 크기에 맞춰 줄인다.
+Widget statsHero({required Widget child}) => Hero(
+  tag: 'keepy-stats',
+  flightShuttleBuilder: (_, _, _, _, toContext) => FittedBox(
+    fit: BoxFit.contain,
+    alignment: Alignment.topLeft,
+    child: SizedBox(width: 320, child: (toContext.widget as Hero).child),
+  ),
+  child: child,
+);
+
 /// 그 날의 태그별 할 일 — 서윤님 '오늘 통계' 의 막대를 그대로 가져온 모양.
 ///
 /// 한 줄 = 라벨 + 막대 + `완료/전체`. 막대는 옅은 색으로 그 태그의 전체,
@@ -31,6 +45,7 @@ class StatBars extends StatelessWidget {
     required this.rows,
     this.emptyLabel = '이 날은 할 일이 없어요',
     this.maxRows = 5,
+    this.compact = false,
   });
 
   final List<StatRow> rows;
@@ -38,6 +53,9 @@ class StatBars extends StatelessWidget {
 
   /// 많은 순으로 이만큼만 (서윤님 구현도 상위 5개만 보여 준다)
   final int maxRows;
+
+  /// 캐릭터 영역용 — 카드 없이 작게. 분수를 빼고 막대만 남긴다.
+  final bool compact;
 
   /// 그 날의 태그별 통계를 막대 줄로 바꾼다 (미지정은 회색으로 맨 뒤)
   static List<StatRow> fromTags(Map<TaskTag?, ({int done, int total})> stats) {
@@ -61,7 +79,9 @@ class StatBars extends StatelessWidget {
       return Text(
         emptyLabel,
         key: const Key('stat-bars-empty'),
-        style: T.caption,
+        style: compact
+            ? T.caption.copyWith(fontSize: 10, color: K.onRoomDim)
+            : T.caption,
       );
     }
     final shown = rows.take(maxRows).toList();
@@ -71,8 +91,9 @@ class StatBars extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (final row in shown) _Bar(row: row, maximum: maximum),
-        if (rows.length > maxRows)
+        for (final row in shown)
+          _Bar(row: row, maximum: maximum, compact: compact),
+        if (rows.length > maxRows && !compact)
           Padding(
             padding: const EdgeInsets.only(top: 1),
             child: Text(
@@ -85,68 +106,81 @@ class StatBars extends StatelessWidget {
   }
 }
 
+/// 한 줄 — 라벨 + 얇은 직사각형 막대 (+ 넓은 자리에서는 `완료/전체`).
+///
+/// 막대는 세 겹이다: 아주 옅은 바탕(전체 중 이 태그가 아닌 몫) · 흐린 색(아직 못 끝낸
+/// 몫) · 네온 색(끝낸 몫). 흐린 쪽을 더 내려서 끝낸 몫만 눈에 들어오게 했다.
 class _Bar extends StatelessWidget {
-  const _Bar({required this.row, required this.maximum});
+  const _Bar({required this.row, required this.maximum, this.compact = false});
 
   final StatRow row;
   final int maximum;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final share = maximum == 0 ? 0.0 : row.total / maximum;
     final rate = row.total == 0 ? 0.0 : row.done / row.total;
+    final color = vivid(row.color);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: EdgeInsets.only(bottom: compact ? 3 : 4),
       child: Row(
+        key: compact ? Key('stat-bar-${row.id}') : null,
         children: [
           SizedBox(
-            width: 58,
+            width: compact ? 46 : 58,
             child: Text(
               row.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: T.caption.copyWith(
-                color: K.label,
+                fontSize: compact ? 10 : null,
+                color: compact ? K.onRoomDim : K.label,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: compact ? 5 : 6),
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                height: 8,
-                child: Stack(
-                  children: [
-                    Container(color: K.fill),
-                    FractionallySizedBox(
-                      widthFactor: share.clamp(0.0, 1.0),
-                      child: Container(
-                        color: row.color.withValues(alpha: .28),
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: rate.clamp(0.0, 1.0),
-                          heightFactor: 1,
-                          child: Container(color: row.color),
-                        ),
+            child: SizedBox(
+              height: compact ? 5 : 8,
+              child: Stack(
+                children: [
+                  ColoredBox(
+                    // 어두운 띠 위에서는 바탕을 흰색 쪽으로 아주 살짝만 띄운다
+                    color: compact
+                        ? const Color(0xFFFFFFFF).withValues(alpha: .13)
+                        : K.ink.withValues(alpha: .06),
+                    child: const SizedBox.expand(),
+                  ),
+                  FractionallySizedBox(
+                    widthFactor: share.clamp(0.0, 1.0),
+                    child: Container(
+                      color: color.withValues(alpha: compact ? .34 : .2),
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: rate.clamp(0.0, 1.0),
+                        heightFactor: 1,
+                        child: ColoredBox(color: color),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 30,
-            child: Text(
-              '${row.done}/${row.total}',
-              key: Key('stat-bar-${row.id}'),
-              textAlign: TextAlign.right,
-              style: T.caption.copyWith(fontWeight: FontWeight.w700),
+          if (!compact) ...[
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 30,
+              child: Text(
+                '${row.done}/${row.total}',
+                key: Key('stat-bar-${row.id}'),
+                textAlign: TextAlign.right,
+                style: T.caption.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -9,8 +9,8 @@ import 'duck_art.dart';
 ///
 /// 그 날의 완료율로 장면이 정해진다.
 enum DuckScene {
-  /// 50% 미만 (할 일 0개 포함) → 이제 막 일어난 아침 방: 파자마 오리가 베개를 끌고 멀뚱멀뚱
-  morning,
+  /// 50% 미만 (할 일 0개 포함) → 아직 자는 방: 파자마 오리가 이불을 덮고 쿨쿨
+  sleep,
 
   /// 50% 이상 → 책상: 셔츠·넥타이 오리가 노트북으로 일하는 중 (책·커피)
   work,
@@ -23,7 +23,7 @@ DuckScene duckSceneOf({required int done, required int total}) {
   final rate = total == 0 ? 0.0 : done / total;
   if (rate >= 1) return DuckScene.party;
   if (rate >= 0.5) return DuckScene.work;
-  return DuckScene.morning;
+  return DuckScene.sleep;
 }
 
 enum _Sun { rise, noon }
@@ -61,7 +61,7 @@ class _SceneGeo {
 /// 오리·비치볼 위치 계산 (프레임마다). 움직임은 수영장 파티에서만.
 class RoomSim extends ChangeNotifier {
   double time = 0;
-  DuckScene scene = DuckScene.morning;
+  DuckScene scene = DuckScene.sleep;
   bool night = false;
   Size size = Size.zero;
   double insetTop = 0;
@@ -185,8 +185,8 @@ class RoomPainter extends CustomPainter {
     if (size.isEmpty) return;
     final g = _SceneGeo(size, sim.insetTop, sim.insetBottom);
     switch (sim.scene) {
-      case DuckScene.morning:
-        _paintMorning(canvas, g, sim.time, night: sim.night);
+      case DuckScene.sleep:
+        _paintSleep(canvas, g, sim.time, night: sim.night);
       case DuckScene.work:
         _paintWork(canvas, g, sim.time, night: sim.night);
       case DuckScene.party:
@@ -509,11 +509,11 @@ class RoomPainter extends CustomPainter {
     );
   }
 
-  // ------------------------------------------------------------ 아침 방 (50% 미만)
+  // ------------------------------------------------------------ 자는 방 (50% 미만)
 
-  /// 이제 막 일어난 아침: 침대 앞에서 파자마·잠옷 모자 오리가 베개를 끌고 멀뚱멀뚱 서 있다.
-  /// 라이트: 커튼 양쪽 열림 + 막 뜬 해 / 다크: 어두운 방, 커튼 한쪽만 열림 + 막 뜬 해.
-  static void _paintMorning(
+  /// 아직 자는 중: 파자마·잠옷 모자 오리가 이불을 덮고 눈을 감았다 (머리 위로 Zzz).
+  /// 라이트: 커튼 양쪽 열림 + 막 뜬 해 / 다크: 어두운 방, 커튼 한쪽만 열림.
+  static void _paintSleep(
     Canvas c,
     _SceneGeo g,
     double t, {
@@ -594,6 +594,76 @@ class RoomPainter extends CustomPainter {
       stroke: const Color(0xFFE3D6C6),
       sw: 1.5,
     );
+    // 러그
+    c.drawOval(
+      Rect.fromCenter(
+        center: Offset(w * 0.6, feetY + 2),
+        width: ds * 2.2,
+        height: ds * 0.4,
+      ),
+      Paint()..color = const Color(0x73FFAABE),
+    );
+    if (night) _dim(c, g, 0.55);
+
+    // 창문 + 햇살
+    final wx = w * 0.5;
+    final wy = h * 0.15;
+    final ww = w * 0.42;
+    final wh = h * 0.22;
+    final beamL = night ? wx + ww * 0.55 : wx + ww * 0.15;
+    final beamR = wx + ww * 0.95;
+    c.drawPath(
+      Path()
+        ..moveTo(beamL, wy + wh)
+        ..lineTo(beamR, wy + wh)
+        ..lineTo(beamR - ww * 0.55, feetY)
+        ..lineTo(beamL - ww * 0.6, feetY)
+        ..close(),
+      Paint()
+        ..color = night ? const Color(0x29FFD296) : const Color(0x66FFECC8),
+    );
+    _window(
+      c,
+      wx,
+      wy,
+      ww,
+      wh,
+      t,
+      sun: _Sun.rise,
+      curtains: night ? _Curtains.half : _Curtains.open,
+      colors: night
+          ? (
+              const Color(0xFFB9728A),
+              const Color(0x73784B4B),
+              const Color(0xFF9A5570),
+            )
+          : (
+              const Color(0xFFFF9FB2),
+              const Color(0x73D65C7A),
+              const Color(0xFFE76F8E),
+            ),
+      dim: night,
+    );
+
+    // 침대 속 오리 — 베개에 머리를 기대고 눈을 감았다 (이불이 뒤에서 덮는다)
+    final dx = bx0 + w * 0.21;
+    final dy = bb - k * 13 - ds * 0.26;
+    paintDuck(
+      c,
+      Offset(dx, dy),
+      ds * 0.84,
+      time: t,
+      look: DuckLook(
+        pajamas: true,
+        nightcap: true,
+        bedhead: true,
+        sleepy: true,
+        wing: DuckWing.down,
+        // 눈은 계속 감은 채, 숨 쉬듯 아주 조금 흔들린다
+        blink: true,
+        tilt: -0.2 + math.sin(t * 0.8) * 0.02,
+      ),
+    );
     // 이불: 부풀어 오른 채 흐트러짐 + 접힌 시트
     final t0 = bx0 + w * 0.17;
     final t1 = bx1 - w * 0.04;
@@ -650,85 +720,27 @@ class RoomPainter extends CustomPainter {
       ..close();
     c.drawPath(sheet, Paint()..color = const Color(0xFFFFFFFF));
     c.drawPath(sheet, _line(const Color(0xFFE3D6C6), 1.5));
-    // 러그
-    c.drawOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.6, feetY + 2),
-        width: ds * 2.2,
-        height: ds * 0.4,
-      ),
-      Paint()..color = const Color(0x73FFAABE),
-    );
-    if (night) _dim(c, g, 0.55);
-
-    // 창문 + 햇살
-    final wx = w * 0.5;
-    final wy = h * 0.15;
-    final ww = w * 0.42;
-    final wh = h * 0.22;
-    final beamL = night ? wx + ww * 0.55 : wx + ww * 0.15;
-    final beamR = wx + ww * 0.95;
-    c.drawPath(
-      Path()
-        ..moveTo(beamL, wy + wh)
-        ..lineTo(beamR, wy + wh)
-        ..lineTo(beamR - ww * 0.55, feetY)
-        ..lineTo(beamL - ww * 0.6, feetY)
-        ..close(),
-      Paint()
-        ..color = night ? const Color(0x29FFD296) : const Color(0x66FFECC8),
-    );
-    _window(
-      c,
-      wx,
-      wy,
-      ww,
-      wh,
-      t,
-      sun: _Sun.rise,
-      curtains: night ? _Curtains.half : _Curtains.open,
-      colors: night
-          ? (
-              const Color(0xFFB9728A),
-              const Color(0x73784B4B),
-              const Color(0xFF9A5570),
-            )
-          : (
-              const Color(0xFFFF9FB2),
-              const Color(0x73D65C7A),
-              const Color(0xFFE76F8E),
-            ),
-      dim: night,
-    );
-
-    // 오리
-    final dx = w * 0.66;
-    final dy = feetY - ds * 0.455;
-    c.drawOval(
-      Rect.fromCenter(
-        center: Offset(dx - ds * 0.1, feetY + 3),
-        width: ds,
-        height: ds * 0.14,
-      ),
-      Paint()..color = const Color(0x14000000),
-    );
-    paintDuck(
-      c,
-      Offset(dx, dy),
-      ds,
-      time: t,
-      look: DuckLook(
-        feet: true,
-        pajamas: true,
-        nightcap: true,
-        bedhead: true,
-        sleepy: true,
-        pillow: true,
-        wing: DuckWing.down,
-        blink: (t % 5) < 0.18,
-        tilt: math.sin(t * 1.1) * 0.025,
-      ),
-    );
+    // Zzz — 머리 위로 하나씩 떠올라 사라진다
+    final zc = night ? const Color(0xFFFFFFFF) : const Color(0xFF8891A8);
+    final zp = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    for (var i = 0; i < 3; i++) {
+      final phase = (t * 0.4 + i * 0.34) % 1;
+      final zs = ds * (0.07 + 0.02 * i);
+      final zx = dx + ds * (0.3 + 0.12 * i) + phase * ds * 0.1;
+      final zy = dy - ds * 0.42 - phase * ds * 0.45;
+      c.drawPath(
+        Path()
+          ..moveTo(zx, zy)
+          ..lineTo(zx + zs, zy)
+          ..lineTo(zx, zy + zs)
+          ..lineTo(zx + zs, zy + zs),
+        zp..color = zc.withValues(alpha: (1 - phase) * 0.8),
+      );
+    }
   }
 
   // ------------------------------------------------------------ 책상 (50% 이상)

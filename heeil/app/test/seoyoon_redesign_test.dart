@@ -10,23 +10,24 @@ import 'companion_widget_test.dart' show launch, advance;
 /// 서윤님 v0.7.0 디자인 이식분 — 헤더 일일 통계, 방의 주간 그래프·장면 단계,
 /// 완료 섹션 접기·비우기.
 void main() {
-  testWidgets('헤더 오른쪽에 오늘의 태그별 막대가 뜨고 완료하면 숫자가 오른다', (tester) async {
+  testWidgets('헤더 오른쪽에 오늘의 태그별 막대가 뜨고 완료하면 완료율이 오른다', (tester) async {
     final state = await launch(tester);
     // launch 가 넣어 둔 '오늘의 공부'(과제 태그, 오늘 기한) 하나가 학습으로 잡힌다
     expect(find.byKey(const Key('stat-bars')), findsOneWidget);
+    // 헤더 막대는 분수 없이 막대만 (줄 자체에 키가 붙는다)
     expect(find.byKey(const Key('stat-bar-assignment')), findsOneWidget);
-    expect(find.text('0/1'), findsOneWidget);
+    expect(find.text('0/1 · 0%'), findsOneWidget);
 
     state.setDone(state.tasks.firstWhere((t) => t.title == '오늘의 공부'), true);
     await advance(tester);
-    expect(find.text('1/1'), findsOneWidget);
+    expect(find.text('1/1 · 100%'), findsOneWidget);
     expect(find.byKey(const Key('header-rate')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('방의 주간 그래프 막대를 누르면 그 날짜로 넘어간다', (tester) async {
     final state = await launch(tester);
-    await tester.tap(find.byKey(const Key('room-open')));
+    await tester.tap(find.byKey(const Key('companion-header')));
     await advance(tester);
     final today = dayOf(state.now);
     final start = weekStart(today);
@@ -42,7 +43,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('완료율에 따라 아침 방 → 책상 → 수영장으로 장면이 바뀐다', (tester) async {
+  testWidgets('완료율에 따라 자는 방 → 책상 → 수영장으로 장면이 바뀐다', (tester) async {
     final state = await launch(tester);
     final today = dayOf(state.now);
     for (final t in state.tasks.toList()) {
@@ -51,9 +52,9 @@ void main() {
     final first = state.add('보고서', due: today, tags: {TaskTag.assignment});
     final second = state.add('장보기', due: today, tags: {TaskTag.personal});
     await advance(tester);
-    await tester.tap(find.byKey(const Key('room-open')));
+    await tester.tap(find.byKey(const Key('companion-header')));
     await advance(tester);
-    expect(find.byKey(const ValueKey('room-scene-morning')), findsOneWidget);
+    expect(find.byKey(const ValueKey('room-scene-sleep')), findsOneWidget);
 
     state.setDone(first, true);
     await advance(tester);

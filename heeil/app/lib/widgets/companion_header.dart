@@ -18,6 +18,9 @@ class CompanionHeader extends StatefulWidget {
 
 class _CompanionHeaderState extends State<CompanionHeader>
     with SingleTickerProviderStateMixin {
+  /// 상반신 그림의 폭 (높이는 이 값 × [CompanionArt.bustRatio])
+  static const _bust = 148.0;
+
   double _pull = 0;
   bool _opening = false;
   bool _canPull = false;
@@ -87,67 +90,50 @@ class _CompanionHeaderState extends State<CompanionHeader>
         },
         onVerticalDragCancel: () => setState(() => _pull = 0),
         child: Container(
-          height: 188 + MediaQuery.paddingOf(context).top + _pull * .2,
+          height: 148 + MediaQuery.paddingOf(context).top + _pull * .2,
           clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: K.room,
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
           ),
           child: Stack(
             children: [
+              // 캐릭터 뒤 은은한 빛 — 어두운 띠에서 오리가 조명을 받는 것처럼
               Positioned(
-                top: MediaQuery.paddingOf(context).top + 14,
-                left: 22,
-                child: Text('Keepy', style: T.title3.copyWith(color: K.blue)),
-              ),
-              Positioned(
-                top: MediaQuery.paddingOf(context).top + 4,
-                right: 8,
-                child: IconButton(
-                  key: const Key('room-open'),
-                  tooltip: '캐릭터 방 열기',
-                  onPressed: _open,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 48,
-                    height: 48,
-                  ),
-                  icon: const Icon(
-                    CupertinoIcons.chevron_down,
-                    size: 24,
-                    color: K.ink,
-                  ),
-                ),
-              ),
-              // 오른쪽: 오늘 통계 카드 (흰 카드가 노란 바탕 위에 떠 보이게)
-              Positioned(
-                left: 114,
-                right: 14,
-                top: MediaQuery.paddingOf(context).top + 46,
-                bottom: 30,
-                child: Container(
+                left: -34,
+                bottom: -40,
+                width: _bust + 80,
+                height: _bust + 60,
+                child: const DecoratedBox(
                   decoration: BoxDecoration(
-                    color: K.card,
-                    borderRadius: BorderRadius.circular(K.radiusCard),
-                    border: Border.all(color: K.hairline, width: 0.8),
-                    boxShadow: K.cardShadow(.5),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: 228,
-                      child: _TodayStats(state: state),
+                    gradient: RadialGradient(
+                      colors: [Color(0x1FFFFFFF), Color(0x00FFFFFF)],
                     ),
                   ),
                 ),
               ),
-              // 왼쪽: 캐릭터 — 카드 옆에 앉아 아래쪽만 목록 띠에 살짝 가린다
               Positioned(
-                left: 6,
-                bottom: 2,
-                width: 116,
-                height: 116,
+                top: MediaQuery.paddingOf(context).top + 8,
+                left: 22,
+                child: Text(
+                  'Keepy',
+                  style: T.title3.copyWith(color: K.onRoom, letterSpacing: 0.2),
+                ),
+              ),
+              // 오른쪽 아래: 오늘 통계 — 카드 없이 바탕 위에 바로 올린다
+              Positioned(
+                left: _bust + 4,
+                right: 16,
+                bottom: 14,
+                child: _TodayStats(state: state),
+              ),
+              // 왼쪽: 캐릭터 — 얼굴·상반신만. 가슴 아래는 띠 끝에서 잘려
+              // 목록 위로 빼꼼 내다보는 구도가 된다.
+              Positioned(
+                left: 0,
+                bottom: 0,
+                width: _bust,
+                height: _bust * CompanionArt.bustRatio,
                 child: Transform.translate(
                   offset: Offset(0, _pull * .16),
                   child: AnimatedBuilder(
@@ -155,6 +141,7 @@ class _CompanionHeaderState extends State<CompanionHeader>
                     builder: (_, _) => Hero(
                       tag: 'keepy-companion',
                       child: CompanionArt(
+                        bust: true,
                         joy: _reaction.isAnimating ? 1 - _reaction.value : 0,
                       ),
                     ),
@@ -192,26 +179,49 @@ class _TodayStats extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // 할 일이 많은 날에는 '10/10 · 100%' 처럼 길어지므로 둘 다 줄어들 수 있게
         Row(
           children: [
-            Text(
-              '${today.month}월 ${today.day}일',
-              key: const Key('header-date'),
-              style: T.headline.copyWith(fontWeight: FontWeight.w700),
+            Flexible(
+              child: Text(
+                '${today.month}월 ${today.day}일',
+                key: const Key('header-date'),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+                style: T.caption.copyWith(
+                  color: K.onRoom,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
             const SizedBox(width: 6),
-            Text(
-              total == 0 ? '할 일 0개' : '$done/$total · $percent%',
-              key: const Key('header-rate'),
-              style: T.caption.copyWith(
-                color: K.blue,
-                fontWeight: FontWeight.w700,
+            Flexible(
+              child: Text(
+                total == 0 ? '할 일 0개' : '$done/$total · $percent%',
+                key: const Key('header-rate'),
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+                style: T.caption.copyWith(
+                  fontSize: 10,
+                  color: K.onRoomAccent,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 7),
-        StatBars(rows: rows, emptyLabel: '할 일을 추가하면 태그별로 정리해 드려요'),
+        const SizedBox(height: 5),
+        // 방을 열면 이 막대가 그대로 아래로 내려가며 폭을 꽉 채운다
+        statsHero(
+          child: StatBars(
+            rows: rows,
+            compact: true,
+            maxRows: 4,
+            emptyLabel: '할 일을 추가하면 태그별로 정리해 드려요',
+          ),
+        ),
       ],
     );
   }

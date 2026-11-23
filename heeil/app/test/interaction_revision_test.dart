@@ -25,7 +25,7 @@ void main() {
   testWidgets('빠른 짧은 당김은 방을 열지 않는다', (tester) async {
     await launch(tester);
     final header = find.byKey(const Key('companion-header'));
-    expect(tester.getSize(header).height, 188);
+    expect(tester.getSize(header).height, 148);
     await tester.fling(header, const Offset(0, 32), 1800);
     await advance(tester);
     expect(find.byKey(const Key('companion-room')), findsNothing);

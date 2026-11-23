@@ -8,6 +8,7 @@ import '../state/app_state.dart';
 import '../theme.dart';
 import '../util/dates.dart';
 import '../widgets/companion_art.dart';
+import 'activity_stats_sheet.dart';
 
 /// Detailed text belongs here, not in the work screen or the character room.
 class ProgressPage extends StatefulWidget {
@@ -25,7 +26,8 @@ class _ProgressPageState extends State<ProgressPage> {
     appBar: AppBar(
       leading: const BackButton(key: Key('progress-back')),
       title: const Text('기록과 보상'),
-      backgroundColor: Colors.white,
+      backgroundColor: K.bg,
+      foregroundColor: K.label,
     ),
     body: ListenableBuilder(
       listenable: widget.state,
@@ -71,6 +73,8 @@ class _ProgressPageState extends State<ProgressPage> {
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
             CupertinoSlidingSegmentedControl<bool>(
+              thumbColor: K.card,
+              backgroundColor: K.fill,
               groupValue: _month,
               children: const {
                 false: Padding(padding: EdgeInsets.all(9), child: Text('주간')),
@@ -141,43 +145,52 @@ class _ProgressPageState extends State<ProgressPage> {
                 .activityCounts(start, end)
                 .entries
                 .map(
-                  (entry) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 7),
-                    child: Row(
-                      children: [
-                        Icon(
-                          activityIcon(entry.key),
-                          size: 18,
-                          color: activityColor(entry.key),
-                        ),
-                        const SizedBox(width: 9),
-                        SizedBox(
-                          width: 46,
-                          child: Text(
-                            activityLabel(entry.key),
-                            style: T.footnote,
+                  // 줄을 누르면 그 활동의 기록 시트가 열린다
+                  (entry) => InkWell(
+                    key: ValueKey('activity-indicator-${entry.key.name}'),
+                    onTap: () => showActivityStats(context, state, entry.key),
+                    borderRadius: BorderRadius.circular(K.radiusControl),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 7,
+                        horizontal: 2,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            activityIcon(entry.key),
+                            size: 18,
+                            color: activityColor(entry.key),
                           ),
-                        ),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: total == 0 ? 0 : entry.value / total,
-                              minHeight: 7,
-                              color: activityColor(entry.key),
-                              backgroundColor: K.fill,
+                          const SizedBox(width: 9),
+                          SizedBox(
+                            width: 46,
+                            child: Text(
+                              activityLabel(entry.key),
+                              style: T.footnote,
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: 33,
-                          child: Text(
-                            '${entry.value}',
-                            textAlign: TextAlign.right,
-                            style: T.footnote,
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: total == 0 ? 0 : entry.value / total,
+                                minHeight: 7,
+                                color: activityColor(entry.key),
+                                backgroundColor: K.fill,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            width: 33,
+                            child: Text(
+                              '${entry.value}',
+                              textAlign: TextAlign.right,
+                              style: T.footnote,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -331,7 +344,7 @@ class _MonthGrid extends StatelessWidget {
                   color: goal?.achieved == true
                       ? K.blue
                       : counts[index] > 0
-                      ? K.room
+                      ? K.duck
                       : K.fill,
                   borderRadius: BorderRadius.circular(8),
                 ),

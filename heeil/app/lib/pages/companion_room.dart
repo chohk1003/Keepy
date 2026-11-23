@@ -1,20 +1,16 @@
-import 'dart:math' as math;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import '../models/companion.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../util/dates.dart';
-import '../widgets/companion_art.dart';
+import '../widgets/activity_bars.dart';
 import '../widgets/fx.dart';
 import '../widgets/room_scene.dart';
 import '../widgets/week_activity_graph.dart';
 import 'progress_page.dart';
-import 'activity_stats_sheet.dart';
 
 Future<void> openCompanionRoom(
   BuildContext context,
@@ -111,10 +107,6 @@ class _CompanionRoomState extends State<CompanionRoom>
       builder: (context, _) {
         final state = widget.state;
         final today = dayOf(state.now);
-        final counts = state.activityCounts(
-          addDays(today, -6),
-          addDays(today, 1),
-        );
         final stats = state.dayActivityStats(_day);
         var done = 0, total = 0;
         for (final s in stats.values) {
@@ -126,8 +118,10 @@ class _CompanionRoomState extends State<CompanionRoom>
         final cardBottom = padding.top + 150;
         _sim
           ..scene = scene
+          // 다크 테마에서는 같은 장면이 밤이 된다 (테마가 캐릭터 배경에 영향)
+          ..night = isDarkTone
           ..insetTop = cardBottom
-          ..insetBottom = padding.bottom + 104;
+          ..insetBottom = padding.bottom + 118;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onVerticalDragStart: (_) => _drag = 0,
@@ -186,13 +180,24 @@ class _CompanionRoomState extends State<CompanionRoom>
                       onToday: sameDay(_day, today) ? null : () => _goto(today),
                     ),
                   ),
+                  // 아래쪽: 그 날의 태그별 통계 — 방에서는 폭을 꽉 쓴다
                   Positioned(
-                    bottom: padding.bottom + 22,
-                    left: 18,
-                    right: 18,
-                    child: _ActivityBars(
-                      counts: counts,
-                      onSelected: (a) => showActivityStats(context, state, a),
+                    bottom: padding.bottom + 20,
+                    left: 12,
+                    right: 12,
+                    child: Glass(
+                      radius: 20,
+                      opacity: .58,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                        child: statsHero(
+                          child: StatBars(
+                            key: const Key('room-tag-stats'),
+                            rows: StatBars.fromTags(state.dayTagStats(_day)),
+                            emptyLabel: '이 날은 할 일이 없어요',
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   // 모은 성취 수는 '기록과 보상' 화면에서 본다
@@ -251,7 +256,7 @@ class _GraphCard extends StatelessWidget {
       ),
       child: Glass(
         radius: 22,
-        opacity: .82,
+        opacity: .58,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 6, 6, 10),
           child: Column(
@@ -270,7 +275,7 @@ class _GraphCard extends StatelessWidget {
                         builder: (_) => ProgressPage(state: state),
                       ),
                     ),
-                    icon: const Icon(CupertinoIcons.chart_bar, color: K.ink),
+                    icon: Icon(CupertinoIcons.chart_bar, color: K.ink),
                   ),
                   Text(
                     mdw(day),
@@ -298,7 +303,7 @@ class _GraphCard extends StatelessWidget {
                     tooltip: '할 일로 돌아가기',
                     visualDensity: VisualDensity.compact,
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(CupertinoIcons.chevron_up, color: K.ink),
+                    icon: Icon(CupertinoIcons.chevron_up, color: K.ink),
                   ),
                 ],
               ),
@@ -312,68 +317,6 @@ class _GraphCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ActivityBars extends StatelessWidget {
-  const _ActivityBars({required this.counts, required this.onSelected});
-  final Map<ActivityKind, int> counts;
-  final ValueChanged<ActivityKind> onSelected;
-  @override
-  Widget build(BuildContext context) {
-    final maximum = counts.values.fold(1, (a, b) => math.max(a, b));
-    return Row(
-      children: [
-        for (final a in ActivityKind.values)
-          Expanded(
-            child: Semantics(
-              label: '${activityLabel(a)} 최근 7일 ${counts[a]}개 통계',
-              button: true,
-              child: Tooltip(
-                message: activityLabel(a),
-                child: InkWell(
-                  key: ValueKey('activity-indicator-${a.name}'),
-                  onTap: () => onSelected(a),
-                  borderRadius: BorderRadius.circular(14),
-                  child: Container(
-                    constraints: const BoxConstraints(minHeight: 52),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .9),
-                      borderRadius: BorderRadius.circular(K.radiusCard),
-                      boxShadow: K.cardShadow(.3),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 9,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          activityIcon(a),
-                          size: 19,
-                          color: activityColor(a),
-                        ),
-                        const SizedBox(height: 7),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: (counts[a] ?? 0) / maximum,
-                            minHeight: 5,
-                            color: activityColor(a),
-                            backgroundColor: K.blue.withValues(alpha: .1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
