@@ -12,24 +12,109 @@ import 'data/sync_store.dart';
 import 'pages/home_shell.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
+import 'widgets/companion_art.dart';
 
-Future<void> main() async {
+/// 저장소 열기를 기다리는 한계. 넘으면 시작 화면에 다시 시도 버튼을 띄운다.
+const _storeTimeout = Duration(seconds: 5);
+
+/// Firebase 초기화를 기다리는 한계. 넘으면 로컬 전용(게스트)으로 그냥 연다 —
+/// 네트워크가 느리다고 앱이 안 열리면 안 된다.
+const _syncTimeout = Duration(seconds: 6);
+
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
   );
-  final local = await LocalStore.open();
+  // 초기화를 기다리는 동안 빈 화면이 되지 않도록 시작 화면부터 띄운다.
+  runApp(const KeepyBoot());
+}
 
-  // MP3: .env 설정이 있으면 Firebase 동기화, 없으면 지금처럼 로컬 저장만 (게스트)
-  final sync = await _startFirebase(local);
-  final state = AppState(store: sync ?? local);
-  if (sync != null) {
-    // 첫 실행 샘플은 메모리에만 있으므로 먼저 저장해 둬야 로그인 시 서버로 올라간다
-    await state.flush();
-    sync.onRemoteTasks = state.applyRemote;
-    sync.start();
+/// 저장소·동기화를 준비하는 동안 보여 줄 시작 화면. 준비가 끝나면 [KeepyApp] 으로 바뀐다.
+class KeepyBoot extends StatefulWidget {
+  const KeepyBoot({super.key});
+
+  @override
+  State<KeepyBoot> createState() => _KeepyBootState();
+}
+
+class _KeepyBootState extends State<KeepyBoot> {
+  AppState? _state;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
   }
-  runApp(KeepyApp(state: state));
+
+  Future<void> _start() async {
+    setState(() => _error = null);
+    final LocalStore local;
+    try {
+      local = await LocalStore.open().timeout(_storeTimeout);
+    } catch (e) {
+      debugPrint('[boot] 저장소를 열지 못했습니다: $e');
+      if (mounted) setState(() => _error = '저장한 할 일을 불러오지 못했어요.');
+      return;
+    }
+    // MP3: .env 설정이 있으면 Firebase 동기화, 없으면 로컬 저장만 (게스트)
+    final sync = await _startFirebase(local)
+        .timeout(_syncTimeout, onTimeout: () => null);
+    final state = AppState(store: sync ?? local);
+    if (sync != null) {
+      // 첫 실행 샘플은 메모리에만 있으므로 먼저 저장해 둬야 로그인 시 서버로 올라간다
+      try {
+        await state.flush();
+      } catch (e) {
+        debugPrint('[boot] 첫 저장 실패: $e');
+      }
+      sync.onRemoteTasks = state.applyRemote;
+      sync.start();
+    }
+    if (!mounted) {
+      state.dispose();
+      return;
+    }
+    setState(() => _state = state);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = _state;
+    if (state != null) return KeepyApp(state: state);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: buildTheme(),
+      home: Scaffold(
+        key: const Key('boot-screen'),
+        backgroundColor: K.room,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 132, height: 132, child: CompanionArt()),
+              const SizedBox(height: 10),
+              Text('Keepy', style: T.title2.copyWith(color: K.blue)),
+              const SizedBox(height: 10),
+              if (_error == null)
+                Text('할 일을 불러오는 중', style: T.caption)
+              else ...[
+                Text(_error!, style: T.caption, textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                FilledButton(
+                  key: const Key('boot-retry'),
+                  onPressed: _start,
+                  style: FilledButton.styleFrom(backgroundColor: K.blue),
+                  child: const Text('다시 시도'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Firebase 초기화. 설정이 없거나 실패하면 null → 로컬 전용으로 계속 실행한다.
