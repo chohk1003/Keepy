@@ -1,21 +1,15 @@
+# Flutter 자동 생성 파일
 .dart_tool/
-.flutter-plugins*
-.packages
 build/
-coverage/
+.flutter-plugins-dependencies
+
+# IDE 설정
 .idea/
-.vscode/
-android/local.properties
-android/key.properties
-**/Pods/
-*.iml
+
+# 로컬 Firebase 설정
+firebase.flutterfire.local.json
+
+# 로컬 환경변수
 .env
 .env.*
 !.env.example
-lib/firebase_options.dart
-firebase.flutterfire.local.json
-.firebaserc
-**/google-services.json
-**/GoogleService-Info.plist
-firebase-debug.log*
-firestore-debug.log*
