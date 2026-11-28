@@ -70,6 +70,25 @@ MP2에서 구현한 로컬 저장 기능을 Firebase와 연동하여 여러 기�
 | 충돌 처리 | 여러 기기의 데이터 변경 시 일관성을 유지하도록 충돌 처리 |
 | 멀티플랫폼 지원 | 기존 Web 앱에 Android 및 iOS 프로젝트 구성 추가 |
 
+### MP4 — 온디바이스 AI로 종이 메모 가져오기
+
+Google ML Kit 기반의 온디바이스 OCR을 적용하여 사진 속 텍스트를 추출하고, 사용자가 인식 결과를 검토한 뒤 태스크로 등록하는 기능을 구현하였다. 기존 태스크 저장 및 동기화 기능과 연동하였으며, 네트워크 연결 없이도 텍스트 인식이 가능하도록 구성하였다.
+
+| 기능 | 설명 |
+|---|---|
+| 사진 촬영 | 카메라를 이용한 종이 메모 촬영 |
+| 이미지 선택 | 기기에 저장된 메모 이미지 불러오기 |
+| 온디바이스 OCR | Google ML Kit를 이용한 기기 내부 텍스트 인식 |
+| 한글·영어 인식 | 한글 및 영어가 포함된 메모 인식 지원 |
+| 후보 항목 추출 | 인식한 텍스트를 줄 단위로 분리하여 태스크 후보 생성 |
+| 후보 검토 및 수정 | 추출된 텍스트 확인 및 내용 수정 |
+| 후보 선택 | 등록할 태스크 후보를 개별적으로 선택 및 해제 |
+| 날짜 설정 | 후보별 날짜를 사용자가 직접 지정 및 변경 |
+| 태스크 등록 | 선택한 후보를 기존 태스크 저장 및 동기화 기능과 연동 |
+| 오프라인 OCR | 비행기 모드 등 네트워크 연결이 없는 환경에서 텍스트 인식 |
+| 권한 처리 | 카메라 접근 권한 거부 시 안내 및 예외 처리 |
+| 프라이버시 보호 | 원본 이미지의 영구 저장 및 외부 서버 전송 방지 |
+| 처리 시간 측정 | OCR 처리 소요 시간 측정 |
 
 ### 기존 프로토타입의 추가 기능
 
@@ -163,6 +182,7 @@ flutter test
 |   |       
 |   \---widgets
 |           empty_state.dart
+|           task_due_date_field.dart
 |           task_tile.dart
 |           
 \---features
@@ -178,6 +198,9 @@ flutter test
     |           calendar_screen.dart
     |           
     +---ocr
+    |   +---services
+    |   |       android_ocr_service.dart
+    |   |       
     |   +---viewmodels
     |   |       ocr_view_model.dart
     |   |       
@@ -198,6 +221,7 @@ flutter test
         \---views
                 task_form_dialog.dart
                 task_screen.dart
+                
 ```
 
 MP2에서는 기존 구조를 유지하면서 `shared_preferences` 기반 로컬 저장 기능을 추가하였다.
@@ -267,8 +291,24 @@ Firebase Authentication으로 로그인한 사용자의 UID를 기준으로 데�
 | 데이터 충돌 처리 | 여러 기기에서 같은 태스크를 수정·삭제할 때 동기화 결과 확인 |
 | 기존 기능 유지 | Firebase 연동 후에도 MP2의 CRUD 및 필터 기능이 정상 작동하는지 확인 |
 
+### 5.4. MP4 검증 항목
 
-## 7. MP3 Firebase 동기화
+| 검증 항목 | 확인 방법 |
+|---|---|
+| 사진 촬영 및 선택 | 카메라 촬영 또는 기기에 저장된 이미지 선택 여부 확인 |
+| OCR 텍스트 인식 | 메모 이미지의 텍스트가 정상적으로 추출되는지 확인 |
+| 한글·영어 인식 | 한글 및 영어가 포함된 메모의 인식 결과 확인 |
+| 줄 단위 추출 | 사진 속 여러 줄의 텍스트가 개별 태스크 후보로 표시되는지 확인 |
+| 후보 수정 | 추출된 태스크 후보의 텍스트를 수정할 수 있는지 확인 |
+| 후보 선택 | 후보별 선택 및 선택 해제가 정상적으로 이루어지는지 확인 |
+| 날짜 설정 | 후보별 날짜를 변경하고 지정한 날짜가 저장된 태스크에 반영되는지 확인 |
+| 태스크 등록 | 선택한 후보만 실제 태스크 목록에 추가되는지 확인 |
+| 비행기 모드 | 네트워크 연결이 차단된 상태에서 OCR 인식이 정상적으로 이루어지는지 확인 |
+| 카메라 권한 거부 | 카메라 접근 권한 거부 시 안내 및 예외 처리 여부 확인 |
+| 프라이버시 보호 | 원본 이미지가 영구 저장되거나 외부 서버로 전송되지 않는지 코드 확인 |
+| 처리 시간 측정 | OCR 실행 시 실제 처리 시간이 측정되는지 확인 |
+
+## 6. MP3 Firebase 동기화
 
 MP3는 Firebase Authentication과 Cloud Firestore를 사용한다. 이메일 계정이 기기마다 동일한 UID를 제공하고, Firestore SDK가 문서 변경 구독·로컬 캐시·보류 중인 쓰기 재전송을 제공한다. 기존 `TaskRepository`와 `Task` JSON 구조를 재사용한다.
 
@@ -278,7 +318,7 @@ MP3는 Firebase Authentication과 Cloud Firestore를 사용한다. 이메일 계
 | Android | `kr.ac.hansung.keepy.dohyeon`, 최소 API 24, 빌드 SDK 36, Flutter 템플릿 NDK 28.2.13676358 |
 | iOS | `kr.ac.hansung.keepy.dohyeon`, iOS 15 이상, macOS와 Xcode 필요 |
 
-### 7.1. 원격 프로젝트 및 계정 설정
+### 6.1. 원격 프로젝트 및 계정 설정
 
 1. 기존 `keepy-mp3` 프로젝트의 Authentication → Sign-in method에서 **Email/Password**를 활성화한다. 기존 익명 세션을 이메일에 연결하려는 사용자는 기존 브라우저 프로필과 주소를 유지한다.
 2. 프로젝트 설정 → 내 앱에서 기존 Web 앱을 사용하고, Android 패키지 이름과 iOS 번들 ID를 위 표와 일치시켜 앱을 각각 등록한다. 이메일/비밀번호 흐름은 Google 로그인용 OAuth 설정을 사용하지 않는다.
@@ -288,21 +328,107 @@ MP3는 Firebase Authentication과 Cloud Firestore를 사용한다. 이메일 계
 
 앱은 `firebase_config.dart`가 만든 `FirebaseOptions`로 초기화한다. FlutterFire 생성 파일과 네이티브 설정 파일은 빌드 입력에서 제외한다. Firebase 클라이언트 API 키와 앱 ID는 클라이언트에 포함되는 식별 정보다. Authentication과 Firestore 규칙이 데이터 접근을 제어한다. 서비스 계정 JSON, 비밀번호, 로그인 토큰과 같은 비밀은 앱에 전달하지 않는다. 과제 제출에는 변수명과 예시만 제공한다. [Firebase Flutter 설정](https://firebase.google.com/docs/flutter/setup) · [이메일/비밀번호 인증](https://firebase.google.com/docs/auth/flutter/password-auth)
 
-### 7.2. 실행 방법
+### 6.2. 실행 방법
+
+#### 6.2.1. 실행 준비
+
+Flutter SDK 설치 및 개발 환경 구성을 완료한 후, 저장소 루트에서 Flutter 프로젝트가 위치한 `dohyeon/app/` 디렉터리로 이동한다.
 
 ```powershell
+cd dohyeon/app
+flutter doctor -v
 flutter pub get
+```
+
+Firebase 연동 모드로 실행하려면 프로젝트 루트에 Firebase 설정이 포함된 `.env` 파일을 준비한다.
+
+#### 6.2.2. Web 실행
+
+```powershell
 flutter run -d chrome --web-port 7358 --dart-define-from-file=.env
+```
+
+Chrome 브라우저에서 앱이 실행된다. 웹의 저장 공간은 주소와 포트별로 분리되므로 검증 중에는 고정 포트 7358을 사용한다.
+
+웹 환경에서는 기존 태스크 관리 및 Firebase 동기화 기능을 사용할 수 있다. MP4의 Google ML Kit 기반 실제 OCR 기능은 Android 환경에서 검증한다.
+
+#### 6.2.3. Android 실행
+
+**Android Studio를 이용한 실행**
+
+1. Android Studio에서 `dohyeon/app/` 폴더를 프로젝트로 연다.
+2. Device Manager에서 Android 에뮬레이터를 실행한다.
+3. `Run → Edit Configurations`의 Additional run args에 `--dart-define-from-file=.env`를 설정한다.
+4. 실행 대상을 Android 에뮬레이터로 선택한다.
+5. `lib/main.dart`를 실행한다.
+
+**터미널을 이용한 실행**
+
+```powershell
 flutter devices
 flutter run -d <android-device-id> --dart-define-from-file=.env
+```
+
+`flutter devices`에 표시된 Android 기기 ID를 확인하여 `<android-device-id>`에 입력한다.
+
+**APK 빌드**
+
+```powershell
 flutter build apk --debug --dart-define-from-file=.env
 ```
 
-웹의 저장 공간은 주소와 포트별로 분리되므로 검증 중에는 고정 포트를 쓴다. 로컬 모드는 같은 명령에서 `--dart-define-from-file=.env`를 빼고 실행한다. Firebase 초기화가 실패한 경우 시작 화면에서도 로컬 모드를 열 수 있다.
+MP4의 사진 촬영, 이미지 선택 및 온디바이스 OCR 기능은 Android 에뮬레이터 또는 실기기에서 실행한다.
 
-Mac에서는 같은 Flutter 버전과 Xcode로 `flutter doctor -v`를 실행하고, 시뮬레이터를 시작한 뒤 `flutter run -d <ios-simulator-id> --dart-define-from-file=.env`를 실행한다. `flutter build ios --simulator --dart-define-from-file=.env`로 시뮬레이터 빌드를 검증한다. 실기기는 Xcode `ios/Runner.xcworkspace`의 Runner에 서명 팀을 설정하고 동일한 번들 ID를 확인한 뒤 실행한다.
+#### 6.2.4. MP4 OCR 실행 방법
 
-### 7.3. 동기화, 오프라인, 충돌
+1. Android 환경에서 Keepy 앱을 실행한다.
+2. OCR 가져오기 기능을 선택한다.
+3. 카메라로 종이 메모를 촬영하거나 저장된 메모 이미지를 선택한다.
+4. OCR로 추출된 태스크 후보 목록을 확인한다.
+5. 필요한 경우 후보의 텍스트와 날짜를 수정한다.
+6. 등록할 후보를 선택하고 저장한다.
+7. 태스크 목록에서 등록 결과를 확인한다.
+
+Android 에뮬레이터에서는 PC의 메모 이미지 파일을 에뮬레이터 화면으로 드래그하여 내부 저장소에 추가할 수 있다.
+
+오프라인 OCR을 검증할 경우 앱 실행 및 필요한 로그인 절차를 완료한 후 비행기 모드를 활성화하고 Wi-Fi를 차단한 상태에서 동일한 인식 과정을 수행한다.
+
+#### 6.2.5. iOS 실행
+
+macOS에서 Flutter SDK와 Xcode를 설치한 후 iOS 시뮬레이터를 실행한다.
+
+```bash
+flutter doctor -v
+flutter pub get
+flutter devices
+flutter run -d <ios-simulator-id> --dart-define-from-file=.env
+```
+
+시뮬레이터 빌드는 다음 명령어로 수행한다.
+
+```bash
+flutter build ios --simulator --dart-define-from-file=.env
+```
+
+실기기를 사용할 경우 Xcode에서 `ios/Runner.xcworkspace`를 열어 Runner의 서명 팀과 번들 ID를 설정한다.
+
+현재 개발 환경이 Windows이므로 iOS 빌드 및 실행은 검증하지 않았다.
+
+#### 6.2.6. 로컬 모드 실행
+
+Firebase를 사용하지 않는 로컬 모드는 각 실행 명령어에서 `--dart-define-from-file=.env`를 제외하여 실행한다.
+
+```powershell
+flutter run -d chrome --web-port 7358
+```
+
+```powershell
+flutter run -d <android-device-id>
+```
+
+Firebase 초기화에 실패한 경우에도 시작 화면을 통해 로컬 모드로 진입할 수 있다.
+
+### 6.3. 동기화, 오프라인, 충돌
 
 - Firestore의 `users/{uid}/tasks/{taskId}`를 구독한다. 같은 계정은 같은 목록을 읽고, 다른 UID의 문서는 규칙에서 읽기·쓰기를 차단한다.
 - Firebase 모드에서 Firestore가 캐시와 보류 쓰기를 소유한다. Android/iOS는 기본으로 영구 캐시를 사용하며, Web은 앱 시작 시 IndexedDB 영구 캐시와 멀티탭 관리를 활성화한다. 같은 브라우저 프로필과 웹 주소에서 기존 캐시를 사용한다. 인터넷 없이 앱 자체를 처음 로드하려면 웹 정적 파일도 접근 가능해야 한다. 이번 웹 재시작 검증에서는 앱 파일은 로컬에서 계속 제공하고 Firestore 연결만 차단했다.
@@ -312,7 +438,7 @@ Mac에서는 같은 Flutter 버전과 Xcode로 `flutter doctor -v`를 실행하�
 
 [Firestore 오프라인 데이터](https://firebase.google.com/docs/firestore/manage-data/enable-offline)
 
-### 7.4. 검증과 증빙
+### 6.4. 검증과 증빙
 
 Firebase CLI에서 `firebase emulators:start --only auth,firestore --project demo-keepy-mp3`를 실행하고, 별도의 로컬 설정 파일에 `FIREBASE_PROJECT_ID=demo-keepy-mp3`, `FIREBASE_EMULATOR_HOST=127.0.0.1`, 더미 API 키·앱 ID·프로젝트 번호·웹 도메인을 넣는다. 에뮬레이터는 Auth 9099, Firestore 8080, 콘솔 4000을 사용하므로 Web 앱은 7358 등 다른 포트로 실행한다. `node tool/verify_firestore_rules.cjs`로 규칙을 로컬에서 재검증할 수 있다.
 
@@ -328,9 +454,41 @@ Firebase CLI에서 `firebase emulators:start --only auth,firestore --project dem
 | Android | Android Studio 에뮬레이터에서 Keepy 앱 실행 및 동작 확인 완료 |
 | 실제 Firebase | Firebase 프로젝트 등록 및 설정 완료. Firebase Authentication과 Cloud Firestore 연동 및 실제 데이터 저장·동기화 확인 |
 
+#### MP4 온디바이스 OCR 검증
 
-## 8. 제출 산출물
+Android Studio의 Android 에뮬레이터를 이용하여 Google ML Kit 기반 온디바이스 OCR 기능을 검증하였다. 메모 이미지 선택부터 텍스트 인식, 후보 검토, 날짜 설정 및 태스크 등록까지의 전체 실행 흐름을 직접 확인하였다.
 
+| 검증 | 2026-11-28 결과 |
+|---|---|
+| Android 실행 | Android Studio 에뮬레이터에서 Keepy 앱 정상 실행 확인 |
+| OCR 인식 | 메모 이미지에서 텍스트가 정상적으로 추출되는 것을 확인 |
+| 후보 항목 생성 | 인식된 텍스트가 줄 단위의 태스크 후보로 표시되는 것을 확인 |
+| 후보 검토 | 후보별 텍스트 수정 및 등록 대상 선택 기능 확인 |
+| 날짜 설정 | 후보별 날짜 지정 및 변경 기능 확인 |
+| 태스크 등록 | 선택한 후보를 실제 태스크 목록에 등록하는 기능 확인 |
+| 오프라인 OCR | 비행기 모드에서 네트워크 연결 없이 텍스트 인식이 정상적으로 이루어지는 것을 확인 |
+| 검증 환경 | Windows 11, Android Studio, Android 에뮬레이터 |
+
+#### OCR 처리 시간 측정
+
+Google ML Kit의 텍스트 인식 요청부터 인식 결과 반환까지의 소요 시간을 측정하였다.
+
+| 측정 항목 | 내용 |
+|---|---|
+| OCR 라이브러리 | Google ML Kit Text Recognition |
+| Flutter 패키지 | `google_mlkit_text_recognition` |
+| 측정 환경 | Android Studio 에뮬레이터 |
+| 측정 방식 | OCR 요청부터 인식 결과 반환까지의 소요 시간 측정 |
+| 처리 시간 | [실제 측정값 입력] ms |
+
+OCR은 기기 내부에서 수행되며, 원본 사진을 외부 서버로 전송하거나 앱의 영구 저장소에 보관하지 않도록 구성하였다. 사용자가 검토 후 선택한 태스크 정보만 기존 저장 및 동기화 시스템에 전달한다.
+
+#### MP4 실행 화면 증빙
+
+사진 선택, OCR 후보 검토, 태스크 등록 결과 및 OCR 인식 화면을 `screenshots/` 디렉터리에 저장하였다. 테스트에는 개인정보가 포함되지 않은 메모 이미지를 사용하였다.
+
+
+## 7. 제출 산출물
 MP1~MP3 제출물은 저장소 루트의 프로젝트에서 아래 구조로 구성한다.
 
 ```text
@@ -364,7 +522,7 @@ MP2에서는 수정, 삭제, 필터 기능과 앱 재시작 전후의 데이터 
 
 AI 도구의 제안을 기존 프로젝트에 적용하면서 발생한 문제와 해결 과정도 포함한다.
 
-## 9. 향후 개발 계획
+## 8. 향후 개발 계획
 
 | 단계 | 개발 목표 | 진행 상태 |
 |---|---|---|
